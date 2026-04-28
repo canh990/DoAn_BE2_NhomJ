@@ -1,0 +1,65 @@
+<?php
+
+namespace App\Http\Controllers\Auth;
+
+use App\Http\Controllers\Controller;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth;
+
+class RegisterController extends Controller
+{
+    /**
+     * Hiển thị trang đăng ký
+     */
+    public function showRegistrationForm()
+    {
+        return view('auth.register');
+    }
+
+    /**
+     * Xử lý lưu trữ người dùng mới
+     */
+    public function register(Request $request)
+    {
+        // 1. Kiểm tra dữ liệu đầu vào (Validation)
+        $this->validator($request->all())->validate();
+
+        // 2. Tạo người dùng mới
+        $user = $this->create($request->all());
+
+        // // 3. Đăng nhập ngay sau khi đăng ký thành công
+        // Auth::login($user);
+
+        // 4. Chuyển hướng về trang chủ hoặc dashboard
+       // return redirect()->intended('/home')->with('success', 'Chào mừng bạn đã gia nhập NHOMJ!');
+       return redirect()->route('login')->with('success', 'Đăng ký thành công! Vui lòng đăng nhập để tiếp tục.');
+    }
+
+    /**
+     * Định nghĩa các quy tắc kiểm tra dữ liệu
+     */
+    // app/Http/Controllers/Auth/RegisterController.php
+
+protected function validator(array $data)
+{
+    return Validator::make($data, [
+        'ten_dang_nhap' => ['required', 'string', 'max:50', 'unique:nguoi_dung,ten_dang_nhap'],
+        'email'         => ['required', 'string', 'email', 'max:255', 'unique:nguoi_dung,email'],
+        'so_dien_thoai' => ['required', 'string', 'max:20', 'unique:nguoi_dung,so_dien_thoai'],
+        'mat_khau'      => ['required', 'string', 'min:8'],
+    ]);
+}
+
+protected function create(array $data)
+{
+    return User::create([
+        'ten_dang_nhap' => $data['ten_dang_nhap'],
+        'email'         => $data['email'],
+        'so_dien_thoai' => $data['so_dien_thoai'],
+        'mat_khau_hash' => Hash::make($data['mat_khau']), // Chú ý: mat_khau_hash
+    ]);
+}
+}
