@@ -47,7 +47,7 @@ class LoginController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('welcome'));
+        return redirect()->intended(route('home'));
     }
 
     public function logout(Request $request)

@@ -49,4 +49,9 @@ class User extends Authenticatable
     {
         return $this->mat_khau_hash;
     }
+    // Nếu bạn muốn dùng 'ten_dang_nhap' làm tên hiển thị chính
+    public function getNameAttribute()
+    {
+        return $this->ten_dang_nhap;
+    }
 }

@@ -3,7 +3,7 @@
 use App\Http\Controllers\Auth\LoginController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SocialLoginController;
-
+use App\Http\Controllers\Auth\RegisterController;
 // -----------------------------------------------
 // Auth routes
 // -----------------------------------------------
@@ -23,6 +23,11 @@ Route::post('/logout', [LoginController::class, 'logout'])
     ->name('logout')
     ->middleware('auth');
 
+    // Route để TRẢ VỀ GIAO DIỆN (Lỗi của bạn đang dừng ở đây)
+Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
+
+// Route để XỬ LÝ DỮ LIỆU khi bấm nút (Đây là dòng bạn đang thiếu)
+Route::post('/register', [RegisterController::class, 'register']);
 // -----------------------------------------------
 // OAuth (Google / Facebook) — cần cài laravel/socialite
 // composer require laravel/socialite
