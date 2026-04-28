@@ -1,0 +1,50 @@
+<?php
+
+use App\Http\Controllers\Auth\LoginController;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\SocialLoginController;
+
+// -----------------------------------------------
+// Auth routes
+// -----------------------------------------------
+
+// Hiển thị form đăng nhập
+Route::get('/login', [LoginController::class, 'showLoginForm'])
+    ->name('login')
+    ->middleware('guest');
+
+// Xử lý đăng nhập
+Route::post('/login', [LoginController::class, 'login'])
+    ->name('login.post')
+    ->middleware('guest');
+
+// Đăng xuất
+Route::post('/logout', [LoginController::class, 'logout'])
+    ->name('logout')
+    ->middleware('auth');
+
+// -----------------------------------------------
+// OAuth (Google / Facebook) — cần cài laravel/socialite
+// composer require laravel/socialite
+// -----------------------------------------------
+ Route::get('/auth/google',          [SocialLoginController::class, 'redirectToGoogle'])->name('auth.google');
+ Route::get('/auth/google/callback', [SocialLoginController::class, 'handleGoogleCallback']);
+ Route::get('/auth/facebook',          [SocialLoginController::class, 'redirectToFacebook'])->name('auth.facebook');
+ Route::get('/auth/facebook/callback', [SocialLoginController::class, 'handleFacebookCallback']);
+
+// -----------------------------------------------
+// Trang sau khi đăng nhập
+// -----------------------------------------------
+Route::get('/home', function () {
+    return view('auth.home');
+})->name('home')->middleware('auth');
+
+// Quên mật khẩu (placeholder)
+Route::get('/forgot-password', function () {
+    return view('auth.forgot-password');
+})->name('password.request')->middleware('guest');
+
+// Đăng ký (placeholder)
+Route::get('/register', function () {
+    return view('auth.register');
+})->name('register')->middleware('guest');
