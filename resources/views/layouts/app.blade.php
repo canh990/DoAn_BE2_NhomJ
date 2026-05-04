@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'NHOMJ')</title>
     
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
@@ -123,15 +124,25 @@
     </header>
 
     <aside class="fixed left-0 top-16 h-[calc(100vh-64px)] w-64 p-4 border-r border-sky-400/10 flex flex-col gap-2 z-40 hidden md:flex">
-        <div class="mb-4 px-4 py-2">
-            <div class="flex items-center gap-3 mb-1">
-                <img class="w-10 h-10 rounded-full border border-sky-400/30 object-cover" data-alt="Close-up portrait of a tech-savvy user with neon blue backlighting and sharp modern aesthetic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD0grD7Xc7CXYMtRNKl-h4rNvN7_rXTKfWOp13GCY73KKsWsqd7WAxs1HL6FXVEL9z1KbnoeWPhrdAx_FRuWVFqh3xiDKgqglwY08PIe6eJlhrghHZYtLV_zupnmc6KyFRyCyLgA8jvrqFvCuFJNFrnsc1Ryh75jV7mMMuUAH4ANyw87qdjuHJwJs8xt2Iw1dbM1pIoQ0lID2HAsMCAeYwmA7GfeYoIIfygu7B7mW_qsZVMj_r-QBscLDXBdd4URiZzmrNhJKzCjFQ"/>
-                <div>
-                    <p class="text-sm font-bold text-sky-300 font-inter">Người dùng NHOMJ</p>
-                    <p class="text-xs text-slate-400">@nguoidung</p>
-                </div>
+     @auth
+    @php $user = Auth::user(); @endphp
+
+    <div class="mb-4 px-4 py-2">
+        <div class="flex items-center gap-3 mb-1">
+            <img 
+                class="w-10 h-10 rounded-full border border-sky-400/30 object-cover" 
+                alt="{{ $user->name }}" 
+                src="{{ $user->anh_dai_dien ? asset('storage/' . $user->anh_dai_dien) : 'https://via.placeholder.com/100' }}"
+            />
+            <div>
+                <p class="text-sm font-bold text-sky-300 font-inter">
+                    {{ $user->name }}
+                </p>
+                
             </div>
         </div>
+    </div>
+@endauth
         <nav class="flex flex-col gap-1 flex-1">
             <a class="flex items-center gap-3 text-slate-400 px-4 py-3 hover:bg-white/5 rounded-xl hover:text-sky-200 transition-colors cursor-pointer transition-transform active:translate-x-1 font-inter text-sm font-medium" href="#">
                 <span class="material-symbols-outlined" data-icon="home">home</span>

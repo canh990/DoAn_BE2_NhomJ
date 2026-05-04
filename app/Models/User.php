@@ -54,4 +54,16 @@ class User extends Authenticatable
     {
         return $this->ten_dang_nhap;
     }
+
+    // Người theo dõi tôi
+    public function followers()
+    {
+        return $this->belongsToMany(User::class, 'theo_doi', 'nguoi_duoc_theo_doi_id', 'nguoi_theo_doi_id');
+    }
+
+    // Những người tôi đang theo dõi
+    public function following()
+    {
+        return $this->belongsToMany(User::class, 'theo_doi', 'nguoi_theo_doi_id', 'nguoi_duoc_theo_doi_id');
+    }
 }
