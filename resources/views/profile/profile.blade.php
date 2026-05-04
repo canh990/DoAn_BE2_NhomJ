@@ -3,40 +3,67 @@
 @section('title', 'Trang cá nhân - ' . ($user->name ?? 'Người dùng'))
 
 @section('content')
+@php
+    $isOwnProfile = auth()->check() && auth()->id() === $user->id;
+    $isFollowing = auth()->check() && ! $isOwnProfile
+        ? auth()->user()->following()->where('nguoi_duoc_theo_doi_id', $user->id)->exists()
+        : false;
+    $profileUrl = route('profile.public', ['username' => $user->ten_dang_nhap]);
+@endphp
+
 <div class="max-w-4xl mx-auto pb-20">
+    @if(session('success'))
+        <div class="mx-6 mt-6 rounded-2xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-200">
+            {{ session('success') }}
+        </div>
+    @endif
+
     <div class="relative">
         <div class="h-64 w-full bg-slate-900 overflow-hidden">
-            <img class="w-full h-full object-cover opacity-60" 
-                 data-alt="Cover photo" 
-                 src="{{ !empty($user->cover_photo) ? asset('storage/' . $user->cover_photo) : 'https://lh3.googleusercontent.com/aida-public/AB6AXuAE8EPzz-gX79DnqAhi0_StOHC91uLm5YDBZwVLWbndwUQ6uK_rUjvdGCmWgdMz8vhDT_KZFa7NE8T8ihfKelL_dO6jLGlJ8sd5AE6svxEDyG59LqoA7KF1QD7pTUv6D9M81ss6aD-J7fp3RxaxKdLt7IZjLiJaECpsYmxZooT54hRgR9bp_99vkrKdEiEEJLPZHCE2LjfSk9G8-idX4qneAxORxh9pxv-y-X3poNr_QVPvLMaqwrEV3YZPUe4RW_tg-_TiSfiyeV4' }}"/>
+            <img
+                class="w-full h-full object-cover opacity-60"
+                data-alt="Cover photo"
+                src="{{ !empty($user->anh_bia) ? asset('storage/' . $user->anh_bia) : 'https://lh3.googleusercontent.com/aida-public/AB6AXuAE8EPzz-gX79DnqAhi0_StOHC91uLm5YDBZwVLWbndwUQ6uK_rUjvdGCmWgdMz8vhDT_KZFa7NE8T8ihfKelL_dO6jLGlJ8sd5AE6svxEDyG59LqoA7KF1QD7pTUv6D9M81ss6aD-J7fp3RxaxKdLt7IZjLiJaECpsYmxZooT54hRgR9bp_99vkrKdEiEEJLPZHCE2LjfSk9G8-idX4qneAxORxh9pxv-y-X3poNr_QVPvLMaqwrEV3YZPUe4RW_tg-_TiSfiyeV4' }}"
+            />
         </div>
 
         <div class="px-6 -mt-16 sm:-mt-24 flex flex-col items-start relative z-10">
             <div class="flex items-end justify-between w-full">
                 <div class="relative group">
                     <div class="w-32 h-32 sm:w-44 sm:h-44 rounded-full border-4 border-background overflow-hidden glass-panel-elevated">
-                        <img class="w-full h-full object-cover" 
-                             data-alt="Profile picture" 
-                             src="{{ !empty($user->avatar) ? asset('storage/' . $user->avatar) : 'https://lh3.googleusercontent.com/aida-public/AB6AXuBB2X-acXW_1cf-FYDgTbvrKUbxQxX6Cg299CVHtaNYCQRKITR_1PwPyZywPFBetIgi2qXpqS9JURFRUyt2YRSV7-DSnR4EkHhM7DuHZ8EI0F6kYBWYbNcwgDetrejvxYyfxV8o7L84z4zC_cIqlzQMLve0LR2szBxaT8jjJeINxPtQT5Wi3bLnJAUcvqBnP3dGvxatXkae_gQm1vz6CGeCT0zQJmj55dgFhyrrMYSdBkd66GagHIasFgIOcEuJehCi0TxWORmK-W0' }}"/>
+                        <img
+                            class="w-full h-full object-cover"
+                            alt="{{ $user->name }}"
+                            src="{{ $user->anh_dai_dien ? asset('storage/' . $user->anh_dai_dien) : 'https://lh3.googleusercontent.com/aida-public/AB6AXuBB2X-acXW_1cf-FYDgTbvrKUbxQxX6Cg299CVHtaNYCQRKITR_1PwPyZywPFBetIgi2qXpqS9JURFRUyt2YRSV7-DSnR4EkHhM7DuHZ8EI0F6kYBWYbNcwgDetrejvxYyfxV8o7L84z4zC_cIqlzQMLve0LR2szBxaT8jjJeINxPtQT5Wi3bLnJAUcvqBnP3dGvxatXkae_gQm1vz6CGeCT0zQJmj55dgFhyrrMYSdBkd66GagHIasFgIOcEuJehCi0TxWORmK-W0' }}"
+                        />
                     </div>
-                    @if(auth()->check() && auth()->id() === $user->id)
-                    <div class="absolute bottom-2 right-2 p-2 bg-sky-400 rounded-full text-on-primary shadow-lg cursor-pointer hover:scale-110 transition-transform hidden group-hover:block">
-                        <span class="material-symbols-outlined text-base" data-icon="photo_camera">photo_camera</span>
-                    </div>
+                    @if($isOwnProfile)
+                        <div class="absolute bottom-2 right-2 p-2 bg-sky-400 rounded-full text-on-primary shadow-lg cursor-pointer hover:scale-110 transition-transform hidden group-hover:block">
+                            <span class="material-symbols-outlined text-base" data-icon="photo_camera">photo_camera</span>
+                        </div>
                     @endif
                 </div>
-                
+
                 <div class="flex gap-3 mb-2">
-                    @if(auth()->check() && auth()->id() === $user->id)
-                        <button class="px-6 py-2 rounded-xl glass-panel text-on-surface font-semibold hover:bg-white/10 transition-all active:scale-95 border border-sky-400/20">
+                    @if($isOwnProfile)
+                        <a href="{{ route('profile.edit') }}" class="px-6 py-2 rounded-xl glass-panel text-on-surface font-semibold hover:bg-white/10 transition-all active:scale-95 border border-sky-400/20 inline-flex items-center">
                             Chỉnh sửa hồ sơ
+                        </a>
+                    @elseif(auth()->check())
+                        <button id="follow-btn" data-user-id="{{ $user->id }}" class="px-6 py-2 rounded-xl glass-panel text-sky-300 font-semibold hover:bg-white/10 transition-all border border-sky-400/20">
+                            {{ $isFollowing ? 'Bỏ theo dõi' : 'Theo dõi' }}
                         </button>
                     @else
-                        <button class="px-6 py-2 rounded-xl glass-panel text-sky-300 font-semibold hover:bg-white/10 transition-all border border-sky-400/20">
-                            Theo dõi
-                        </button>
+                        <a href="{{ route('login') }}" class="px-6 py-2 rounded-xl glass-panel text-sky-300 font-semibold hover:bg-white/10 transition-all border border-sky-400/20 inline-flex items-center">
+                            Đăng nhập để theo dõi
+                        </a>
                     @endif
-                    <button class="p-2 rounded-xl glass-panel text-on-surface hover:bg-white/10 transition-all border border-sky-400/20">
+                    <button
+                        type="button"
+                        class="p-2 rounded-xl glass-panel text-on-surface hover:bg-white/10 transition-all border border-sky-400/20"
+                        onclick="navigator.clipboard.writeText('{{ $profileUrl }}')"
+                        title="Sao chép liên kết hồ sơ"
+                    >
                         <span class="material-symbols-outlined" data-icon="share">share</span>
                     </button>
                 </div>
@@ -45,31 +72,31 @@
             <div class="mt-4 space-y-1">
                 <div class="flex items-center gap-2">
                     <h1 class="text-3xl font-bold text-on-surface tracking-tight">{{ $user->name }}</h1>
-                    @if(isset($user->is_verified) && $user->is_verified)
+                    @if($user->da_xac_thuc)
                         <span class="material-symbols-outlined text-sky-400 text-xl" data-icon="verified" style="font-variation-settings: 'FILL' 1;">verified</span>
                     @endif
                 </div>
-                <p class="text-slate-400 font-medium text-lg">{{ '@' . ($user->username ?? 'nguoidung') }}</p>
+                <p class="text-slate-400 font-medium text-lg">{{ '@' . ($user->ten_dang_nhap ?? 'nguoidung') }}</p>
             </div>
 
             <div class="mt-4 max-w-2xl">
                 <p class="text-on-surface-variant leading-relaxed">
-                    {{ $user->bio ?? 'Nhà thiết kế sản phẩm số & Người yêu thích công nghệ. Đang khám phá những giới hạn mới của giao diện Glassmorphism và Web3. ✨' }}
+                    {{ $user->tieu_su ?? 'Nhà thiết kế sản phẩm số & Người yêu thích công nghệ. Đang khám phá những giới hạn mới của giao diện Glassmorphism và Web3.' }}
                 </p>
             </div>
 
             <div class="flex flex-wrap gap-6 mt-6">
                 <div class="flex items-center gap-1.5 group cursor-pointer">
-                    <span class="font-bold text-on-surface group-hover:text-sky-300">1,234</span>
+                    <span class="font-bold text-on-surface group-hover:text-sky-300">{{ number_format($user->following_count ?? 0) }}</span>
                     <span class="text-slate-400 group-hover:text-slate-300">Đang theo dõi</span>
                 </div>
                 <div class="flex items-center gap-1.5 group cursor-pointer">
-                    <span class="font-bold text-on-surface group-hover:text-sky-300">45.6K</span>
+                    <span id="followers-count" class="font-bold text-on-surface group-hover:text-sky-300">{{ number_format($user->followers_count ?? 0) }}</span>
                     <span class="text-slate-400 group-hover:text-slate-300">Người theo dõi</span>
                 </div>
                 <div class="flex items-center gap-1.5 text-slate-400">
                     <span class="material-symbols-outlined text-sm" data-icon="calendar_month">calendar_month</span>
-                    <span>Đã tham gia {{ isset($user->created_at) ? $user->created_at->format('m/Y') : 'tháng 10, 2023' }}</span>
+                    <span>Đã tham gia {{ isset($user->created_at) ? $user->created_at->format('m/Y') : '10/2023' }}</span>
                 </div>
             </div>
         </div>
@@ -92,12 +119,14 @@
                     <div class="space-y-3">
                         <div class="flex items-center gap-3 text-slate-300">
                             <span class="material-symbols-outlined text-sky-400/70" data-icon="location_on">location_on</span>
-                            <span class="text-sm">{{ $user->location ?? 'Hà Nội, Việt Nam' }}</span>
+                            <span class="text-sm">{{ $user->noi_o ?? 'Hà Nội, Việt Nam' }}</span>
                         </div>
-                        <div class="flex items-center gap-3 text-slate-300">
-                            <span class="material-symbols-outlined text-sky-400/70" data-icon="link">link</span>
-                            <a class="text-sm text-sky-300 hover:underline" href="#">{{ $user->website ?? 'nhomj.design/profile' }}</a>
-                        </div>
+                        @if(!empty($user->ngay_sinh) && $user->quyen_rieng_tu !== 'rieng_tu')
+                            <div class="flex items-center gap-3 text-slate-300">
+                                <span class="material-symbols-outlined text-sky-400/70" data-icon="cake">cake</span>
+                                <span class="text-sm">{{ \Illuminate\Support\Carbon::parse($user->ngay_sinh)->format('d/m/Y') }}</span>
+                            </div>
+                        @endif
                         <div class="flex items-center gap-3 text-slate-300">
                             <span class="material-symbols-outlined text-sky-400/70" data-icon="work">work</span>
                             <span class="text-sm">UI/UX Designer tại NHOMJ Lab</span>
@@ -122,27 +151,27 @@
             </div>
 
             <div class="md:col-span-2 space-y-6">
-                {{-- Nếu bạn đã tạo component Blade <x-post-card> và có dữ liệu $posts --}}
                 @if(isset($posts) && $posts->count() > 0)
                     @foreach($posts as $post)
                         <x-post-card :post="$post" />
                     @endforeach
                 @else
-                    {{-- Giao diện bài viết mẫu tĩnh (Sẽ hiển thị nếu chưa có bài nào) --}}
                     <article class="glass-panel rounded-2xl p-6 hover:border-sky-400/30 transition-all group">
                         <div class="flex gap-4">
-                            <img class="w-12 h-12 rounded-full border border-sky-400/20 shrink-0" 
-                                 src="{{ !empty($user->avatar) ? asset('storage/' . $user->avatar) : 'https://lh3.googleusercontent.com/aida-public/AB6AXuD9qskgk4XFpsZBYKZc4rdDypD28T8KdOwfnG808klKqwpLfAh0i6HBd2d0MOLnmwV9V9-EqiVsS4taYDJ5eJtvloI7UlY_mfzHTAZcq8EUkxnI6ZZ2bFHhDU3BP6hg0HqdlUPwiFNOoVtsWepab4DN8U8fPQLkZRVNixZmxxi2OH6ozJEYvCuUQoTNNoYrIy_NHBBU4ki1udM8dLTr9zqhSuJEWvjDJxLDsF5F7w17Ftjw50F3a_chMuJpHT4GiqavrorCqAm3bmk' }}"/>
+                            <img
+                                class="w-12 h-12 rounded-full border border-sky-400/20 shrink-0"
+                                src="{{ !empty($user->anh_dai_dien) ? asset('storage/' . $user->anh_dai_dien) : 'https://lh3.googleusercontent.com/aida-public/AB6AXuD9qskgk4XFpsZBYKZc4rdDypD28T8KdOwfnG808klKqwpLfAh0i6HBd2d0MOLnmwV9V9-EqiVsS4taYDJ5eJtvloI7UlY_mfzHTAZcq8EUkxnI6ZZ2bFHhDU3BP6hg0HqdlUPwiFNOoVtsWepab4DN8U8fPQLkZRVNixZmxxi2OH6ozJEYvCuUQoTNNoYrIy_NHBBU4ki1udM8dLTr9zqhSuJEWvjDJxLDsF5F7w17Ftjw50F3a_chMuJpHT4GiqavrorCqAm3bmk' }}"
+                            />
                             <div class="flex-1 space-y-3">
                                 <div class="flex justify-between items-start">
                                     <div>
                                         <span class="font-bold text-on-surface hover:text-sky-300 cursor-pointer">{{ $user->name }}</span>
-                                        <span class="text-slate-500 text-sm ml-2">{{ '@' . ($user->username ?? 'nguoidung') }} · 2h</span>
+                                        <span class="text-slate-500 text-sm ml-2">{{ '@' . ($user->ten_dang_nhap ?? 'nguoidung') }} · 2h</span>
                                     </div>
                                     <button class="text-slate-500 hover:text-sky-300"><span class="material-symbols-outlined" data-icon="more_horiz">more_horiz</span></button>
                                 </div>
                                 <p class="text-on-surface-variant leading-relaxed">
-                                    Vừa hoàn thiện xong Concept UI cho dự án NHOMJ mới. Phong cách Glacier thực sự mang lại cảm giác cao cấp và hiện đại hơn cho trải nghiệm người dùng. Ý kiến các bạn thế nào? ❄️💎
+                                    Vừa hoàn thiện xong Concept UI cho dự án NHOMJ mới. Phong cách Glacier thực sự mang lại cảm giác cao cấp và hiện đại hơn cho trải nghiệm người dùng. Ý kiến các bạn thế nào?
                                 </p>
                                 <div class="rounded-2xl overflow-hidden border border-sky-400/10 mt-3 aspect-video bg-slate-900">
                                     <img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBaz-tnlcYkz-gWZiH-UT6jdm67JAHuTNPKhw8p3QV41fkx9ngQxGLeDRwjtYeLSmVgVIRcGxuGhNOcHAmYooWM6-ZEA3QBYwwbo47EVBQW1Mq7VEz5rvMJWPhnKaqWY-6VeWO9IOSnF-kNW9MjnqrRQN--QlVidWtaO1fkXCQTWtMsj6zpZCEXOpdssqh8hGjDXVcY0b9V6T2MwwXrdokoVVoZKdbicXU5sxf5bzaJHAhxK9n_Oh9EUwk4RwCKP8h0fze1nyziCNE"/>
@@ -161,4 +190,36 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const followBtn = document.getElementById('follow-btn');
+    const followersCount = document.getElementById('followers-count');
+
+    if (followBtn) {
+        followBtn.addEventListener('click', async function() {
+            const userId = this.getAttribute('data-user-id');
+
+            try {
+                const response = await fetch(`/user/${userId}/toggle-follow`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    this.innerText = data.is_following ? 'Bỏ theo dõi' : 'Theo dõi';
+                    followersCount.innerText = new Intl.NumberFormat().format(data.followers_count);
+                }
+            } catch (error) {
+                console.error('Lỗi khi thực hiện theo dõi:', error);
+            }
+        });
+    }
+});
+</script>
 @endsection
