@@ -46,10 +46,29 @@ class RegisterController extends Controller
 protected function validator(array $data)
 {
     return Validator::make($data, [
-        'ten_dang_nhap' => ['required', 'string', 'max:50', 'unique:nguoi_dung,ten_dang_nhap'],
+       'ten_dang_nhap' => [
+    'required',
+    'min:4',
+    'max:30',
+    'regex:/^[a-z0-9._]+$/',
+    'unique:nguoi_dung,ten_dang_nhap'
+],
         'email'         => ['required', 'string', 'email', 'max:255', 'unique:nguoi_dung,email'],
         'so_dien_thoai' => ['required', 'string', 'max:20', 'unique:nguoi_dung,so_dien_thoai'],
         'mat_khau'      => ['required', 'string', 'min:8'],
+    ], [
+        'ten_dang_nhap.required' => 'Vui lòng nhập tên đăng nhập',
+        'ten_dang_nhap.unique'   => 'Tên đăng nhập đã tồn tại',
+
+        'email.required' => 'Vui lòng nhập email',
+        'email.email'    => 'Email không hợp lệ',
+        'email.unique'   => 'Email đã tồn tại',
+
+        'so_dien_thoai.required' => 'Vui lòng nhập số điện thoại',
+        'so_dien_thoai.unique'   => 'Số điện thoại đã tồn tại',
+
+        'mat_khau.required' => 'Vui lòng nhập mật khẩu',
+        'mat_khau.min'      => 'Mật khẩu phải có ít nhất 8 ký tự',
     ]);
 }
 

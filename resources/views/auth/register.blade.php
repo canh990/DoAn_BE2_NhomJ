@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.auth')
 
 @section('title', 'Đăng ký - NHOMJ')
 
@@ -54,10 +54,10 @@
                 @csrf
                 
                 <div class="space-y-1.5">
-                    <label class="text-xs font-semibold text-on-secondary-container tracking-wider uppercase ml-1">Họ tên</label>
+                    <label class="text-xs font-semibold text-on-secondary-container tracking-wider uppercase ml-1">tên đăng nhập</label>
                     <div class="relative">
                         <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-xl">person</span>
-                        <input name="ten_dang_nhap" type="text" value="{{ old('ten_dang_nhap') }}" class="glass-input w-full pl-11 pr-4 py-3 rounded-xl text-on-surface placeholder:text-outline" placeholder="Nguyễn Văn A" required>
+                        <input name="ten_dang_nhap" type="text" value="{{ old('ten_dang_nhap') }}" class="glass-input w-full pl-11 pr-4 py-3 rounded-xl text-on-surface placeholder:text-outline" placeholder="" required>
                     </div>
                     @error('ten_dang_nhap') <span class="text-error text-xs">{{ $message }}</span> @enderror
                 </div>
@@ -66,7 +66,7 @@
                     <label class="text-xs font-semibold text-on-secondary-container tracking-wider uppercase ml-1">Email</label>
                     <div class="relative">
                         <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-xl">mail</span>
-                        <input name="email" type="email" value="{{ old('email') }}" class="glass-input w-full pl-11 pr-4 py-3 rounded-xl text-on-surface placeholder:text-outline" placeholder="example@email.com" required>
+                        <input name="email" type="email" value="{{ old('email') }}" class="glass-input w-full pl-11 pr-4 py-3 rounded-xl text-on-surface placeholder:text-outline" placeholder="" required>
                     </div>
                     @error('email') <span class="text-error text-xs">{{ $message }}</span> @enderror
                 </div>
@@ -75,7 +75,7 @@
                     <label class="text-xs font-semibold text-on-secondary-container tracking-wider uppercase ml-1">Số điện thoại</label>
                     <div class="relative">
                         <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-xl">call</span>
-                        <input name="so_dien_thoai" type="tel" value="{{ old('so_dien_thoai') }}" class="glass-input w-full pl-11 pr-4 py-3 rounded-xl text-on-surface placeholder:text-outline" placeholder="090 123 4567" required>
+                        <input name="so_dien_thoai" type="tel" value="{{ old('so_dien_thoai') }}" class="glass-input w-full pl-11 pr-4 py-3 rounded-xl text-on-surface placeholder:text-outline" placeholder="" required>
                     </div>
                     @error('so_dien_thoai') <span class="text-error text-xs">{{ $message }}</span> @enderror
                 </div>
@@ -84,7 +84,7 @@
                     <label class="text-xs font-semibold text-on-secondary-container tracking-wider uppercase ml-1">Mật khẩu</label>
                     <div class="relative">
                         <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-xl">lock</span>
-                        <input name="mat_khau" type="password" class="glass-input w-full pl-11 pr-4 py-3 rounded-xl text-on-surface placeholder:text-outline" placeholder="••••••••" required>
+                        <input name="mat_khau" type="password" class="glass-input w-full pl-11 pr-4 py-3 rounded-xl text-on-surface placeholder:text-outline" placeholder="" required>
                     </div>
                     @error('mat_khau') <span class="text-error text-xs">{{ $message }}</span> @enderror
                 </div>

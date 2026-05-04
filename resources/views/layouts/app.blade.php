@@ -1,15 +1,15 @@
 <!DOCTYPE html>
-<html class="dark" lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html class="dark" lang="vi">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
     <title>@yield('title', 'NHOMJ')</title>
     
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
     
-    <script>
+    <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
             theme: {
@@ -74,29 +74,111 @@
                         "body": ["Inter"],
                         "label": ["Inter"]
                     }
-                },
-            },
+                }
+            }
         }
     </script>
     <style>
-        .glass-panel { background: rgba(15, 21, 36, 0.6); backdrop-filter: blur(16px); border: 1px solid rgba(125, 211, 252, 0.1); }
-        .glass-input { background: rgba(26, 36, 56, 0.4); border: 1px solid rgba(74, 96, 112, 0.3); transition: all 0.3s ease; }
-        .glass-input:focus { background: rgba(26, 36, 56, 0.6); border-color: #7dd3fc; box-shadow: 0 0 15px rgba(125, 211, 252, 0.1); outline: none; }
-        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        body {
+            background-color: #0a0e1a;
+            color: #e0e8f0;
+            font-family: 'Inter', sans-serif;
+        }
+        .glass-panel {
+            background: rgba(15, 21, 36, 0.6);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(125, 211, 252, 0.1);
+        }
+        .glass-panel-elevated {
+            background: rgba(15, 21, 36, 0.75);
+            backdrop-filter: blur(24px);
+            border: 1px solid rgba(125, 211, 252, 0.15);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
     </style>
 </head>
-<body class="bg-background font-body text-on-surface min-h-screen selection:bg-primary/30 selection:text-primary">
-    <main class="relative min-h-screen flex items-center justify-center p-6 overflow-hidden">
-        <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[120px]"></div>
-        <div class="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-tertiary/10 rounded-full blur-[120px]"></div>
-        
-        @yield('content')
+<body class="antialiased selection:bg-primary/30 selection:text-primary">
 
-        <div class="fixed bottom-6 w-full text-center px-6">
-            <p class="text-[10px] text-outline uppercase tracking-widest opacity-50">
-                Bằng cách đăng ký, bạn đồng ý với Điều khoản & Chính sách bảo mật của NHOMJ
-            </p>
+    <header class="fixed top-0 w-full z-50 bg-[#0a0e1a]/60 backdrop-blur-xl border-b border-sky-400/10 shadow-[0_0_30px_rgba(125,211,252,0.05)] font-inter tracking-tight flex justify-between items-center px-6 h-16">
+        <div class="flex items-center gap-8">
+            <span class="text-2xl font-bold bg-gradient-to-r from-sky-400 to-purple-400 bg-clip-text text-transparent">NHOMJ</span>
+            <div class="hidden md:flex items-center bg-white/5 border border-sky-400/10 rounded-full px-4 py-1.5 focus-within:border-sky-400/30 transition-all">
+                <span class="material-symbols-outlined text-slate-400 text-sm mr-2" data-icon="search">search</span>
+                <input class="bg-transparent border-none focus:ring-0 text-sm text-on-surface placeholder:text-slate-500 w-64" placeholder="Tìm kiếm trên NHOMJ" type="text"/>
+            </div>
         </div>
+        <div class="flex items-center gap-2">
+            <button class="p-2 text-slate-400 hover:bg-sky-400/10 rounded-xl transition-all active:scale-95 duration-200">
+                <span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+            </button>
+            <button class="p-2 text-slate-400 hover:bg-sky-400/10 rounded-xl transition-all active:scale-95 duration-200">
+                <span class="material-symbols-outlined" data-icon="mail">mail</span>
+            </button>
+            <button class="p-2 text-sky-300 hover:bg-sky-400/10 rounded-xl transition-all active:scale-95 duration-200">
+                <span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+            </button>
+        </div>
+    </header>
+
+    <aside class="fixed left-0 top-16 h-[calc(100vh-64px)] w-64 p-4 border-r border-sky-400/10 flex flex-col gap-2 z-40 hidden md:flex">
+        <div class="mb-4 px-4 py-2">
+            <div class="flex items-center gap-3 mb-1">
+                <img class="w-10 h-10 rounded-full border border-sky-400/30 object-cover" data-alt="Close-up portrait of a tech-savvy user with neon blue backlighting and sharp modern aesthetic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD0grD7Xc7CXYMtRNKl-h4rNvN7_rXTKfWOp13GCY73KKsWsqd7WAxs1HL6FXVEL9z1KbnoeWPhrdAx_FRuWVFqh3xiDKgqglwY08PIe6eJlhrghHZYtLV_zupnmc6KyFRyCyLgA8jvrqFvCuFJNFrnsc1Ryh75jV7mMMuUAH4ANyw87qdjuHJwJs8xt2Iw1dbM1pIoQ0lID2HAsMCAeYwmA7GfeYoIIfygu7B7mW_qsZVMj_r-QBscLDXBdd4URiZzmrNhJKzCjFQ"/>
+                <div>
+                    <p class="text-sm font-bold text-sky-300 font-inter">Người dùng NHOMJ</p>
+                    <p class="text-xs text-slate-400">@nguoidung</p>
+                </div>
+            </div>
+        </div>
+        <nav class="flex flex-col gap-1 flex-1">
+            <a class="flex items-center gap-3 text-slate-400 px-4 py-3 hover:bg-white/5 rounded-xl hover:text-sky-200 transition-colors cursor-pointer transition-transform active:translate-x-1 font-inter text-sm font-medium" href="#">
+                <span class="material-symbols-outlined" data-icon="home">home</span>
+                Bảng tin
+            </a>
+            <a class="flex items-center gap-3 text-slate-400 px-4 py-3 hover:bg-white/5 rounded-xl hover:text-sky-200 transition-colors cursor-pointer transition-transform active:translate-x-1 font-inter text-sm font-medium" href="#">
+                <span class="material-symbols-outlined" data-icon="explore">explore</span>
+                Khám phá
+            </a>
+            <a class="flex items-center gap-3 text-slate-400 px-4 py-3 hover:bg-white/5 rounded-xl hover:text-sky-200 transition-colors cursor-pointer transition-transform active:translate-x-1 font-inter text-sm font-medium" href="#">
+                <span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+                Thông báo
+            </a>
+            <a class="flex items-center gap-3 text-slate-400 px-4 py-3 hover:bg-white/5 rounded-xl hover:text-sky-200 transition-colors cursor-pointer transition-transform active:translate-x-1 font-inter text-sm font-medium" href="#">
+                <span class="material-symbols-outlined" data-icon="chat">chat</span>
+                Tin nhắn
+            </a>
+            <a class="flex items-center gap-3 bg-sky-400/20 text-sky-300 rounded-xl px-4 py-3 border border-sky-400/20 cursor-pointer transition-transform active:translate-x-1 font-inter text-sm font-medium" href="#">
+                <span class="material-symbols-outlined" data-icon="person">person</span>
+                Hồ sơ
+            </a>
+        </nav>
+        <button class="mt-4 w-full py-3 bg-sky-400/20 border border-sky-400/30 text-sky-300 font-bold rounded-xl hover:bg-sky-400/30 transition-all active:scale-95">
+            Đăng bài mới
+        </button>
+    </aside>
+
+    <main class="md:ml-64 pt-16 min-h-screen">
+        @yield('content')
     </main>
+
+    <nav class="md:hidden fixed bottom-0 w-full glass-panel-elevated flex justify-around items-center h-16 z-50 border-t border-sky-400/10">
+        <button class="p-2 text-slate-400">
+            <span class="material-symbols-outlined" data-icon="home">home</span>
+        </button>
+        <button class="p-2 text-slate-400">
+            <span class="material-symbols-outlined" data-icon="explore">explore</span>
+        </button>
+        <button class="p-2 text-sky-300 bg-sky-400/20 rounded-xl">
+            <span class="material-symbols-outlined" data-icon="person">person</span>
+        </button>
+        <button class="p-2 text-slate-400">
+            <span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+        </button>
+        <button class="p-2 text-slate-400">
+            <span class="material-symbols-outlined" data-icon="mail">mail</span>
+        </button>
+    </nav>
 </body>
 </html>
