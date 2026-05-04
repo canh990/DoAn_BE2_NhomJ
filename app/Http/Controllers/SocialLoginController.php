@@ -37,7 +37,7 @@ class SocialLoginController extends Controller
             ]);
 
             return redirect()->route('login')
-                ->with('error', 'Loi dang nhap Google: ' . $e->getMessage());
+                ->with('error', __('auth.social_login_error', ['provider' => 'Google', 'message' => $e->getMessage()]));
         }
     }
 
@@ -71,7 +71,7 @@ class SocialLoginController extends Controller
             ]);
 
             return redirect()->route('login')
-                ->with('error', 'Loi dang nhap Facebook: ' . $e->getMessage());
+                ->with('error', __('auth.social_login_error', ['provider' => 'Facebook', 'message' => $e->getMessage()]));
         }
     }
 
@@ -98,7 +98,7 @@ class SocialLoginController extends Controller
             return User::create([
                 'ten_dang_nhap' => $tenDangNhap,
                 'email' => $email,
-                'mat_khau_hash' => Str::random(40),
+                'mat_khau_hash' => \Illuminate\Support\Facades\Hash::make(Str::random(40)), // Ensure password is always hashed
                 'da_xac_thuc' => true,
                 'nha_cung_cap_oauth' => $provider,
                 'id_oauth' => $oauthId,

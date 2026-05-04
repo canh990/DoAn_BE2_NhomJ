@@ -23,11 +23,12 @@ Route::post('/logout', [LoginController::class, 'logout'])
     ->name('logout')
     ->middleware('auth');
 
-    // Route để TRẢ VỀ GIAO DIỆN (Lỗi của bạn đang dừng ở đây)
-Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
+Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register')->middleware('guest');
+Route::post('/register', [RegisterController::class, 'register'])->name('register.post')->middleware('guest');
 
-// Route để XỬ LÝ DỮ LIỆU khi bấm nút (Đây là dòng bạn đang thiếu)
-Route::post('/register', [RegisterController::class, 'register']);
+Route::get('/forgot-password', function () {
+    return view('auth.forgot-password');
+})->name('password.request');
 // -----------------------------------------------
 // OAuth (Google / Facebook) — cần cài laravel/socialite
 // composer require laravel/socialite
@@ -43,13 +44,3 @@ Route::post('/register', [RegisterController::class, 'register']);
 Route::get('/home', function () {
     return view('auth.home');
 })->name('home')->middleware('auth');
-
-// Quên mật khẩu (placeholder)
-Route::get('/forgot-password', function () {
-    return view('auth.forgot-password');
-})->name('password.request')->middleware('guest');
-
-// Đăng ký (placeholder)
-Route::get('/register', function () {
-    return view('auth.register');
-})->name('register')->middleware('guest');
