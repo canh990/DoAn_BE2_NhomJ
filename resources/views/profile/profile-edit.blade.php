@@ -36,6 +36,7 @@
                 
                 <label for="anh_bia" class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
                     <div class="flex items-center gap-2 rounded-xl bg-black/50 backdrop-blur-md px-4 py-2 text-white border border-white/20">
+                        <span class="material-symbols-outlined">cover_guides</span>
                         <span class="text-sm font-medium">Thay đổi ảnh bìa</span>
                     </div>
                 </label>

@@ -47,7 +47,7 @@ class ProfileController extends Controller
                 Rule::unique('nguoi_dung', 'ten_dang_nhap')->ignore($user->id),
             ],
             'tieu_su' => ['nullable', 'string', 'max:1000'],
-            'ngay_sinh' => ['nullable', 'date', 'before_or_equal:today'],
+            'ngay_sinh' => ['nullable', 'date'],
             'noi_o' => ['nullable', 'string', 'max:255'],
             'quyen_rieng_tu' => ['required', Rule::in(['cong_khai', 'ban_be', 'rieng_tu'])],
             'anh_dai_dien' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
