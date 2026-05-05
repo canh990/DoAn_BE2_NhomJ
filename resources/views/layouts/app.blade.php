@@ -132,8 +132,8 @@
             <img 
                 class="w-10 h-10 rounded-full border border-sky-400/30 object-cover" 
                 alt="{{ $user->name }}" 
-                src="{{ $user->anh_dai_dien ? asset('storage/' . $user->anh_dai_dien) : 'https://via.placeholder.com/100' }}"
-            />
+<img src="{{ $user->anh_dai_dien ? asset('storage/' . $user->anh_dai_dien) : asset('storage/avatars/avtmacdinh.png') }}" 
+     alt="Avatar">            
             <div>
                 <p class="text-sm font-bold text-sky-300 font-inter">
                     {{ $user->name }}
