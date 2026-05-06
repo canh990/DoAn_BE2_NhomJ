@@ -78,7 +78,7 @@
                         'phan_no' => ['icon' => 'mood_bad', 'label' => 'Phẫn nộ', 'color' => 'text-orange-400'],
                         'wow' => ['icon' => 'emoji_objects', 'label' => 'Wow', 'color' => 'text-emerald-400'],
                     ];
-                    $userReaction = optional($post->reactions->first())->loai_cam_xuc;
+                    $userReaction = optional($post->reactions ?? collect())->first()->loai_cam_xuc ?? null;
                     $selected = $userReaction ? ($reactionButtons[$userReaction] ?? null) : null;
                     $selectedIcon = $selected['icon'] ?? 'thumb_up';
                     $selectedLabel = $selected['label'] ?? 'Thích';

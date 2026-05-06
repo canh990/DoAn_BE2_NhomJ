@@ -122,6 +122,12 @@
             <button class="p-2 text-sky-300 hover:bg-sky-400/10 rounded-xl transition-all active:scale-95 duration-200">
                 <span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
             </button>
+            <form method="POST" action="{{ route('logout') }}" class="inline">
+                @csrf
+                <button type="submit" class="p-2 text-slate-400 hover:text-red-400 hover:bg-red-400/10 rounded-xl transition-all active:scale-95 duration-200" title="Đăng xuất">
+                    <span class="material-symbols-outlined" data-icon="logout">logout</span>
+                </button>
+            </form>
         </div>
     </header>
 

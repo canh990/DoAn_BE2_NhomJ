@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\BaiViet;
 
 #[Fillable(['name', 'email', 'password'])]
 #[Hidden(['password', 'remember_token'])]
@@ -70,5 +71,10 @@ class User extends Authenticatable
     public function following()
     {
         return $this->belongsToMany(User::class, 'theo_doi', 'nguoi_theo_doi_id', 'nguoi_duoc_theo_doi_id');
+    }
+
+    public function posts()
+    {
+        return $this->hasMany(BaiViet::class, 'nguoi_dung_id');
     }
 }
