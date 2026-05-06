@@ -14,16 +14,21 @@
         <div class="flex gap-4">
             <img class="w-12 h-12 rounded-full border border-sky-400/20 shrink-0" alt="Avatar" src="{{ Auth::user()->anh_dai_dien ? asset('storage/' . Auth::user()->anh_dai_dien) : asset('storage/avatars/avtmacdinh.png') }}">
             <div class="w-full">
-                <form action="{{ route('posts.store') }}" method="POST">
+                <form action="{{ route('posts.store') }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     <textarea id="post-content" name="noi_dung" maxlength="280" class="w-full bg-transparent border border-white/10 focus:border-sky-400 focus:ring-0 text-on-surface placeholder-slate-500 resize-none text-lg leading-relaxed rounded-3xl p-4 min-h-[140px]" placeholder="Bạn đang nghĩ gì?" rows="4">{{ old('noi_dung') }}</textarea>
                     @error('noi_dung')
                         <p class="mt-2 text-sm text-red-400">{{ $message }}</p>
                     @enderror
+                    <input type="file" id="post-image" name="anh" accept="image/*" class="hidden">
+                    <div id="image-preview" class="mt-3 hidden">
+                        <img id="preview-img" class="max-w-full h-auto rounded-lg border border-white/10">
+                        <button type="button" id="remove-image" class="mt-2 text-red-400 hover:text-red-300 text-sm">Xóa ảnh</button>
+                    </div>
                     <div class="h-px bg-white/5 my-3"></div>
                     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <div class="flex items-center gap-1 flex-wrap">
-                            <button type="button" class="p-2 text-sky-300 hover:bg-sky-400/10 rounded-lg transition-colors">
+                            <button type="button" id="image-btn" class="p-2 text-sky-300 hover:bg-sky-400/10 rounded-lg transition-colors">
                                 <span class="material-symbols-outlined" data-icon="image">image</span>
                             </button>
                             <button type="button" class="p-2 text-tertiary hover:bg-tertiary/10 rounded-lg transition-colors">
@@ -67,6 +72,15 @@
             </div>
             <div class="px-4 pb-3">
                 <p class="text-sm leading-relaxed text-on-surface-variant whitespace-pre-line">{{ $post->noi_dung }}</p>
+                @if($post->media->count() > 0)
+                    <div class="mt-3">
+                        @foreach($post->media as $media)
+                            @if($media->loai === 'hinh_anh')
+                                <img src="{{ asset('storage/' . $media->duong_dan) }}" alt="Post image" class="w-full h-auto rounded-lg border border-white/10">
+                            @endif
+                        @endforeach
+                    </div>
+                @endif
             </div>
             <div class="p-4 border-t border-white/5" data-reaction-area>
                 @php
@@ -135,6 +149,11 @@
         const textarea = document.getElementById('post-content');
         const counter = document.getElementById('post-char-count');
         const submitButton = document.getElementById('post-submit-button');
+        const imageBtn = document.getElementById('image-btn');
+        const imageInput = document.getElementById('post-image');
+        const imagePreview = document.getElementById('image-preview');
+        const previewImg = document.getElementById('preview-img');
+        const removeImageBtn = document.getElementById('remove-image');
 
         if (!textarea || !counter || !submitButton) {
             return;
@@ -145,10 +164,41 @@
         const updateCount = function () {
             const length = textarea.value.length;
             counter.textContent = `${length}/${maxLength}`;
-            submitButton.disabled = textarea.value.trim().length === 0;
+            updateSubmitButton();
+        };
+
+        const updateSubmitButton = function () {
+            const hasText = textarea.value.trim().length > 0;
+            const hasImage = imageInput.files && imageInput.files.length > 0;
+            submitButton.disabled = !hasText && !hasImage;
         };
 
         textarea.addEventListener('input', updateCount);
+
+        // Image upload handling
+        imageBtn.addEventListener('click', function () {
+            imageInput.click();
+        });
+
+        imageInput.addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    previewImg.src = e.target.result;
+                    imagePreview.classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+            updateSubmitButton();
+        });
+
+        removeImageBtn.addEventListener('click', function () {
+            imageInput.value = '';
+            imagePreview.classList.add('hidden');
+            updateSubmitButton();
+        });
+
         updateCount();
     });
 </script>

@@ -25,8 +25,13 @@ class BaiViet extends Model
         return $this->belongsTo(User::class, 'nguoi_dung_id');
     }
 
+
     public function reactions(): HasMany
     {
         return $this->hasMany(CamXuc::class, 'bai_viet_id');
+
+    public function media(): HasMany
+    {
+        return $this->hasMany(MediaBaiViet::class, 'bai_viet_id');
     }
 }
