@@ -103,7 +103,7 @@ class ForgotPasswordController extends Controller
                 'min:8',
                 'regex:/[a-zA-Z]/',      // Ít nhất một chữ cái
                 'regex:/[0-9]/',        // Ít nhất một số
-                'regex:/[@$!%*#?&]/',   // Ít nhất một ký tự đặc biệt
+                'regex:/[@$!%*#?&.]/',   // Ít nhất một ký tự đặc biệt
             ],
         ], [
             'password.confirmed' => 'Mật khẩu xác nhận không khớp.'
