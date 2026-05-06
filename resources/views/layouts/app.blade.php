@@ -195,5 +195,6 @@
         </button>
     </nav>
     <script src="/js/theme-toggle.js"></script>
+    <script src="/js/language-toggle.js"></script>
 </body>
 </html>
