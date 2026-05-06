@@ -146,23 +146,23 @@
     </div>
 @endauth
         <nav class="flex flex-col gap-1 flex-1">
-            <a class="flex items-center gap-3 text-slate-400 px-4 py-3 hover:bg-white/5 rounded-xl hover:text-sky-200 transition-colors cursor-pointer transition-transform active:translate-x-1 font-inter text-sm font-medium" href="#">
+            <a class="flex items-center gap-3 {{ request()->routeIs('home') ? 'bg-sky-400/20 text-sky-300 border border-sky-400/20' : 'text-slate-400 hover:bg-white/5 hover:text-sky-200' }} px-4 py-3 rounded-xl transition-colors cursor-pointer transition-transform active:translate-x-1 font-inter text-sm font-medium" href="{{ route('home') }}">
                 <span class="material-symbols-outlined" data-icon="home">home</span>
                 Bảng tin
             </a>
-            <a class="flex items-center gap-3 text-slate-400 px-4 py-3 hover:bg-white/5 rounded-xl hover:text-sky-200 transition-colors cursor-pointer transition-transform active:translate-x-1 font-inter text-sm font-medium" href="#">
+            <a class="flex items-center gap-3 {{ request()->routeIs('explore') ? 'bg-sky-400/20 text-sky-300 border border-sky-400/20' : 'text-slate-400 hover:bg-white/5 hover:text-sky-200' }} px-4 py-3 rounded-xl transition-colors cursor-pointer transition-transform active:translate-x-1 font-inter text-sm font-medium" href="{{ route('explore') }}">
                 <span class="material-symbols-outlined" data-icon="explore">explore</span>
                 Khám phá
             </a>
-            <a class="flex items-center gap-3 text-slate-400 px-4 py-3 hover:bg-white/5 rounded-xl hover:text-sky-200 transition-colors cursor-pointer transition-transform active:translate-x-1 font-inter text-sm font-medium" href="#">
+            <a class="flex items-center gap-3 {{ request()->routeIs('notifications') ? 'bg-sky-400/20 text-sky-300 border border-sky-400/20' : 'text-slate-400 hover:bg-white/5 hover:text-sky-200' }} px-4 py-3 rounded-xl transition-colors cursor-pointer transition-transform active:translate-x-1 font-inter text-sm font-medium" href="{{ route('notifications') }}">
                 <span class="material-symbols-outlined" data-icon="notifications">notifications</span>
                 Thông báo
             </a>
-            <a class="flex items-center gap-3 text-slate-400 px-4 py-3 hover:bg-white/5 rounded-xl hover:text-sky-200 transition-colors cursor-pointer transition-transform active:translate-x-1 font-inter text-sm font-medium" href="#">
+            <a class="flex items-center gap-3 {{ request()->routeIs('messages') ? 'bg-sky-400/20 text-sky-300 border border-sky-400/20' : 'text-slate-400 hover:bg-white/5 hover:text-sky-200' }} px-4 py-3 rounded-xl transition-colors cursor-pointer transition-transform active:translate-x-1 font-inter text-sm font-medium" href="{{ route('messages') }}">
                 <span class="material-symbols-outlined" data-icon="chat">chat</span>
                 Tin nhắn
             </a>
-            <a class="flex items-center gap-3 bg-sky-400/20 text-sky-300 rounded-xl px-4 py-3 border border-sky-400/20 cursor-pointer transition-transform active:translate-x-1 font-inter text-sm font-medium" href="#">
+            <a class="flex items-center gap-3 {{ request()->routeIs('profile') ? 'bg-sky-400/20 text-sky-300 border border-sky-400/20' : 'text-slate-400 hover:bg-white/5 hover:text-sky-200' }} px-4 py-3 rounded-xl transition-colors cursor-pointer transition-transform active:translate-x-1 font-inter text-sm font-medium" href="{{ route('profile') }}">
                 <span class="material-symbols-outlined" data-icon="person">person</span>
                 Hồ sơ
             </a>
