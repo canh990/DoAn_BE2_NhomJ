@@ -10,27 +10,26 @@ use Illuminate\Support\Facades\Storage;
 class PostController extends Controller
 {
 
-    public function index()
-    {
-        $posts = BaiViet::with('user')
-            ->withCount(['reactions', 'comments'])
-            ->with(['reactions' => function ($query) {
-                $query->where('nguoi_dung_id', auth()->id());
-            }, 'comments' => function ($query) {
-                $query->with('user')->latest('ngay_tao')->limit(3);
-            }])
-            ->where('loai', 'van_ban')
-            ->where('da_xoa', false)
-            ->latest()
-            ->take(20)
-            ->get();
+  public function index()
+{
+    $posts = BaiViet::with(['user', 'media']) // THÊM 'media' ở đây
+        ->withCount(['reactions', 'comments'])
+        ->with(['reactions' => function ($query) {
+            $query->where('nguoi_dung_id', auth()->id());
+        }, 'comments' => function ($query) {
+            $query->with('user')->latest('ngay_tao')->limit(3);
+        }])
+        // XÓA HOẶC SỬA dòng ->where('loai', 'van_ban')
+        ->whereIn('loai', ['van_ban', 'hinh_anh']) // Lấy cả bài chữ và bài ảnh
+        ->where('da_xoa', false)
+        ->latest()
+        ->take(20)
+        ->get();
 
-        return view('components.home', [
-            'posts' => $posts,
-        ]);
-    }
+    return view('components.home', compact('posts'));
+}
 
-laravel13/Tin/2-comment
+
     public function store(Request $request)
     {
         $validated = $request->validate([

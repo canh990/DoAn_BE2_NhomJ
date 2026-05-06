@@ -4,7 +4,7 @@
 use App\Http\Controllers\HomeController;
 
 use App\Http\Controllers\CommentController;
- laravel13/Tin/2-comment
+
 use App\Http\Controllers\PostController;
 use Illuminate\Support\Facades\Route;
 
