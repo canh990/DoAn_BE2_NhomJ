@@ -10,6 +10,10 @@ class PostController extends Controller
     public function index()
     {
         $posts = BaiViet::with('user')
+            ->withCount('reactions')
+            ->with(['reactions' => function ($query) {
+                $query->where('nguoi_dung_id', auth()->id());
+            }])
             ->where('loai', 'van_ban')
             ->where('da_xoa', false)
             ->latest()

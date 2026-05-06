@@ -4,20 +4,19 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-
 use App\Models\User;
-use App\Models\CamXuc;
+use App\Models\BaiViet;
 
-class BaiViet extends Model
+class CamXuc extends Model
 {
-    protected $table = 'bai_viet';
+    protected $table = 'cam_xuc';
+    public $timestamps = false;
 
     protected $fillable = [
         'nguoi_dung_id',
-        'loai',
-        'noi_dung',
-        'quyen_rieng_tu',
+        'bai_viet_id',
+        'binh_luan_id',
+        'loai_cam_xuc',
     ];
 
     public function user(): BelongsTo
@@ -25,8 +24,8 @@ class BaiViet extends Model
         return $this->belongsTo(User::class, 'nguoi_dung_id');
     }
 
-    public function reactions(): HasMany
+    public function baiViet(): BelongsTo
     {
-        return $this->hasMany(CamXuc::class, 'bai_viet_id');
+        return $this->belongsTo(BaiViet::class, 'bai_viet_id');
     }
 }
