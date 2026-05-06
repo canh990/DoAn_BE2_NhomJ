@@ -14,14 +14,14 @@ class ProfileController extends Controller
         $user = auth()->user()->loadCount(['followers', 'following']);
 
         $posts = $user->posts()
-            ->with('user')
+            ->with(['user', 'media'])
             ->withCount(['reactions', 'comments'])
             ->with(['reactions' => function ($query) {
                 $query->where('nguoi_dung_id', auth()->id());
             }, 'comments' => function ($query) {
                 $query->with('user')->latest('ngay_tao')->limit(3);
             }])
-            ->where('loai', 'van_ban')
+            ->whereIn('loai', ['van_ban', 'hinh_anh'])
             ->where('da_xoa', false)
             ->latest()
             ->take(20)
@@ -41,14 +41,14 @@ class ProfileController extends Controller
             ->firstOrFail();
 
         $posts = $user->posts()
-            ->with('user')
+            ->with(['user', 'media'])
             ->withCount(['reactions', 'comments'])
             ->with(['reactions' => function ($query) {
                 $query->where('nguoi_dung_id', auth()->id());
             }, 'comments' => function ($query) {
                 $query->with('user')->latest('ngay_tao')->limit(3);
             }])
-            ->where('loai', 'van_ban')
+            ->whereIn('loai', ['van_ban', 'hinh_anh'])
             ->where('da_xoa', false)
             ->latest()
             ->take(20)
