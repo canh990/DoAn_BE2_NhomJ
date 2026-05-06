@@ -1,0 +1,27 @@
+/* Light mode overrides when html has class 'light' */
+html.light {
+  color-scheme: light;
+}
+html.light body {
+  background: #ffffff !important;
+  color: #000000 !important;
+}
+html.light .glass-panel {
+  background: rgba(255,255,255,0.9) !important;
+  backdrop-filter: none !important;
+  border: 1px solid rgba(15,21,36,0.06) !important;
+}
+html.light .glass-panel-elevated {
+  background: rgba(255,255,255,0.95) !important;
+  backdrop-filter: none !important;
+  border: 1px solid rgba(15,21,36,0.08) !important;
+}
+html.light .bg-background { background-color: #ffffff !important; }
+html.light .text-on-background { color: #0b1220 !important; }
+html.light .text-on-surface { color: #0b1220 !important; }
+html.light .text-on-surface-variant { color: #475569 !important; }
+html.light .bg-slate-950\/60 { background-color: rgba(255,255,255,0.6) !important; }
+html.light .border-white\/10 { border-color: rgba(0,0,0,0.06) !important; }
+/* Make the switch track lighter */
+html.light .w-11.h-6 { background-color: #e5e7eb !important; }
+html.light .peer-checked:bg-primary { background-color: #0ea5a4 !important; }
