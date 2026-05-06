@@ -139,7 +139,7 @@
     <div class="flex items-center gap-3 mb-1">
         <div class="w-10 h-10 overflow-hidden rounded-full border border-sky-400/30">
             <img 
-                id="avatar-preview"
+             
                 class="w-full h-full object-cover" 
                 alt="{{ $user->name }}" 
                 src="{{ $user->anh_dai_dien ? asset('storage/' . $user->anh_dai_dien) : 'https://ui-avatars.com/api/?name='.urlencode($user->name).'&background=random' }}" 
