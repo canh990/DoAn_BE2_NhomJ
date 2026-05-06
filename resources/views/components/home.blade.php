@@ -5,9 +5,9 @@
 @section('content')
 <div class="space-y-6">
     @if(session('success'))
-        <div class="glass-panel rounded-2xl p-4 border border-emerald-400/20 bg-emerald-500/10 text-emerald-200">
-            {{ session('success') }}
-        </div>
+    <div class="glass-panel rounded-2xl p-4 border border-emerald-400/20 bg-emerald-500/10 text-emerald-200">
+        {{ session('success') }}
+    </div>
     @endif
 
     <section class="glass-panel rounded-2xl p-4">
@@ -18,7 +18,7 @@
                     @csrf
                     <textarea id="post-content" name="noi_dung" maxlength="280" class="w-full bg-transparent border border-white/10 focus:border-sky-400 focus:ring-0 text-on-surface placeholder-slate-500 resize-none text-lg leading-relaxed rounded-3xl p-4 min-h-[140px]" placeholder="Bạn đang nghĩ gì?" rows="4">{{ old('noi_dung') }}</textarea>
                     @error('noi_dung')
-                        <p class="mt-2 text-sm text-red-400">{{ $message }}</p>
+                    <p class="mt-2 text-sm text-red-400">{{ $message }}</p>
                     @enderror
                     <input type="file" id="post-image" name="anh" accept="image/*" class="hidden">
                     <div id="image-preview" class="mt-3 hidden">
@@ -60,28 +60,78 @@
     </section>
 
     @forelse($posts as $post)
-        <article class="glass-panel rounded-2xl overflow-hidden">
-            <div class="p-4 flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <img class="w-10 h-10 rounded-full border border-sky-400/20 object-cover" alt="{{ $post->user?->name ?? 'Người dùng' }}" src="{{ $post->user && $post->user->anh_dai_dien ? asset('storage/' . $post->user->anh_dai_dien) : asset('storage/avatars/avtmacdinh.png') }}">
-                    <div>
-                        <h3 class="font-bold text-sm text-on-surface">{{ $post->user?->name ?? 'Người dùng' }}</h3>
-                        <p class="text-[10px] text-slate-400">{{ $post->created_at ? $post->created_at->diffForHumans() : 'Không xác định' }}</p>
-                    </div>
+    <article class="glass-panel rounded-2xl overflow-hidden">
+        <div class="p-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <img class="w-10 h-10 rounded-full border border-sky-400/20 object-cover" alt="{{ $post->user?->name ?? 'Người dùng' }}" src="{{ $post->user && $post->user->anh_dai_dien ? asset('storage/' . $post->user->anh_dai_dien) : asset('storage/avatars/avtmacdinh.png') }}">
+                <div>
+                    <h3 class="font-bold text-sm text-on-surface">{{ $post->user?->name ?? 'Người dùng' }}</h3>
+                    <p class="text-[10px] text-slate-400">{{ $post->created_at ? $post->created_at->diffForHumans() : 'Không xác định' }}</p>
                 </div>
             </div>
-            <div class="px-4 pb-3">
-                <p class="text-sm leading-relaxed text-on-surface-variant whitespace-pre-line">{{ $post->noi_dung }}</p>
-                @if($post->media->count() > 0)
-                    <div class="mt-3">
-                        @foreach($post->media as $media)
-                            @if($media->loai === 'hinh_anh')
-                                <img src="{{ asset('storage/' . $media->duong_dan) }}" alt="Post image" class="w-full h-auto rounded-lg border border-white/10">
-                            @endif
+        </div>
+        <div class="px-4 pb-3">
+            <p class="text-sm leading-relaxed text-on-surface-variant whitespace-pre-line">{{ $post->noi_dung }}</p>
+            @if($post->media->count() > 0)
+            <div class="mt-3">
+                @foreach($post->media as $media)
+                @if($media->loai === 'hinh_anh')
+                <img src="{{ asset('storage/' . $media->duong_dan) }}"
+                    class="w-[600px] h-[500px] object-cover rounded-lg border border-white/10"> @endif
+                @endforeach
+            </div>
+            @endif
+        </div>
+        <div class="p-4 border-t border-white/5" data-reaction-area>
+            @php
+            $reactionButtons = [
+            'thich' => ['icon' => 'thumb_up', 'label' => 'Thích', 'color' => 'text-sky-400'],
+            'tim' => ['icon' => 'favorite', 'label' => 'Yêu thích', 'color' => 'text-rose-400'],
+            'haha' => ['icon' => 'mood', 'label' => 'Haha', 'color' => 'text-yellow-300'],
+            'buon' => ['icon' => 'sentiment_dissatisfied', 'label' => 'Buồn', 'color' => 'text-slate-400'],
+            'phan_no' => ['icon' => 'mood_bad', 'label' => 'Phẫn nộ', 'color' => 'text-orange-400'],
+            'wow' => ['icon' => 'emoji_objects', 'label' => 'Wow', 'color' => 'text-emerald-400'],
+            ];
+            $userReaction = optional($post->reactions ?? collect())->first()->loai_cam_xuc ?? null;
+            $selected = $userReaction ? ($reactionButtons[$userReaction] ?? null) : null;
+            $selectedIcon = $selected['icon'] ?? 'thumb_up';
+            $selectedLabel = $selected['label'] ?? 'Thích';
+            $selectedColor = $selected['color'] ?? 'text-sky-400';
+            @endphp
+
+            <div class="relative">
+                <div class="flex items-center gap-2">
+                    <button type="button" data-reaction-trigger class="flex items-center gap-2 rounded-full border px-3 py-2 text-sm font-medium transition-all duration-200 {{ $selected ? 'border-sky-400/20 bg-sky-400/10 text-sky-300' : 'border-white/10 bg-slate-950/80 text-slate-300 hover:border-sky-400/20 hover:bg-sky-400/10 hover:text-sky-300' }}">
+                        <span class="material-symbols-outlined {{ $selectedColor }}" data-reaction-trigger-icon>{{ $selectedIcon }}</span>
+                        <span data-reaction-trigger-label>{{ $selectedLabel }}</span>
+                    </button>
+
+                    <button class="flex items-center gap-2 text-slate-400 hover:text-sky-300 transition-colors py-1.5 px-4 rounded-full hover:bg-sky-400/10">
+                        <span class="material-symbols-outlined" data-icon="chat_bubble">chat_bubble</span>
+                        <span class="text-sm font-medium">Bình luận</span>
+                    </button>
+
+                    <button class="flex items-center gap-2 text-slate-400 hover:text-sky-300 transition-colors py-1.5 px-4 rounded-full hover:bg-sky-400/10">
+                        <span class="material-symbols-outlined" data-icon="share">share</span>
+                        <span class="text-sm font-medium">Chia sẻ</span>
+                    </button>
+
+                    <span class="ml-auto text-xs text-slate-400" data-reaction-count>{{ $post->reactions_count }} cảm xúc</span>
+                </div>
+
+                <div data-reaction-picker class="hidden absolute left-0 bottom-full z-10 mb-2 w-auto rounded-[32px] border border-white/10 bg-slate-950/95 p-3 shadow-[0_12px_35px_rgba(0,0,0,0.25)] backdrop-blur-sm transition-all duration-200">
+                    <div class="flex items-center gap-2">
+                        @foreach($reactionButtons as $type => $button)
+                        <button type="button" data-reaction-option data-reaction="{{ $type }}" data-reaction-label="{{ $button['label'] }}" data-reaction-color="{{ $button['color'] }}" data-reaction-icon="{{ $button['icon'] }}" class="flex flex-col items-center justify-center rounded-3xl bg-slate-900 px-3 py-2 text-center text-slate-300 transition duration-200 hover:-translate-y-1 hover:bg-sky-400/10 hover:text-sky-300">
+                            <span class="material-symbols-outlined {{ $button['color'] }} text-xl">{{ $button['icon'] }}</span>
+                            <span class="text-[10px]">{{ $button['label'] }}</span>
+                        </button>
                         @endforeach
                     </div>
+
                 @endif
             </div>
+
             <div class="p-4 border-t border-white/5" data-reaction-area>
                 @php
                     $reactionButtons = [
@@ -129,6 +179,22 @@
                             @endforeach
                         </div>
                     </div>
+=======
+            <div class="p-4 border-t border-white/5">
+                <div class="flex items-center justify-around">
+                    <button class="flex items-center gap-2 text-slate-400 hover:text-sky-300 transition-colors py-1.5 px-4 rounded-xl hover:bg-sky-400/10">
+                        <span class="material-symbols-outlined" data-icon="thumb_up">thumb_up</span>
+                        <span class="text-sm font-medium">Thích</span>
+                    </button>
+                    <button class="flex items-center gap-2 text-slate-400 hover:text-sky-300 transition-colors py-1.5 px-4 rounded-xl hover:bg-sky-400/10">
+                        <span class="material-symbols-outlined" data-icon="chat_bubble">chat_bubble</span>
+                        <span class="text-sm font-medium">Bình luận</span>
+                    </button>
+                    <button class="flex items-center gap-2 text-slate-400 hover:text-sky-300 transition-colors py-1.5 px-4 rounded-xl hover:bg-sky-400/10">
+                        <span class="material-symbols-outlined" data-icon="share">share</span>
+                        <span class="text-sm font-medium">Chia sẻ</span>
+                    </button>
+
                 </div>
 
                 <form class="reaction-submit-form hidden" method="POST" action="{{ route('posts.react', $post) }}">
@@ -136,16 +202,22 @@
                     <input type="hidden" name="loai_cam_xuc" value="">
                 </form>
             </div>
-        </article>
-    @empty
-        <div class="glass-panel rounded-2xl p-6 text-center text-slate-300">
-            <p class="text-sm">Chưa có bài viết nào. Hãy là người đầu tiên đăng trạng thái!</p>
+
+            <form class="reaction-submit-form hidden" method="POST" action="{{ route('posts.react', $post) }}">
+                @csrf
+                <input type="hidden" name="loai_cam_xuc" value="">
+            </form>
         </div>
+    </article>
+    @empty
+    <div class="glass-panel rounded-2xl p-6 text-center text-slate-300">
+        <p class="text-sm">Chưa có bài viết nào. Hãy là người đầu tiên đăng trạng thái!</p>
+    </div>
     @endforelse
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('DOMContentLoaded', function() {
         const textarea = document.getElementById('post-content');
         const counter = document.getElementById('post-char-count');
         const submitButton = document.getElementById('post-submit-button');
@@ -161,13 +233,13 @@
 
         const maxLength = Number(textarea.getAttribute('maxlength')) || 280;
 
-        const updateCount = function () {
+        const updateCount = function() {
             const length = textarea.value.length;
             counter.textContent = `${length}/${maxLength}`;
             updateSubmitButton();
         };
 
-        const updateSubmitButton = function () {
+        const updateSubmitButton = function() {
             const hasText = textarea.value.trim().length > 0;
             const hasImage = imageInput.files && imageInput.files.length > 0;
             submitButton.disabled = !hasText && !hasImage;
@@ -176,15 +248,15 @@
         textarea.addEventListener('input', updateCount);
 
         // Image upload handling
-        imageBtn.addEventListener('click', function () {
+        imageBtn.addEventListener('click', function() {
             imageInput.click();
         });
 
-        imageInput.addEventListener('change', function (e) {
+        imageInput.addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
                 const reader = new FileReader();
-                reader.onload = function (e) {
+                reader.onload = function(e) {
                     previewImg.src = e.target.result;
                     imagePreview.classList.remove('hidden');
                 };
@@ -193,7 +265,7 @@
             updateSubmitButton();
         });
 
-        removeImageBtn.addEventListener('click', function () {
+        removeImageBtn.addEventListener('click', function() {
             imageInput.value = '';
             imagePreview.classList.add('hidden');
             updateSubmitButton();

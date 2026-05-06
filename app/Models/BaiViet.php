@@ -26,9 +26,13 @@ class BaiViet extends Model
     }
 
 
+
     public function reactions(): HasMany
     {
         return $this->hasMany(CamXuc::class, 'bai_viet_id');
+
+    }
+
 
     public function media(): HasMany
     {

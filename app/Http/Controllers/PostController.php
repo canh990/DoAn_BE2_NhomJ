@@ -43,7 +43,7 @@ class PostController extends Controller
         }
 
         return redirect()
-            ->route('profile')
+            ->route('home')
             ->with('success', 'Bài viết đã được đăng thành công.');
     }
 }
