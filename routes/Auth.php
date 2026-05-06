@@ -42,5 +42,5 @@ Route::get('/forgot-password', function () {
 // Trang sau khi đăng nhập
 // -----------------------------------------------
 Route::get('/home', function () {
-    return view('auth.home');
+    return view('components.home');
 })->name('home')->middleware('auth');
