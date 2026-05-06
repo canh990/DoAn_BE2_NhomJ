@@ -9,6 +9,10 @@
         ? auth()->user()->following()->where('nguoi_duoc_theo_doi_id', $user->id)->exists()
         : false;
     $profileUrl = route('profile.public', ['username' => $user->ten_dang_nhap]);
+    $canViewFullProfile = $canViewFullProfile ?? true;
+    $canViewPosts = $canViewPosts ?? true;
+    $privacyLevel = $privacyLevel ?? ($user->quyen_rieng_tu ?? 'cong_khai');
+    $privacyMessage = $privacyMessage ?? null;
 @endphp
 
 <div class="max-w-4xl mx-auto pb-20">
@@ -28,7 +32,7 @@
         </div>
 
         <div class="relative z-10 -mt-16 flex flex-col items-start px-6 sm:-mt-24">
-            <div class="flex w-full items-end justify-between">
+            <div class="flex w-full items-end justify-between gap-4">
                 <div class="group relative">
                     <div class="glass-panel-elevated h-32 w-32 overflow-hidden rounded-full border-4 border-background sm:h-44 sm:w-44">
                         <img
@@ -44,7 +48,7 @@
                     @endif
                 </div>
 
-                <div class="mb-2 flex gap-3">
+                <div class="mb-2 flex flex-wrap justify-end gap-3">
                     @if($isOwnProfile)
                         <a href="{{ route('profile.edit') }}" class="inline-flex items-center rounded-xl border border-sky-400/20 glass-panel px-6 py-2 font-semibold text-on-surface transition-all hover:bg-white/10 active:scale-95">
                             Chỉnh sửa hồ sơ
@@ -76,14 +80,25 @@
                     @if($user->da_xac_thuc)
                         <span class="material-symbols-outlined text-xl text-sky-400" data-icon="verified" style="font-variation-settings: 'FILL' 1;">verified</span>
                     @endif
+                    @if($privacyLevel === 'rieng_tu' && ! $isOwnProfile)
+                        <span class="rounded-full border border-rose-400/20 bg-rose-400/10 px-3 py-1 text-xs font-semibold text-rose-200">Riêng tư</span>
+                    @elseif($privacyLevel === 'ban_be' && ! $isOwnProfile)
+                        <span class="rounded-full border border-amber-400/20 bg-amber-400/10 px-3 py-1 text-xs font-semibold text-amber-200">Bạn bè</span>
+                    @endif
                 </div>
                 <p class="text-lg font-medium text-slate-400">{{ '@' . ($user->ten_dang_nhap ?? 'nguoidung') }}</p>
             </div>
 
             <div class="mt-4 max-w-2xl">
-                <p class="leading-relaxed text-on-surface-variant">
-                    {{ $user->tieu_su ?? 'Nhà thiết kế sản phẩm số và người yêu thích công nghệ. Đang khám phá những giới hạn mới của giao diện glassmorphism và Web3.' }}
-                </p>
+                @if($canViewFullProfile)
+                    <p class="leading-relaxed text-on-surface-variant">
+                        {{ $user->tieu_su ?? 'Người dùng này chưa cập nhật tiểu sử.' }}
+                    </p>
+                @else
+                    <p class="leading-relaxed text-slate-400">
+                        Tiểu sử đang được ẩn theo thiết lập quyền riêng tư của tài khoản này.
+                    </p>
+                @endif
             </div>
 
             <div class="mt-6 flex flex-wrap gap-6">
@@ -103,6 +118,12 @@
         </div>
     </div>
 
+    @if($privacyMessage)
+        <div class="mx-6 mt-6 rounded-2xl border border-amber-400/20 bg-amber-400/10 px-4 py-4 text-sm text-amber-100">
+            {{ $privacyMessage }}
+        </div>
+    @endif
+
     <div class="sticky top-16 z-30 mt-8 border-b border-sky-400/10 bg-[#0a0e1a]/80 backdrop-blur-md">
         <div class="no-scrollbar flex overflow-x-auto px-2">
             <button class="whitespace-nowrap border-b-2 border-sky-400 px-6 py-4 font-bold text-sky-300 transition-all">Bài đăng</button>
@@ -117,52 +138,69 @@
             <div class="space-y-6 md:col-span-1">
                 <div class="glass-panel space-y-4 rounded-2xl p-5">
                     <h3 class="text-lg font-bold text-sky-300">Giới thiệu</h3>
-                    <div class="space-y-3">
-                        <div class="flex items-center gap-3 text-slate-300">
-                            <span class="material-symbols-outlined text-sky-400/70" data-icon="location_on">location_on</span>
-                            <span class="text-sm">{{ $user->noi_o ?? 'Hà Nội, Việt Nam' }}</span>
-                        </div>
-                        @if(!empty($user->ngay_sinh) && $user->quyen_rieng_tu !== 'rieng_tu')
+                    @if($canViewFullProfile)
+                        <div class="space-y-3">
                             <div class="flex items-center gap-3 text-slate-300">
-                                <span class="material-symbols-outlined text-sky-400/70" data-icon="cake">cake</span>
-                                <span class="text-sm">{{ \Illuminate\Support\Carbon::parse($user->ngay_sinh)->format('d/m/Y') }}</span>
+                                <span class="material-symbols-outlined text-sky-400/70" data-icon="location_on">location_on</span>
+                                <span class="text-sm">{{ $user->noi_o ?? 'Chưa cập nhật nơi ở' }}</span>
                             </div>
-                        @endif
-                        <div class="flex items-center gap-3 text-slate-300">
-                            <span class="material-symbols-outlined text-sky-400/70" data-icon="work">work</span>
-                            <span class="text-sm">UI/UX Designer tại NHOMJ Lab</span>
+                            @if(!empty($user->ngay_sinh))
+                                <div class="flex items-center gap-3 text-slate-300">
+                                    <span class="material-symbols-outlined text-sky-400/70" data-icon="cake">cake</span>
+                                    <span class="text-sm">{{ \Illuminate\Support\Carbon::parse($user->ngay_sinh)->format('d/m/Y') }}</span>
+                                </div>
+                            @endif
+                            <div class="flex items-center gap-3 text-slate-300">
+                                <span class="material-symbols-outlined text-sky-400/70" data-icon="lock">lock</span>
+                                <span class="text-sm">
+                                    @if($privacyLevel === 'cong_khai')
+                                        Hồ sơ công khai
+                                    @elseif($privacyLevel === 'ban_be')
+                                        Hồ sơ chỉ bạn bè hai chiều thấy đầy đủ
+                                    @else
+                                        Hồ sơ riêng tư
+                                    @endif
+                                </span>
+                            </div>
                         </div>
-                    </div>
+                    @else
+                        <p class="text-sm leading-relaxed text-slate-400">
+                            Thông tin giới thiệu đang được ẩn theo thiết lập quyền riêng tư.
+                        </p>
+                    @endif
                 </div>
 
-                <div class="glass-panel space-y-4 rounded-2xl p-5">
-                    <div class="flex items-center justify-between">
-                        <h3 class="text-lg font-bold text-sky-300">Phương tiện</h3>
-                        <button class="text-xs text-sky-300 hover:underline">Xem tất cả</button>
+                @if($canViewFullProfile)
+                    <div class="glass-panel space-y-4 rounded-2xl p-5">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-lg font-bold text-sky-300">Phương tiện</h3>
+                            <button class="text-xs text-sky-300 hover:underline">Xem tất cả</button>
+                        </div>
+                        <div class="grid grid-cols-3 gap-2">
+                            <div class="aspect-square overflow-hidden rounded-lg bg-slate-800"><img class="h-full w-full object-cover transition-transform duration-500 hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAcJ-QooLwGSegkbQYTxdBq5P5q5gaQT4yoYAwnrdJ3lBsIFFXLjdGUEVrUw1JiEQsL-Px0AqQGCSndymq7KsfrKTrLN0nZKUYGnkVvYwaPlgja8OMe5cq_88kvnV7sc_0e7kX1gWZth-L7hJWrd7amohSFhp7r-e6Q5bUDaTV7Ocg9pFRRoVXztX_mDAlQDcb5YH_pfqHKTwk1TOtDo8g2sv8vjim10WuBLKp3tH-k9HFEDxRlMhpVUffRR40gicaB9f5phb0iFkI" /></div>
+                            <div class="aspect-square overflow-hidden rounded-lg bg-slate-800"><img class="h-full w-full object-cover transition-transform duration-500 hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDJ1pV1EdqRMUvrmPQV1YmlQN1SQbVVZKK_AjI8Fq5GGKlVqkeZ3pkGcAlZgM9oBcOKLFRRb79FW2GPHH5LruN4B1KEZewuwSXuwM6HtQ85TpTGO9kzT12mPiIKXWGjHx0geVnHouKJO5p6r3cwlA3_FP8py_xR5CsYtGphnkotu_MeA-9gZ4d8mY7iq63EI0sad2twkWs_IBa44lh_pcCI8AUk0d7MSJ-VbVJKh_2Orn29kLLp2xbVLpQ0u2Ct5bnfiVQGAPCo170" /></div>
+                            <div class="aspect-square overflow-hidden rounded-lg bg-slate-800"><img class="h-full w-full object-cover transition-transform duration-500 hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDVLN5mzLMVOyuWiXAutttI_EloRRs0k2frSwqkUe03DyV9DcDIGDh-Tt9JYVE3DhIwojrKvMiWhOvBagxt0-lEXoICAeW_PXYL-wBYggxCqY-NFNs7Go34j_kvXEO6GEw0ZZOAftN8Ez3sYrH1qNohrrg19sYc51sFuiZto54EYo-VZPbNeV4Fep00902OvhVAp0xROh3uUhHgFyUQcFXfE-BK48aTCvjrV-o8JblcWa4OLCkLYzb9GFFcStm3l3SnlusKETi_T_M" /></div>
+                            <div class="aspect-square overflow-hidden rounded-lg bg-slate-800"><img class="h-full w-full object-cover transition-transform duration-500 hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCLD7ngkFLziGv9MzlIa5dyTTUUxIfiCAlKMY1sSxAWvU9q1JgVxxszn6Z3lzKKAuNya2eQSqXkQn2ibNUNQ6RsxxDzuegPYwmkEL5xgbtkSGuPF80cLWBRyrDys3YtRaWojkKy2mO8rF4ugg8v8RMpm8NMoycOA5KHGbL-gw5_mNjJ2190O1Gql2KT3bBWPV2SbdtM4KKY9S8FcYEGPYfq1Do25twrzgUU1cJy60q2jBvHAWAUALcW6T1Vk-lGeP7iW_LUdYgSzhM" /></div>
+                            <div class="aspect-square overflow-hidden rounded-lg bg-slate-800"><img class="h-full w-full object-cover transition-transform duration-500 hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBAgiicC-g8lvn-X0_aktsjCh_w-lEMB0tLQtzkGbzb3kHkEUSYA206VV_FuNupxt0gQuvO7zr3BDIVqS3mN13A5SRsMdBIql84sDnRYxhcbB8a0QgK1aiHMxaun4LlTxV92DfatsEKXQB_wejyCJMWB3UYusrsUIsXGurTZUYYQq_3RYgCq0SHAdlZEd08FC389FjOE6gKyIjM2oy8OVx4NIBgjPWoxXz71rE4xUIHDt76nRtBy1FdotYtbvK99jT4RJ8kTr7tUjQ" /></div>
+                            <div class="aspect-square overflow-hidden rounded-lg bg-slate-800"><img class="h-full w-full object-cover transition-transform duration-500 hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDsTkjQnhVrNwndcrogjc0i8VzJpIGp2G-6X9ahqHzbJmvrE_sXtHWZMql1A9GuQeAW90tgZuf_IZiPt_XqCFeC7xOFb1HcHjtPG2NnJ5e99P-QKr46bnN88MGK3N5vbk2-jMvECmuVSxY7WCW9UCvY2tVtIdNFXpbxqtQxvXgGxn9_o6dT-18aaKk9hDQSJbepRA8YMWcmw4ppPIHzFruvDT1HiirQoZGI66810-em0UneqhxOE24PHi_amXdzgXdCwDCHA2yoh3k" /></div>
+                        </div>
                     </div>
-                    <div class="grid grid-cols-3 gap-2">
-                        <div class="aspect-square overflow-hidden rounded-lg bg-slate-800"><img class="h-full w-full object-cover transition-transform duration-500 hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAcJ-QooLwGSegkbQYTxdBq5P5q5gaQT4yoYAwnrdJ3lBsIFFXLjdGUEVrUw1JiEQsL-Px0AqQGCSndymq7KsfrKTrLN0nZKUYGnkVvYwaPlgja8OMe5cq_88kvnV7sc_0e7kX1gWZth-L7hJWrd7amohSFhp7r-e6Q5bUDaTV7Ocg9pFRRoVXztX_mDAlQDcb5YH_pfqHKTwk1TOtDo8g2sv8vjim10WuBLKp3tH-k9HFEDxRlMhpVUffRR40gicaB9f5phb0iFkI" /></div>
-                        <div class="aspect-square overflow-hidden rounded-lg bg-slate-800"><img class="h-full w-full object-cover transition-transform duration-500 hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDJ1pV1EdqRMUvrmPQV1YmlQN1SQbVVZKK_AjI8Fq5GGKlVqkeZ3pkGcAlZgM9oBcOKLFRRb79FW2GPHH5LruN4B1KEZewuwSXuwM6HtQ85TpTGO9kzT12mPiIKXWGjHx0geVnHouKJO5p6r3cwlA3_FP8py_xR5CsYtGphnkotu_MeA-9gZ4d8mY7iq63EI0sad2twkWs_IBa44lh_pcCI8AUk0d7MSJ-VbVJKh_2Orn29kLLp2xbVLpQ0u2Ct5bnfiVQGAPCo170" /></div>
-                        <div class="aspect-square overflow-hidden rounded-lg bg-slate-800"><img class="h-full w-full object-cover transition-transform duration-500 hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDVLN5mzLMVOyuWiXAutttI_EloRRs0k2frSwqkUe03DyV9DcDIGDh-Tt9JYVE3DhIwojrKvMiWhOvBagxt0-lEXoICAeW_PXYL-wBYggxCqY-NFNs7Go34j_kvXEO6GEw0ZZOAftN8Ez3sYrH1qNohrrg19sYc51sFuiZto54EYo-VZPbNeV4Fep00902OvhVAp0xROh3uUhHgFyUQcFXfE-BK48aTCvjrV-o8JblcWa4OLCkLYzb9GFFcStm3l3SnlusKETi_T_M" /></div>
-                        <div class="aspect-square overflow-hidden rounded-lg bg-slate-800"><img class="h-full w-full object-cover transition-transform duration-500 hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCLD7ngkFLziGv9MzlIa5dyTTUUxIfiCAlKMY1sSxAWvU9q1JgVxxszn6Z3lzKKAuNya2eQSqXkQn2ibNUNQ6RsxxDzuegPYwmkEL5xgbtkSGuPF80cLWBRyrDys3YtRaWojkKy2mO8rF4ugg8v8RMpm8NMoycOA5KHGbL-gw5_mNjJ2190O1Gql2KT3bBWPV2SbdtM4KKY9S8FcYEGPYfq1Do25twrzgUU1cJy60q2jBvHAWAUALcW6T1Vk-lGeP7iW_LUdYgSzhM" /></div>
-                        <div class="aspect-square overflow-hidden rounded-lg bg-slate-800"><img class="h-full w-full object-cover transition-transform duration-500 hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBAgiicC-g8lvn-X0_aktsjCh_w-lEMB0tLQtzkGbzb3kHkEUSYA206VV_FuNupxt0gQuvO7zr3BDIVqS3mN13A5SRsMdBIql84sDnRYxhcbB8a0QgK1aiHMxaun4LlTxV92DfatsEKXQB_wejyCJMWB3UYusrsUIsXGurTZUYYQq_3RYgCq0SHAdlZEd08FC389FjOE6gKyIjM2oy8OVx4NIBgjPWoxXz71rE4xUIHDt76nRtBy1FdotYtbvK99jT4RJ8kTr7tUjQ" /></div>
-                        <div class="aspect-square overflow-hidden rounded-lg bg-slate-800"><img class="h-full w-full object-cover transition-transform duration-500 hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDsTkjQnhVrNwndcrogjc0i8VzJpIGp2G-6X9ahqHzbJmvrE_sXtHWZMql1A9GuQeAW90tgZuf_IZiPt_XqCFeC7xOFb1HcHjtPG2NnJ5e99P-QKr46bnN88MGK3N5vbk2-jMvECmuVSxY7WCW9UCvY2tVtIdNFXpbxqtQxvXgGxn9_o6dT-18aaKk9hDQSJbepRA8YMWcmw4ppPIHzFruvDT1HiirQoZGI66810-em0UneqhxOE24PHi_amXdzgXdCwDCHA2yoh3k" /></div>
-                    </div>
-                </div>
+                @endif
             </div>
 
             <div class="space-y-6 md:col-span-2">
-                @if(isset($posts) && $posts->count() > 0)
+                @if($canViewPosts && isset($posts) && $posts->count() > 0)
                     @foreach($posts as $post)
                         <x-post-card :post="$post" />
                     @endforeach
+                @elseif($canViewPosts)
+                    <div class="glass-panel rounded-2xl p-6 text-center text-slate-300">
+                        <p class="text-sm">Chưa có bài đăng nào để hiển thị.</p>
+                    </div>
                 @else
-                    <x-post-card
-                        :user="$user"
-                        content="Vừa hoàn thiện xong Concept UI cho dự án NHOMJ mới. Phong cách Glacier thực sự mang lại cảm giác cao cấp và hiện đại hơn cho trải nghiệm người dùng. Ý kiến các bạn thế nào?"
-                        image="https://lh3.googleusercontent.com/aida-public/AB6AXuBaz-tnlcYkz-gWZiH-UT6jdm67JAHuTNPKhw8p3QV41fkx9ngQxGLeDRwjtYeLSmVgVIRcGxuGhNOcHAmYooWM6-ZEA3QBYwwbo47EVBQW1Mq7VEz5rvMJWPhnKaqWY-6VeWO9IOSnF-kNW9MjnqrRQN--QlVidWtaO1fkXCQTWtMsj6zpZCEXOpdssqh8hGjDXVcY0b9V6T2MwwXrdokoVVoZKdbicXU5sxf5bzaJHAhxK9n_Oh9EUwk4RwCKP8h0fze1nyziCNE"
-                        timestamp="2 giờ trước"
-                    />
+                    <div class="glass-panel rounded-2xl p-6 text-center text-slate-300">
+                        <p class="text-sm">Bài đăng đang được ẩn theo quyền riêng tư của hồ sơ này.</p>
+                    </div>
                 @endif
             </div>
         </div>
