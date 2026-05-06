@@ -200,4 +200,5 @@ $profileUrl = route('profile.public', ['username' => $user->ten_dang_nhap]);
         }
     });
 </script>
+
 @endsection
