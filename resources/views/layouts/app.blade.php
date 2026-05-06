@@ -333,6 +333,7 @@
                     }
 
                     if (box) {
+                        box.classList.remove('hidden');
                         const noComments = box.querySelector('[data-no-comments]');
                         const list = box.querySelector('[data-comment-list]');
 
