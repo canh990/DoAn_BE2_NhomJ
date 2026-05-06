@@ -60,7 +60,8 @@ protected function validator(array $data)
             'string', 
             'min:8',
             // Regex: Ít nhất 1 chữ cái, 1 số, 1 ký tự đặc biệt
-            'regex:/^(?=.*[a-zA-Z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/'
+            //'regex:/^(?=.*[a-zA-Z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/'
+            'regex:/^(?=.*[a-zA-Z])(?=.*\d)(?=.*[@$!%*#?&.])[A-Za-z\d@$!%*#?&.]{8,}$/'
         ],
     ], [
         'ten_dang_nhap.required' => 'Vui lòng nhập tên đăng nhập',
