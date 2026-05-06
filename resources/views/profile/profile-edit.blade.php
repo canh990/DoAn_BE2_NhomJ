@@ -105,17 +105,24 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="space-y-2">
-                    <label class="text-xs font-bold uppercase tracking-wider text-slate-500 ml-1">Ngày sinh</label>
-                    <div class="relative">
-                        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">cake</span>
-                        <input
-                            name="ngay_sinh"
-                            type="date"
-                            value="{{ old('ngay_sinh', optional($user->ngay_sinh)->format('Y-m-d') ?? $user->ngay_sinh) }}"
-                            class="w-full bg-slate-900/50 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-on-surface focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all outline-none [color-scheme:dark]"
-                        >
-                    </div>
-                </div>
+    <label class="text-xs font-bold uppercase text-slate-500">Ngày sinh</label>
+    
+    <input 
+        type="date" 
+        name="ngay_sinh" 
+        {{-- Dùng old() để giữ lại giá trị vừa nhập nếu có lỗi --}}
+        value="{{ old('ngay_sinh', $user->ngay_sinh ? \Carbon\Carbon::parse($user->ngay_sinh)->format('Y-m-d') : '') }}"
+        {{-- Đổi màu viền sang đỏ nếu có lỗi --}}
+        class="w-full bg-slate-900/50 border {{ $errors->has('ngay_sinh') ? 'border-red-500/50' : 'border-white/10' }} rounded-2xl py-3.5 px-4 text-on-surface outline-none transition-all focus:border-sky-400/50"
+    >
+
+    @error('ngay_sinh')
+        <div class="flex items-center gap-1 mt-1 text-red-400">
+            <span class="material-symbols-outlined text-sm">error</span>
+            <span class="text-xs font-medium">{{ $message }}</span>
+        </div>
+    @enderror
+</div>
 
                 <div class="space-y-2">
                     <label class="text-xs font-bold uppercase tracking-wider text-slate-500 ml-1">Nơi ở</label>
