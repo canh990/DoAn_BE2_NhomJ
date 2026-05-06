@@ -191,5 +191,87 @@
             <span class="material-symbols-outlined" data-icon="mail">mail</span>
         </button>
     </nav>
+
+    <script>
+        document.addEventListener('click', function (event) {
+            const reactionTrigger = event.target.closest('[data-reaction-trigger]');
+            const reactionOption = event.target.closest('[data-reaction-option]');
+            const reactionAreas = document.querySelectorAll('[data-reaction-area]');
+
+            if (reactionOption) {
+                event.stopPropagation();
+                const reaction = reactionOption.dataset.reaction;
+                const label = reactionOption.dataset.reactionLabel;
+                const color = reactionOption.dataset.reactionColor;
+                const iconName = reactionOption.dataset.reactionIcon;
+                const area = reactionOption.closest('[data-reaction-area]');
+                const form = area.querySelector('.reaction-submit-form');
+                const action = form.action;
+                const token = form.querySelector('input[name="_token"]').value;
+                const body = new URLSearchParams();
+
+                body.append('_token', token);
+                body.append('loai_cam_xuc', reaction);
+
+                fetch(action, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                    },
+                    body,
+                })
+                    .then(function (response) {
+                        return response.json();
+                    })
+                    .then(function (data) {
+                        if (!data.success) {
+                            return;
+                        }
+
+                        const triggerIcon = area.querySelector('[data-reaction-trigger-icon]');
+                        const triggerLabel = area.querySelector('[data-reaction-trigger-label]');
+                        const countNode = area.querySelector('[data-reaction-count]');
+                        const picker = area.querySelector('[data-reaction-picker]');
+                        const isRemoved = data.removed;
+                        const newIconName = isRemoved ? 'thumb_up' : iconName;
+                        const newLabel = isRemoved ? 'Thích' : label;
+                        const newColor = isRemoved ? 'text-sky-400' : color;
+
+                        if (triggerIcon) {
+                            triggerIcon.textContent = newIconName;
+                            triggerIcon.className = 'material-symbols-outlined ' + newColor;
+                        }
+
+                        if (triggerLabel) {
+                            triggerLabel.textContent = newLabel;
+                        }
+
+                        if (countNode) {
+                            countNode.textContent = data.reactions_count + ' cảm xúc';
+                        }
+
+                        if (picker) {
+                            picker.classList.add('hidden');
+                        }
+                    });
+
+                return;
+            }
+
+            reactionAreas.forEach(function (area) {
+                const picker = area.querySelector('[data-reaction-picker]');
+                if (!picker) {
+                    return;
+                }
+
+                if (reactionTrigger && area.contains(reactionTrigger)) {
+                    picker.classList.toggle('hidden');
+                } else if (!area.contains(event.target)) {
+                    picker.classList.add('hidden');
+                }
+            });
+        });
+    </script>
 </body>
 </html>

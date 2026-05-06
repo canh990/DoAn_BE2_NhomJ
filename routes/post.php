@@ -12,4 +12,7 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/posts', [PostController::class, 'store'])
         ->name('posts.store');
+
+    Route::post('/posts/{post}/reaction', [\App\Http\Controllers\ReactionController::class, 'store'])
+        ->name('posts.react');
 });
