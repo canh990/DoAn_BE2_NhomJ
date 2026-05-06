@@ -209,7 +209,18 @@
         document.addEventListener('click', function (event) {
             const reactionTrigger = event.target.closest('[data-reaction-trigger]');
             const reactionOption = event.target.closest('[data-reaction-option]');
+            const commentToggle = event.target.closest('[data-comment-toggle]');
             const reactionAreas = document.querySelectorAll('[data-reaction-area]');
+
+            if (commentToggle) {
+                event.stopPropagation();
+                const area = commentToggle.closest('[data-reaction-area]');
+                const box = area?.querySelector('[data-comment-box]');
+                if (box) {
+                    box.classList.toggle('hidden');
+                }
+                return;
+            }
 
             if (reactionOption) {
                 event.stopPropagation();
@@ -284,6 +295,77 @@
                     picker.classList.add('hidden');
                 }
             });
+        });
+
+        document.addEventListener('submit', function (event) {
+            const commentForm = event.target.closest('.comment-submit-form');
+            if (!commentForm) {
+                return;
+            }
+
+            event.preventDefault();
+            const action = commentForm.action;
+            const body = new FormData(commentForm);
+
+            fetch(action, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                },
+                body,
+            })
+                .then(function (response) {
+                    return response.json();
+                })
+                .then(function (data) {
+                    if (!data.success) {
+                        return;
+                    }
+
+                    const area = commentForm.closest('[data-reaction-area]');
+                    const countNode = area?.querySelector('[data-comment-count]');
+                    const box = commentForm.closest('[data-comment-box]');
+                    const textarea = commentForm.querySelector('textarea[name="noi_dung"]');
+
+                    if (countNode) {
+                        countNode.textContent = '(' + data.comments_count + ')';
+                    }
+
+                    if (textarea) {
+                        textarea.value = '';
+                    }
+
+                    if (box) {
+                        const noComments = box.querySelector('[data-no-comments]');
+                        const list = box.querySelector('[data-comment-list]');
+
+                        if (noComments) {
+                            noComments.remove();
+                        }
+
+                        if (list) {
+                            const commentBlock = document.createElement('div');
+                            commentBlock.className = 'rounded-2xl border border-white/10 bg-slate-950 p-3';
+                            commentBlock.innerHTML = `
+                                <div class="flex gap-3 items-start">
+                                    <img class="w-8 h-8 rounded-full object-cover border border-slate-700" src="${data.comment.user_avatar}" alt="${data.comment.user_name}">
+                                    <div class="flex-1">
+                                        <div class="flex items-center justify-between gap-2 text-sm text-slate-200">
+                                            <span class="font-semibold">${data.comment.user_name}</span>
+                                            <span class="text-xs text-slate-500">${data.comment.created_at}</span>
+                                        </div>
+                                        <p class="mt-1 text-sm leading-relaxed text-slate-300">${data.comment.content}</p>
+                                    </div>
+                                </div>
+                            `;
+                            list.appendChild(commentBlock);
+                        }
+                    }
+                })
+                .catch(function (error) {
+                    console.error('Lỗi khi gửi bình luận:', error);
+                });
         });
     </script>
     <script src="/js/theme-toggle.js"></script>
