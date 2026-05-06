@@ -88,6 +88,24 @@
         ?? 0);
 
     $isVerified = (bool) (data_get($author, 'da_xac_thuc') ?? false);
+    $postId = data_get($post, 'id');
+    $hasPersistedPost = filled($postId);
+    $comments = collect(data_get($post, 'comments', []));
+
+    $reactionButtons = [
+        'thich' => ['icon' => 'thumb_up', 'label' => 'Thích', 'color' => 'text-sky-400'],
+        'tim' => ['icon' => 'favorite', 'label' => 'Yêu thích', 'color' => 'text-rose-400'],
+        'haha' => ['icon' => 'mood', 'label' => 'Haha', 'color' => 'text-yellow-300'],
+        'buon' => ['icon' => 'sentiment_dissatisfied', 'label' => 'Buồn', 'color' => 'text-slate-400'],
+        'phan_no' => ['icon' => 'mood_bad', 'label' => 'Phẫn nộ', 'color' => 'text-orange-400'],
+        'wow' => ['icon' => 'emoji_objects', 'label' => 'Wow', 'color' => 'text-emerald-400'],
+    ];
+
+    $userReaction = optional(data_get($post, 'reactions'))->first()->loai_cam_xuc ?? null;
+    $selected = $userReaction ? ($reactionButtons[$userReaction] ?? null) : null;
+    $selectedIcon = $selected['icon'] ?? 'thumb_up';
+    $selectedLabel = $selected['label'] ?? 'Thích';
+    $selectedColor = $selected['color'] ?? 'text-sky-400';
 @endphp
 
 <article {{ $attributes->merge(['class' => 'glass-panel group rounded-2xl p-6 transition-all hover:border-sky-400/30']) }}>
@@ -139,22 +157,6 @@
             @endif
 
             <div class="flex flex-col gap-3 pt-3 text-slate-400 max-w-sm">
-                @php
-                    $reactionButtons = [
-                        'thich' => ['icon' => 'thumb_up', 'label' => 'Thích', 'color' => 'text-sky-400'],
-                        'tim' => ['icon' => 'favorite', 'label' => 'Yêu thích', 'color' => 'text-rose-400'],
-                        'haha' => ['icon' => 'mood', 'label' => 'Haha', 'color' => 'text-yellow-300'],
-                        'buon' => ['icon' => 'sentiment_dissatisfied', 'label' => 'Buồn', 'color' => 'text-slate-400'],
-                        'phan_no' => ['icon' => 'mood_bad', 'label' => 'Phẫn nộ', 'color' => 'text-orange-400'],
-                        'wow' => ['icon' => 'emoji_objects', 'label' => 'Wow', 'color' => 'text-emerald-400'],
-                    ];
-                    $userReaction = optional(data_get($post, 'reactions'))->first()->loai_cam_xuc ?? null;
-                    $selected = $userReaction ? ($reactionButtons[$userReaction] ?? null) : null;
-                    $selectedIcon = $selected['icon'] ?? 'thumb_up';
-                    $selectedLabel = $selected['label'] ?? 'Thích';
-                    $selectedColor = $selected['color'] ?? 'text-sky-400';
-                @endphp
-
                 <div class="relative" data-reaction-area>
                     <div class="flex items-center gap-2">
                         <button type="button" data-reaction-trigger class="flex items-center gap-2 rounded-full border px-3 py-2 text-sm font-medium transition-all duration-200 {{ $selected ? 'border-sky-400/20 bg-sky-400/10 text-sky-300' : 'border-white/10 bg-slate-950 text-slate-300 hover:border-sky-400/20 hover:bg-sky-400/10 hover:text-sky-300' }}">
@@ -187,26 +189,34 @@
                         </div>
                     </div>
 
-                    <form class="reaction-submit-form hidden" method="POST" action="{{ route('posts.react', $post) }}">
-                        @csrf
-                        <input type="hidden" name="loai_cam_xuc" value="">
-                    </form>
+                    @if($hasPersistedPost)
+                        <form class="reaction-submit-form hidden" method="POST" action="{{ route('posts.react', ['post' => $postId]) }}">
+                            @csrf
+                            <input type="hidden" name="loai_cam_xuc" value="">
+                        </form>
+                    @endif
 
                     <div data-comment-box class="hidden mt-3 rounded-3xl border border-white/10 bg-slate-950/80 p-3">
-                        <form class="comment-submit-form" method="POST" action="{{ route('posts.comment', $post) }}">
-                            @csrf
-                            <textarea name="noi_dung" rows="2" required class="w-full bg-transparent border border-white/10 focus:border-sky-400 focus:ring-0 rounded-3xl p-3 text-sm text-slate-100 placeholder:text-slate-500" placeholder="Viết bình luận..."></textarea>
-                            <div class="mt-3 flex items-center justify-between">
-                                <span class="text-xs text-slate-500">Viết bình luận mới</span>
-                                <button type="submit" class="rounded-full bg-sky-400/10 text-sky-300 px-4 py-2 text-sm font-semibold hover:bg-sky-400/20">Gửi</button>
+                        @if($hasPersistedPost)
+                            <form class="comment-submit-form" method="POST" action="{{ route('posts.comment', ['post' => $postId]) }}">
+                                @csrf
+                                <textarea name="noi_dung" rows="2" required class="w-full bg-transparent border border-white/10 focus:border-sky-400 focus:ring-0 rounded-3xl p-3 text-sm text-slate-100 placeholder:text-slate-500" placeholder="Viết bình luận..."></textarea>
+                                <div class="mt-3 flex items-center justify-between">
+                                    <span class="text-xs text-slate-500">Viết bình luận mới</span>
+                                    <button type="submit" class="rounded-full bg-sky-400/10 text-sky-300 px-4 py-2 text-sm font-semibold hover:bg-sky-400/20">Gửi</button>
+                                </div>
+                            </form>
+                        @else
+                            <div class="rounded-2xl border border-dashed border-white/10 bg-slate-950/60 p-3 text-sm text-slate-500">
+                                Bài viết mẫu không hỗ trợ cảm xúc hoặc bình luận.
                             </div>
-                        </form>
+                        @endif
 
                         <div data-comment-list class="mt-4 space-y-3 text-slate-300">
-                            @if($post->comments->isEmpty())
+                            @if($comments->isEmpty())
                                 <div data-no-comments class="text-sm text-slate-500">Chưa có bình luận nào. Hãy là người đầu tiên bình luận.</div>
                             @else
-                                @foreach($post->comments as $comment)
+                                @foreach($comments as $comment)
                                     <div class="rounded-2xl border border-white/10 bg-slate-950 p-3">
                                         <div class="flex gap-3 items-start">
                                             <img class="w-8 h-8 rounded-full object-cover border border-slate-700" src="{{ $comment->user && $comment->user->anh_dai_dien ? asset('storage/' . $comment->user->anh_dai_dien) : asset('storage/avatars/avtmacdinh.png') }}" alt="{{ $comment->user?->name ?? 'Người dùng' }}">
