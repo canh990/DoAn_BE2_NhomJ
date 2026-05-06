@@ -1,13 +1,10 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Glacier Chat</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+@extends('layouts.app')
+
+@section('title', 'Tin nhan')
+
+@section('content')
     <style>
-        * { scrollbar-width: thin; scrollbar-color: #21455f #0b1220; }
-        body { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+        .chat-surface { scrollbar-width: thin; scrollbar-color: #21455f #0b1220; }
         .avatar-ring { box-shadow: 0 0 0 1px rgba(125, 211, 252, .4), 0 12px 28px rgba(0, 0, 0, .28); }
         .chat-bg {
             background:
@@ -16,82 +13,29 @@
                 #080d18;
         }
     </style>
-</head>
-<body class="h-screen overflow-hidden bg-[#080d18] text-slate-100">
+
     @php
         $activeUser = $selectedUser;
-        $displayName = fn ($user) => $user->ten_dang_nhap ?: ($user->email ?: 'Người dùng');
+        $displayName = fn ($user) => $user->ten_dang_nhap ?: ($user->email ?: 'Nguoi dung');
         $avatarText = fn ($user) => mb_strtoupper(mb_substr($displayName($user), 0, 1));
     @endphp
 
-    <div class="grid h-screen grid-cols-[318px_400px_minmax(0,1fr)] bg-[#080d18]">
-        <aside class="flex min-h-0 flex-col border-r border-[#1b3047] bg-[#0d1423]">
-            <div class="flex items-center gap-4 px-7 py-6">
-                <div class="grid h-12 w-12 place-items-center rounded-full border border-sky-400/50 bg-sky-400/15 text-3xl font-bold text-sky-300 avatar-ring">*</div>
-                <div>
-                    <div class="text-xl font-bold text-sky-300">Glacier Chat</div>
-                    <div class="text-xs font-bold uppercase tracking-[.28em] text-sky-400">Trực tuyến</div>
-                </div>
-            </div>
-
-            <nav class="mt-5 space-y-4 px-3 text-lg font-semibold text-slate-400">
-                <a class="flex items-center gap-5 border-r-2 border-sky-400 bg-sky-500/14 px-5 py-4 text-sky-300" href="{{ route('chat.demo') }}">
-                    <span class="grid h-8 w-8 place-items-center rounded bg-sky-300 text-[#102136]">≡</span>
-                    <span>Tin nhắn</span>
-                </a>
-                <div class="flex items-center gap-5 px-5 py-3">
-                    <span class="text-3xl text-slate-500">☎</span>
-                    <span>Cuộc gọi</span>
-                </div>
-                <div class="flex items-center gap-5 px-5 py-3">
-                    <span class="text-3xl text-slate-500">▣</span>
-                    <span>Danh bạ</span>
-                </div>
-                <a href="{{ route('chat.groups.index') }}" class="flex items-center gap-5 px-5 py-3 hover:bg-white/[.04] hover:text-sky-300">
-                    <span class="text-3xl text-slate-500">☷</span>
-                    <span>Nhóm</span>
-                </a>
-                <div class="flex items-center gap-5 px-5 py-3">
-                    <span class="text-3xl text-slate-500">▤</span>
-                    <span>Lưu trữ</span>
-                </div>
-            </nav>
-
-            <div class="mt-auto border-t border-[#1b3047] p-3">
-                <div class="mb-6 flex items-center gap-5 px-5 py-4 text-lg font-semibold text-slate-400">
-                    <span class="text-3xl">⚙</span>
-                    <span>Cài đặt</span>
-                </div>
-
-                <div class="flex items-center justify-between rounded-[28px] border border-[#1b3047] bg-[#101a2b] px-5 py-4">
-                    <div class="flex min-w-0 items-center gap-3">
-                        <div class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-gradient-to-br from-sky-300 to-teal-500 font-bold text-[#07111f]">
-                            {{ $avatarText($currentUser) }}
-                        </div>
-                        <div class="min-w-0">
-                            <div class="truncate font-bold">{{ $displayName($currentUser) }}</div>
-                            <div class="truncate text-sm text-slate-400">Thiết lập trạng thái</div>
-                        </div>
-                    </div>
-
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <button class="text-sm font-semibold text-sky-300 hover:text-sky-200" type="submit">Thoát</button>
-                    </form>
-                </div>
-            </div>
-        </aside>
-
+    <div class="chat-surface grid h-[calc(100vh-64px)] grid-cols-[380px_minmax(0,1fr)] overflow-hidden bg-[#080d18] text-slate-100">
         <section class="flex min-h-0 flex-col border-r border-[#1b3047] bg-[#0b1220]">
             <div class="flex items-center justify-between px-8 py-7">
-                <h1 class="text-3xl font-extrabold">Tin nhắn</h1>
-                <button class="grid h-11 w-11 place-items-center rounded-full bg-sky-400/10 text-xl text-sky-300" type="button">✎</button>
+                <div>
+                    <h1 class="text-3xl font-extrabold">Tin nhan</h1>
+                    <p class="mt-1 text-sm font-semibold text-slate-500">Chat 1-1</p>
+                </div>
+                <a href="{{ route('chat.groups.index') }}" class="rounded-2xl border border-sky-400/30 px-4 py-2 text-sm font-bold text-sky-300 hover:bg-sky-400/10">
+                    Nhom
+                </a>
             </div>
 
             <div class="px-8">
                 <label class="flex h-12 items-center gap-3 rounded-3xl border border-[#1b3047] bg-[#101827] px-4 text-slate-500">
-                    <span class="text-xl">⌕</span>
-                    <input class="w-full border-0 bg-transparent text-base outline-none placeholder:text-slate-500 focus:ring-0" placeholder="Tìm kiếm cuộc trò chuyện..." type="search">
+                    <span class="material-symbols-outlined text-xl">search</span>
+                    <input class="w-full border-0 bg-transparent text-base outline-none placeholder:text-slate-500 focus:ring-0" placeholder="Tim kiem cuoc tro chuyen..." type="search">
                 </label>
             </div>
 
@@ -139,21 +83,17 @@
                             <div class="flex items-center justify-between gap-3">
                                 <div class="truncate text-lg font-bold">{{ $name }}</div>
                                 <div class="shrink-0 text-sm font-semibold {{ $isActive ? 'text-sky-300' : 'text-slate-400' }}">
-                                    {{ $isActive ? 'Vừa xong' : 'Online' }}
+                                    {{ $isActive ? 'Vua xong' : 'Online' }}
                                 </div>
                             </div>
                             <div class="mt-1 truncate font-medium {{ $isActive ? 'text-sky-300' : 'text-slate-400' }}">
-                                {{ $isActive && $messages->last() ? $messages->last()->noi_dung : ($user->email ?: 'Bắt đầu trò chuyện') }}
+                                {{ $isActive && $messages->last() ? $messages->last()->noi_dung : ($user->email ?: 'Bat dau tro chuyen') }}
                             </div>
                         </div>
-
-                        @if ($isActive)
-                            <span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-sky-300 text-sm font-black text-[#07111f]">1</span>
-                        @endif
                     </a>
                 @empty
                     <div class="rounded-3xl border border-[#1b3047] bg-white/[.03] p-5 text-center text-slate-400">
-                        Chưa có người dùng khác để chat.
+                        Chua co nguoi dung khac de chat.
                     </div>
                 @endforelse
             </div>
@@ -175,17 +115,17 @@
                         </div>
                     </div>
 
-                    <div class="flex items-center gap-7 text-3xl text-slate-400">
-                        <button class="hover:text-sky-300" type="button">☎</button>
-                        <button class="hover:text-sky-300" type="button">▭</button>
+                    <div class="flex items-center gap-6 text-2xl text-slate-400">
+                        <button class="material-symbols-outlined hover:text-sky-300" type="button">call</button>
+                        <button class="material-symbols-outlined hover:text-sky-300" type="button">videocam</button>
                         <span class="h-8 w-px bg-[#1b3047]"></span>
-                        <button class="hover:text-sky-300" type="button">⚙</button>
+                        <button class="material-symbols-outlined hover:text-sky-300" type="button">settings</button>
                     </div>
                 </header>
 
                 <div id="chatMessages" class="min-h-0 flex-1 space-y-8 overflow-y-auto px-8 py-7">
                     <div class="flex justify-center">
-                        <span class="rounded-full bg-white/[.06] px-5 py-2 text-xs font-black uppercase tracking-[.22em] text-slate-400">Hôm nay</span>
+                        <span class="rounded-full bg-white/[.06] px-5 py-2 text-xs font-black uppercase tracking-[.22em] text-slate-400">Hom nay</span>
                     </div>
 
                     @forelse ($messages as $chatMessage)
@@ -211,7 +151,7 @@
                         </div>
                     @empty
                         <div class="flex h-full items-center justify-center text-lg font-semibold text-slate-500">
-                            Chưa có tin nhắn. Hãy gửi tin đầu tiên.
+                            Chua co tin nhan. Hay gui tin dau tien.
                         </div>
                     @endforelse
                 </div>
@@ -229,15 +169,15 @@
                         @endunless
 
                         <button class="grid h-9 w-9 shrink-0 place-items-center rounded-full border-2 border-slate-400 text-2xl font-bold text-slate-400 hover:border-sky-300 hover:text-sky-300" type="button">+</button>
-                        <button class="grid h-9 w-9 shrink-0 place-items-center rounded-full border-2 border-slate-400 text-xl text-slate-400 hover:border-sky-300 hover:text-sky-300" type="button">☺</button>
+                        <button class="material-symbols-outlined grid h-9 w-9 shrink-0 place-items-center rounded-full border-2 border-slate-400 text-slate-400 hover:border-sky-300 hover:text-sky-300" type="button">mood</button>
                         <input id="messageInput"
                                name="noi_dung"
                                class="h-14 min-w-0 flex-1 rounded-full border border-[#1b3047] bg-[#111a2a] px-6 text-lg font-semibold text-slate-100 outline-none placeholder:text-slate-500 focus:border-sky-400"
-                               placeholder="Nhập tin nhắn của bạn..."
+                               placeholder="Nhap tin nhan cua ban..."
                                autocomplete="off"
                                required
                                value="{{ old('noi_dung') }}">
-                        <button class="text-3xl text-slate-400 hover:text-sky-300" type="button">♬</button>
+                        <button class="material-symbols-outlined text-3xl text-slate-400 hover:text-sky-300" type="button">mic</button>
                         <button class="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-sky-300 text-3xl font-black text-[#07111f] transition hover:bg-sky-200" type="submit">➤</button>
                     </form>
 
@@ -248,7 +188,7 @@
             @else
                 <div class="flex h-full flex-col items-center justify-center gap-4 text-slate-400">
                     <div class="grid h-20 w-20 place-items-center rounded-full bg-sky-400/10 text-4xl text-sky-300">≡</div>
-                    <div class="text-xl font-bold">Chọn một người dùng để bắt đầu chat.</div>
+                    <div class="text-xl font-bold">Chon mot nguoi dung de bat dau chat.</div>
                 </div>
             @endif
         </main>
@@ -310,7 +250,7 @@
 
             chatMessages.innerHTML = `
                 <div class="flex justify-center">
-                    <span class="rounded-full bg-white/[.06] px-5 py-2 text-xs font-black uppercase tracking-[.22em] text-slate-400">Hôm nay</span>
+                    <span class="rounded-full bg-white/[.06] px-5 py-2 text-xs font-black uppercase tracking-[.22em] text-slate-400">Hom nay</span>
                 </div>
                 ${body}
             `;
@@ -379,5 +319,4 @@
             setInterval(loadMessages, 2500);
         }
     </script>
-</body>
-</html>
+@endsection

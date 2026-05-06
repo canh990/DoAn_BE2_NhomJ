@@ -85,18 +85,113 @@
         .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
     </style>
 </head>
+<<<<<<< Updated upstream
 <body class="bg-background font-body text-on-surface min-h-screen selection:bg-primary/30 selection:text-primary">
     <main class="relative min-h-screen flex items-center justify-center p-6 overflow-hidden">
         <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[120px]"></div>
         <div class="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-tertiary/10 rounded-full blur-[120px]"></div>
         
+=======
+<body class="antialiased selection:bg-primary/30 selection:text-primary">
+
+    <header class="fixed top-0 w-full z-50 bg-[#0a0e1a]/60 backdrop-blur-xl border-b border-sky-400/10 shadow-[0_0_30px_rgba(125,211,252,0.05)] font-inter tracking-tight flex justify-between items-center px-6 h-16">
+        <div class="flex items-center gap-8">
+            <span class="text-2xl font-bold bg-gradient-to-r from-sky-400 to-purple-400 bg-clip-text text-transparent">NHOMJ</span>
+            <div class="hidden md:flex items-center bg-white/5 border border-sky-400/10 rounded-full px-4 py-1.5 focus-within:border-sky-400/30 transition-all">
+                <span class="material-symbols-outlined text-slate-400 text-sm mr-2" data-icon="search">search</span>
+                <input class="bg-transparent border-none focus:ring-0 text-sm text-on-surface placeholder:text-slate-500 w-64" placeholder="Tìm kiếm trên NHOMJ" type="text"/>
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <button class="p-2 text-slate-400 hover:bg-sky-400/10 rounded-xl transition-all active:scale-95 duration-200">
+                <span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+            </button>
+            <a href="{{ route('chat.demo') }}" class="p-2 text-slate-400 hover:bg-sky-400/10 rounded-xl transition-all active:scale-95 duration-200">
+                <span class="material-symbols-outlined" data-icon="mail">mail</span>
+            </a>
+            <button class="p-2 text-sky-300 hover:bg-sky-400/10 rounded-xl transition-all active:scale-95 duration-200">
+                <span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+            </button>
+        </div>
+    </header>
+
+    <aside class="fixed left-0 top-16 h-[calc(100vh-64px)] w-64 p-4 border-r border-sky-400/10 flex flex-col gap-2 z-40 hidden md:flex">
+     @auth
+    @php $user = Auth::user(); @endphp
+
+    <div class="mb-4 px-4 py-2">
+        <div class="flex items-center gap-3 mb-1">
+            <img 
+                class="w-10 h-10 rounded-full border border-sky-400/30 object-cover" 
+                alt="{{ $user->name }}" 
+<img src="{{ $user->anh_dai_dien ? asset('storage/' . $user->anh_dai_dien) : asset('storage/avatars/avtmacdinh.png') }}" 
+     alt="Avatar">            
+            <div>
+                <p class="text-sm font-bold text-sky-300 font-inter">
+                    {{ $user->name }}
+                </p>
+                
+            </div>
+        </div>
+    </div>
+@endauth
+        <nav class="flex flex-col gap-1 flex-1">
+            <a class="flex items-center gap-3 {{ request()->routeIs('home') ? 'bg-sky-400/20 text-sky-300 border border-sky-400/20' : 'text-slate-400 hover:bg-white/5 hover:text-sky-200' }} px-4 py-3 rounded-xl transition-colors cursor-pointer transition-transform active:translate-x-1 font-inter text-sm font-medium" href="{{ route('home') }}">
+                <span class="material-symbols-outlined" data-icon="home">home</span>
+                Bảng tin
+            </a>
+            <a class="flex items-center gap-3 {{ request()->routeIs('explore') ? 'bg-sky-400/20 text-sky-300 border border-sky-400/20' : 'text-slate-400 hover:bg-white/5 hover:text-sky-200' }} px-4 py-3 rounded-xl transition-colors cursor-pointer transition-transform active:translate-x-1 font-inter text-sm font-medium" href="{{ route('explore') }}">
+                <span class="material-symbols-outlined" data-icon="explore">explore</span>
+                Khám phá
+            </a>
+            <a class="flex items-center gap-3 {{ request()->routeIs('notifications') ? 'bg-sky-400/20 text-sky-300 border border-sky-400/20' : 'text-slate-400 hover:bg-white/5 hover:text-sky-200' }} px-4 py-3 rounded-xl transition-colors cursor-pointer transition-transform active:translate-x-1 font-inter text-sm font-medium" href="{{ route('notifications') }}">
+                <span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+                Thông báo
+            </a>
+            <a class="flex items-center gap-3 {{ request()->routeIs('chat.demo') || request()->routeIs('chat.user.*') || request()->routeIs('chat.messages.*') || request()->routeIs('chat.conversations.*') ? 'bg-sky-400/20 text-sky-300 border border-sky-400/20' : 'text-slate-400 hover:bg-white/5 hover:text-sky-200' }} px-4 py-3 rounded-xl transition-colors cursor-pointer transition-transform active:translate-x-1 font-inter text-sm font-medium" href="{{ route('chat.demo') }}">
+                <span class="material-symbols-outlined" data-icon="chat">chat</span>
+                Tin nhắn
+            </a>
+            <a class="flex items-center gap-3 {{ request()->routeIs('profile') ? 'bg-sky-400/20 text-sky-300 border border-sky-400/20' : 'text-slate-400 hover:bg-white/5 hover:text-sky-200' }} px-4 py-3 rounded-xl transition-colors cursor-pointer transition-transform active:translate-x-1 font-inter text-sm font-medium" href="{{ route('profile') }}">
+                <span class="material-symbols-outlined" data-icon="person">person</span>
+                Hồ sơ
+            </a>
+        </nav>
+        <button class="mt-4 w-full py-3 bg-sky-400/20 border border-sky-400/30 text-sky-300 font-bold rounded-xl hover:bg-sky-400/30 transition-all active:scale-95">
+            Đăng bài mới
+        </button>
+    </aside>
+
+    <main class="md:ml-64 pt-16 min-h-screen">
+>>>>>>> Stashed changes
         @yield('content')
 
+<<<<<<< Updated upstream
         <div class="fixed bottom-6 w-full text-center px-6">
             <p class="text-[10px] text-outline uppercase tracking-widest opacity-50">
                 Bằng cách đăng ký, bạn đồng ý với Điều khoản & Chính sách bảo mật của NHOMJ
             </p>
         </div>
     </main>
+=======
+    <nav class="md:hidden fixed bottom-0 w-full glass-panel-elevated flex justify-around items-center h-16 z-50 border-t border-sky-400/10">
+        <button class="p-2 text-slate-400">
+            <span class="material-symbols-outlined" data-icon="home">home</span>
+        </button>
+        <button class="p-2 text-slate-400">
+            <span class="material-symbols-outlined" data-icon="explore">explore</span>
+        </button>
+        <button class="p-2 text-sky-300 bg-sky-400/20 rounded-xl">
+            <span class="material-symbols-outlined" data-icon="person">person</span>
+        </button>
+        <button class="p-2 text-slate-400">
+            <span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+        </button>
+        <a href="{{ route('chat.demo') }}" class="p-2 text-slate-400">
+            <span class="material-symbols-outlined" data-icon="mail">mail</span>
+        </a>
+    </nav>
+    <script src="/js/theme-toggle.js"></script>
+>>>>>>> Stashed changes
 </body>
 </html>
