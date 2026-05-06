@@ -15,9 +15,11 @@ class ProfileController extends Controller
 
         $posts = $user->posts()
             ->with('user')
-            ->withCount('reactions')
+            ->withCount(['reactions', 'comments'])
             ->with(['reactions' => function ($query) {
                 $query->where('nguoi_dung_id', auth()->id());
+            }, 'comments' => function ($query) {
+                $query->with('user')->latest('ngay_tao')->limit(3);
             }])
             ->where('loai', 'van_ban')
             ->where('da_xoa', false)
@@ -40,9 +42,11 @@ class ProfileController extends Controller
 
         $posts = $user->posts()
             ->with('user')
-            ->withCount('reactions')
+            ->withCount(['reactions', 'comments'])
             ->with(['reactions' => function ($query) {
                 $query->where('nguoi_dung_id', auth()->id());
+            }, 'comments' => function ($query) {
+                $query->with('user')->latest('ngay_tao')->limit(3);
             }])
             ->where('loai', 'van_ban')
             ->where('da_xoa', false)

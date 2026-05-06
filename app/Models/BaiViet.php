@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 use App\Models\User;
 use App\Models\CamXuc;
+use App\Models\BinhLuan;
 
 class BaiViet extends Model
 {
@@ -37,5 +38,10 @@ class BaiViet extends Model
     public function media(): HasMany
     {
         return $this->hasMany(MediaBaiViet::class, 'bai_viet_id');
+    }
+
+    public function comments(): HasMany
+    {
+        return $this->hasMany(BinhLuan::class, 'bai_viet_id')->latest('ngay_tao');
     }
 }
