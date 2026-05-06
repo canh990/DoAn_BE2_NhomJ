@@ -11,8 +11,25 @@ class ProfileController extends Controller
 {
     public function show()
     {
+        $user = auth()->user()->loadCount(['followers', 'following']);
+
+        $posts = $user->posts()
+            ->with('user')
+            ->withCount(['reactions', 'comments'])
+            ->with(['reactions' => function ($query) {
+                $query->where('nguoi_dung_id', auth()->id());
+            }, 'comments' => function ($query) {
+                $query->with('user')->latest('ngay_tao')->limit(3);
+            }])
+            ->where('loai', 'van_ban')
+            ->where('da_xoa', false)
+            ->latest()
+            ->take(20)
+            ->get();
+
         return view('profile.profile', [
-            'user' => auth()->user()->loadCount(['followers', 'following']),
+            'user' => $user,
+            'posts' => $posts,
         ]);
     }
 
@@ -23,8 +40,23 @@ class ProfileController extends Controller
             ->withCount(['followers', 'following'])
             ->firstOrFail();
 
+        $posts = $user->posts()
+            ->with('user')
+            ->withCount(['reactions', 'comments'])
+            ->with(['reactions' => function ($query) {
+                $query->where('nguoi_dung_id', auth()->id());
+            }, 'comments' => function ($query) {
+                $query->with('user')->latest('ngay_tao')->limit(3);
+            }])
+            ->where('loai', 'van_ban')
+            ->where('da_xoa', false)
+            ->latest()
+            ->take(20)
+            ->get();
+
         return view('profile.profile', [
             'user' => $user,
+            'posts' => $posts,
         ]);
     }
 

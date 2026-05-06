@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html class="dark" lang="vi">
+@php $theme = session('personal_theme', null); @endphp
+<html class="{{ $theme === 'light' ? 'light' : 'dark' }}" lang="vi">
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
@@ -9,6 +10,7 @@
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="/css/theme-light.css">
     
     <script id="tailwind-config">
         tailwind.config = {
@@ -120,6 +122,12 @@
             <button class="p-2 text-sky-300 hover:bg-sky-400/10 rounded-xl transition-all active:scale-95 duration-200">
                 <span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
             </button>
+            <form method="POST" action="{{ route('logout') }}" class="inline">
+                @csrf
+                <button type="submit" class="p-2 text-slate-400 hover:text-red-400 hover:bg-red-400/10 rounded-xl transition-all active:scale-95 duration-200" title="Đăng xuất">
+                    <span class="material-symbols-outlined" data-icon="logout">logout</span>
+                </button>
+            </form>
         </div>
     </header>
 
@@ -144,25 +152,30 @@
     </div>
 @endauth
         <nav class="flex flex-col gap-1 flex-1">
-            <a class="flex items-center gap-3 text-slate-400 px-4 py-3 hover:bg-white/5 rounded-xl hover:text-sky-200 transition-colors cursor-pointer transition-transform active:translate-x-1 font-inter text-sm font-medium" href="#">
+            <a class="flex items-center gap-3 {{ request()->routeIs('home') ? 'bg-sky-400/20 text-sky-300 border border-sky-400/20' : 'text-slate-400 hover:bg-white/5 hover:text-sky-200' }} px-4 py-3 rounded-xl transition-colors cursor-pointer transition-transform active:translate-x-1 font-inter text-sm font-medium" href="{{ route('home') }}">
                 <span class="material-symbols-outlined" data-icon="home">home</span>
                 Bảng tin
             </a>
-            <a class="flex items-center gap-3 text-slate-400 px-4 py-3 hover:bg-white/5 rounded-xl hover:text-sky-200 transition-colors cursor-pointer transition-transform active:translate-x-1 font-inter text-sm font-medium" href="#">
+            <a class="flex items-center gap-3 {{ request()->routeIs('explore') ? 'bg-sky-400/20 text-sky-300 border border-sky-400/20' : 'text-slate-400 hover:bg-white/5 hover:text-sky-200' }} px-4 py-3 rounded-xl transition-colors cursor-pointer transition-transform active:translate-x-1 font-inter text-sm font-medium" href="{{ route('explore') }}">
                 <span class="material-symbols-outlined" data-icon="explore">explore</span>
                 Khám phá
             </a>
-            <a class="flex items-center gap-3 text-slate-400 px-4 py-3 hover:bg-white/5 rounded-xl hover:text-sky-200 transition-colors cursor-pointer transition-transform active:translate-x-1 font-inter text-sm font-medium" href="#">
+            <a class="flex items-center gap-3 {{ request()->routeIs('notifications') ? 'bg-sky-400/20 text-sky-300 border border-sky-400/20' : 'text-slate-400 hover:bg-white/5 hover:text-sky-200' }} px-4 py-3 rounded-xl transition-colors cursor-pointer transition-transform active:translate-x-1 font-inter text-sm font-medium" href="{{ route('notifications') }}">
                 <span class="material-symbols-outlined" data-icon="notifications">notifications</span>
                 Thông báo
             </a>
-            <a class="flex items-center gap-3 text-slate-400 px-4 py-3 hover:bg-white/5 rounded-xl hover:text-sky-200 transition-colors cursor-pointer transition-transform active:translate-x-1 font-inter text-sm font-medium" href="#">
+
+            <a class="flex items-center gap-3 {{ request()->routeIs('chat.demo') || request()->routeIs('chat.user.*') || request()->routeIs('chat.messages.*') || request()->routeIs('chat.conversations.*') ? 'bg-sky-400/20 text-sky-300 border border-sky-400/20' : 'text-slate-400 hover:bg-white/5 hover:text-sky-200' }} px-4 py-3 rounded-xl transition-colors cursor-pointer transition-transform active:translate-x-1 font-inter text-sm font-medium" href="{{ route('chat.demo') }}">
                 <span class="material-symbols-outlined" data-icon="chat">chat</span>
                 Tin nhắn
             </a>
-            <a class="flex items-center gap-3 bg-sky-400/20 text-sky-300 rounded-xl px-4 py-3 border border-sky-400/20 cursor-pointer transition-transform active:translate-x-1 font-inter text-sm font-medium" href="#">
+            <a class="flex items-center gap-3 {{ request()->routeIs('profile') ? 'bg-sky-400/20 text-sky-300 border border-sky-400/20' : 'text-slate-400 hover:bg-white/5 hover:text-sky-200' }} px-4 py-3 rounded-xl transition-colors cursor-pointer transition-transform active:translate-x-1 font-inter text-sm font-medium" href="{{ route('profile') }}">
                 <span class="material-symbols-outlined" data-icon="person">person</span>
                 Hồ sơ
+            </a>
+            <a class="flex items-center gap-3 {{ request()->routeIs('settings.*') ? 'bg-sky-400/20 text-sky-300 border border-sky-400/20' : 'text-slate-400 hover:bg-white/5 hover:text-sky-200' }} px-4 py-3 rounded-xl transition-colors cursor-pointer transition-transform active:translate-x-1 font-inter text-sm font-medium" href="{{ route('settings.index') }}">
+                <span class="material-symbols-outlined" data-icon="settings">settings</span>
+                Cài đặt
             </a>
         </nav>
         <button class="mt-4 w-full py-3 bg-sky-400/20 border border-sky-400/30 text-sky-300 font-bold rounded-xl hover:bg-sky-400/30 transition-all active:scale-95">
@@ -191,5 +204,171 @@
             <span class="material-symbols-outlined" data-icon="mail">mail</span>
         </button>
     </nav>
+
+    <script>
+        document.addEventListener('click', function (event) {
+            const reactionTrigger = event.target.closest('[data-reaction-trigger]');
+            const reactionOption = event.target.closest('[data-reaction-option]');
+            const commentToggle = event.target.closest('[data-comment-toggle]');
+            const reactionAreas = document.querySelectorAll('[data-reaction-area]');
+
+            if (commentToggle) {
+                event.stopPropagation();
+                const area = commentToggle.closest('[data-reaction-area]');
+                const box = area?.querySelector('[data-comment-box]');
+                if (box) {
+                    box.classList.toggle('hidden');
+                }
+                return;
+            }
+
+            if (reactionOption) {
+                event.stopPropagation();
+                const reaction = reactionOption.dataset.reaction;
+                const label = reactionOption.dataset.reactionLabel;
+                const color = reactionOption.dataset.reactionColor;
+                const iconName = reactionOption.dataset.reactionIcon;
+                const area = reactionOption.closest('[data-reaction-area]');
+                const form = area.querySelector('.reaction-submit-form');
+                const action = form.action;
+                const token = form.querySelector('input[name="_token"]').value;
+                const body = new URLSearchParams();
+
+                body.append('_token', token);
+                body.append('loai_cam_xuc', reaction);
+
+                fetch(action, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                    },
+                    body,
+                })
+                    .then(function (response) {
+                        return response.json();
+                    })
+                    .then(function (data) {
+                        if (!data.success) {
+                            return;
+                        }
+
+                        const triggerIcon = area.querySelector('[data-reaction-trigger-icon]');
+                        const triggerLabel = area.querySelector('[data-reaction-trigger-label]');
+                        const countNode = area.querySelector('[data-reaction-count]');
+                        const picker = area.querySelector('[data-reaction-picker]');
+                        const isRemoved = data.removed;
+                        const newIconName = isRemoved ? 'thumb_up' : iconName;
+                        const newLabel = isRemoved ? 'Thích' : label;
+                        const newColor = isRemoved ? 'text-sky-400' : color;
+
+                        if (triggerIcon) {
+                            triggerIcon.textContent = newIconName;
+                            triggerIcon.className = 'material-symbols-outlined ' + newColor;
+                        }
+
+                        if (triggerLabel) {
+                            triggerLabel.textContent = newLabel;
+                        }
+
+                        if (countNode) {
+                            countNode.textContent = data.reactions_count + ' cảm xúc';
+                        }
+
+                        if (picker) {
+                            picker.classList.add('hidden');
+                        }
+                    });
+
+                return;
+            }
+
+            reactionAreas.forEach(function (area) {
+                const picker = area.querySelector('[data-reaction-picker]');
+                if (!picker) {
+                    return;
+                }
+
+                if (reactionTrigger && area.contains(reactionTrigger)) {
+                    picker.classList.toggle('hidden');
+                } else if (!area.contains(event.target)) {
+                    picker.classList.add('hidden');
+                }
+            });
+        });
+
+        document.addEventListener('submit', function (event) {
+            const commentForm = event.target.closest('.comment-submit-form');
+            if (!commentForm) {
+                return;
+            }
+
+            event.preventDefault();
+            const action = commentForm.action;
+            const body = new FormData(commentForm);
+
+            fetch(action, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                },
+                body,
+            })
+                .then(function (response) {
+                    return response.json();
+                })
+                .then(function (data) {
+                    if (!data.success) {
+                        return;
+                    }
+
+                    const area = commentForm.closest('[data-reaction-area]');
+                    const countNode = area?.querySelector('[data-comment-count]');
+                    const box = commentForm.closest('[data-comment-box]');
+                    const textarea = commentForm.querySelector('textarea[name="noi_dung"]');
+
+                    if (countNode) {
+                        countNode.textContent = '(' + data.comments_count + ')';
+                    }
+
+                    if (textarea) {
+                        textarea.value = '';
+                    }
+
+                    if (box) {
+                        const noComments = box.querySelector('[data-no-comments]');
+                        const list = box.querySelector('[data-comment-list]');
+
+                        if (noComments) {
+                            noComments.remove();
+                        }
+
+                        if (list) {
+                            const commentBlock = document.createElement('div');
+                            commentBlock.className = 'rounded-2xl border border-white/10 bg-slate-950 p-3';
+                            commentBlock.innerHTML = `
+                                <div class="flex gap-3 items-start">
+                                    <img class="w-8 h-8 rounded-full object-cover border border-slate-700" src="${data.comment.user_avatar}" alt="${data.comment.user_name}">
+                                    <div class="flex-1">
+                                        <div class="flex items-center justify-between gap-2 text-sm text-slate-200">
+                                            <span class="font-semibold">${data.comment.user_name}</span>
+                                            <span class="text-xs text-slate-500">${data.comment.created_at}</span>
+                                        </div>
+                                        <p class="mt-1 text-sm leading-relaxed text-slate-300">${data.comment.content}</p>
+                                    </div>
+                                </div>
+                            `;
+                            list.appendChild(commentBlock);
+                        }
+                    }
+                })
+                .catch(function (error) {
+                    console.error('Lỗi khi gửi bình luận:', error);
+                });
+        });
+    </script>
+    <script src="/js/theme-toggle.js"></script>
+    <script src="/js/language-toggle.js"></script>
 </body>
 </html>

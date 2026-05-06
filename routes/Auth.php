@@ -41,6 +41,17 @@ Route::get('/forgot-password', function () {
 // -----------------------------------------------
 // Trang sau khi đăng nhập
 // -----------------------------------------------
-Route::get('/home', function () {
-    return view('auth.home');
-})->name('home')->middleware('auth');
+Route::view('/explore', 'components.placeholder', [
+    'title' => 'Khám phá',
+    'message' => 'Trang Khám phá sẽ sớm có nội dung đầy đủ.',
+])->name('explore')->middleware('auth');
+
+Route::view('/notifications', 'components.placeholder', [
+    'title' => 'Thông báo',
+    'message' => 'Bạn chưa có thông báo mới.',
+])->name('notifications')->middleware('auth');
+
+Route::view('/messages', 'components.placeholder', [
+    'title' => 'Tin nhắn',
+    'message' => 'Hộp thư của bạn đang trống.',
+])->name('messages')->middleware('auth');
