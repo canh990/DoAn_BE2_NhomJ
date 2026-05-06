@@ -47,10 +47,10 @@
                     <span class="text-3xl text-slate-500">▣</span>
                     <span>Danh bạ</span>
                 </div>
-                <div class="flex items-center gap-5 px-5 py-3">
+                <a href="{{ route('chat.groups.index') }}" class="flex items-center gap-5 px-5 py-3 hover:bg-white/[.04] hover:text-sky-300">
                     <span class="text-3xl text-slate-500">☷</span>
                     <span>Nhóm</span>
-                </div>
+                </a>
                 <div class="flex items-center gap-5 px-5 py-3">
                     <span class="text-3xl text-slate-500">▤</span>
                     <span>Lưu trữ</span>
