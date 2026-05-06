@@ -50,7 +50,7 @@
                 <p class="text-on-surface-variant">Bắt đầu hành trình của bạn ngay hôm nay</p>
             </div>
 
-            <form action="{{ route('register') }}" method="POST" class="space-y-5">
+            <form action="{{ route('register.post') }}" method="POST" class="space-y-5">
                 @csrf
                 
                 <div class="space-y-1.5">
