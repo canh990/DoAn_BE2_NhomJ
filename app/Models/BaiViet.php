@@ -24,6 +24,15 @@ class BaiViet extends Model
         return $this->belongsTo(User::class, 'nguoi_dung_id');
     }
 
+<<<<<<< Updated upstream
+=======
+
+    public function reactions(): HasMany
+    {
+        return $this->hasMany(CamXuc::class, 'bai_viet_id');
+    }
+
+>>>>>>> Stashed changes
     public function media(): HasMany
     {
         return $this->hasMany(MediaBaiViet::class, 'bai_viet_id');

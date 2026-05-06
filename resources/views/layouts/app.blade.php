@@ -156,13 +156,21 @@
                 <span class="material-symbols-outlined" data-icon="notifications">notifications</span>
                 Thông báo
             </a>
+<<<<<<< Updated upstream
             <a class="flex items-center gap-3 {{ request()->routeIs('messages') ? 'bg-sky-400/20 text-sky-300 border border-sky-400/20' : 'text-slate-400 hover:bg-white/5 hover:text-sky-200' }} px-4 py-3 rounded-xl transition-colors cursor-pointer transition-transform active:translate-x-1 font-inter text-sm font-medium" href="{{ route('messages') }}">
+=======
+            <a class="flex items-center gap-3 {{ request()->routeIs('chat.demo') || request()->routeIs('chat.user.*') || request()->routeIs('chat.messages.*') || request()->routeIs('chat.conversations.*') ? 'bg-sky-400/20 text-sky-300 border border-sky-400/20' : 'text-slate-400 hover:bg-white/5 hover:text-sky-200' }} px-4 py-3 rounded-xl transition-colors cursor-pointer transition-transform active:translate-x-1 font-inter text-sm font-medium" href="{{ route('chat.demo') }}">
+>>>>>>> Stashed changes
                 <span class="material-symbols-outlined" data-icon="chat">chat</span>
                 Tin nhắn
             </a>
             <a class="flex items-center gap-3 {{ request()->routeIs('profile') ? 'bg-sky-400/20 text-sky-300 border border-sky-400/20' : 'text-slate-400 hover:bg-white/5 hover:text-sky-200' }} px-4 py-3 rounded-xl transition-colors cursor-pointer transition-transform active:translate-x-1 font-inter text-sm font-medium" href="{{ route('profile') }}">
                 <span class="material-symbols-outlined" data-icon="person">person</span>
                 Hồ sơ
+            </a>
+            <a class="flex items-center gap-3 {{ request()->routeIs('settings.*') ? 'bg-sky-400/20 text-sky-300 border border-sky-400/20' : 'text-slate-400 hover:bg-white/5 hover:text-sky-200' }} px-4 py-3 rounded-xl transition-colors cursor-pointer transition-transform active:translate-x-1 font-inter text-sm font-medium" href="{{ route('settings.index') }}">
+                <span class="material-symbols-outlined" data-icon="settings">settings</span>
+                Cài đặt
             </a>
         </nav>
         <button class="mt-4 w-full py-3 bg-sky-400/20 border border-sky-400/30 text-sky-300 font-bold rounded-xl hover:bg-sky-400/30 transition-all active:scale-95">
