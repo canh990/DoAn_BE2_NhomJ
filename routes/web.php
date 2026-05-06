@@ -1,5 +1,6 @@
 <?php
 require __DIR__ . '/Auth.php';
+require __DIR__ . '/forgot-password.php';
 
 require __DIR__ . '/post.php';
 

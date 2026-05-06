@@ -46,19 +46,26 @@ class RegisterController extends Controller
 protected function validator(array $data)
 {
     return Validator::make($data, [
-       'ten_dang_nhap' => [
-    'required',
-    'min:4',
-    'max:30',
-    'regex:/^[a-z0-9._]+$/',
-    'unique:nguoi_dung,ten_dang_nhap'
-],
+        'ten_dang_nhap' => [
+            'required',
+            'min:4',
+            'max:30',
+            'regex:/^[a-z0-9._]+$/',
+            'unique:nguoi_dung,ten_dang_nhap'
+        ],
         'email'         => ['required', 'string', 'email', 'max:255', 'unique:nguoi_dung,email'],
         'so_dien_thoai' => ['required', 'string', 'max:20', 'unique:nguoi_dung,so_dien_thoai'],
-        'mat_khau'      => ['required', 'string', 'min:8'],
+        'mat_khau'      => [
+            'required', 
+            'string', 
+            'min:8',
+            // Regex: Ít nhất 1 chữ cái, 1 số, 1 ký tự đặc biệt
+            'regex:/^(?=.*[a-zA-Z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/'
+        ],
     ], [
         'ten_dang_nhap.required' => 'Vui lòng nhập tên đăng nhập',
         'ten_dang_nhap.unique'   => 'Tên đăng nhập đã tồn tại',
+        'ten_dang_nhap.regex'    => 'Tên đăng nhập chỉ chứa chữ thường, số, dấu chấm và gạch dưới',
 
         'email.required' => 'Vui lòng nhập email',
         'email.email'    => 'Email không hợp lệ',
@@ -69,6 +76,7 @@ protected function validator(array $data)
 
         'mat_khau.required' => 'Vui lòng nhập mật khẩu',
         'mat_khau.min'      => 'Mật khẩu phải có ít nhất 8 ký tự',
+        'mat_khau.regex'    => 'Mật khẩu phải bao gồm chữ cái, số và ít nhất một ký tự đặc biệt (!@#$...)',
     ]);
 }
 
