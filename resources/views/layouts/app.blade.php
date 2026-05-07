@@ -210,7 +210,37 @@
             const reactionTrigger = event.target.closest('[data-reaction-trigger]');
             const reactionOption = event.target.closest('[data-reaction-option]');
             const commentToggle = event.target.closest('[data-comment-toggle]');
+            const commentReplyButton = event.target.closest('[data-comment-reply-button]');
+            const commentCancel = event.target.closest('[data-comment-cancel]');
             const reactionAreas = document.querySelectorAll('[data-reaction-area]');
+
+            if (commentCancel) {
+                event.preventDefault();
+                const area = commentCancel.closest('[data-reaction-area]');
+                const form = area?.querySelector('.comment-submit-form');
+                if (form) {
+                    form.querySelector('input[name="binh_luan_cha_id"]').value = '';
+                    form.querySelector('[data-comment-action]').textContent = 'Viết bình luận mới';
+                    commentCancel.classList.add('hidden');
+                }
+                return;
+            }
+
+            if (commentReplyButton) {
+                event.preventDefault();
+                const area = commentReplyButton.closest('[data-reaction-area]');
+                const form = area?.querySelector('.comment-submit-form');
+                if (form) {
+                    form.querySelector('input[name="binh_luan_cha_id"]').value = commentReplyButton.dataset.commentId;
+                    form.querySelector('textarea[name="noi_dung"]').focus();
+                    form.querySelector('[data-comment-action]').textContent = `Trả lời ${commentReplyButton.dataset.commentUser}`;
+                    const cancelButton = form.querySelector('[data-comment-cancel]');
+                    if (cancelButton) {
+                        cancelButton.classList.remove('hidden');
+                    }
+                }
+                return;
+            }
 
             if (commentToggle) {
                 event.stopPropagation();
@@ -344,22 +374,69 @@
                             noComments.remove();
                         }
 
-                        if (list) {
-                            const commentBlock = document.createElement('div');
-                            commentBlock.className = 'rounded-2xl border border-white/10 bg-slate-950 p-3';
-                            commentBlock.innerHTML = `
-                                <div class="flex gap-3 items-start">
-                                    <img class="w-8 h-8 rounded-full object-cover border border-slate-700" src="${data.comment.user_avatar}" alt="${data.comment.user_name}">
-                                    <div class="flex-1">
-                                        <div class="flex items-center justify-between gap-2 text-sm text-slate-200">
-                                            <span class="font-semibold">${data.comment.user_name}</span>
-                                            <span class="text-xs text-slate-500">${data.comment.created_at}</span>
-                                        </div>
-                                        <p class="mt-1 text-sm leading-relaxed text-slate-300">${data.comment.content}</p>
+                        const parentId = data.comment.parent_id;
+                        const newComment = document.createElement('div');
+                        newComment.className = 'rounded-2xl border border-white/10 bg-slate-950 p-3';
+                        newComment.dataset.commentId = data.comment.id;
+                        newComment.innerHTML = `
+                            <div class="flex gap-3 items-start">
+                                <img class="w-8 h-8 rounded-full object-cover border border-slate-700" src="${data.comment.user_avatar}" alt="${data.comment.user_name}">
+                                <div class="flex-1">
+                                    <div class="flex items-center justify-between gap-2 text-sm text-slate-200">
+                                        <span class="font-semibold">${data.comment.user_name}</span>
+                                        <span class="text-xs text-slate-500">${data.comment.created_at}</span>
                                     </div>
+                                    <p class="mt-1 text-sm leading-relaxed text-slate-300">${data.comment.content}</p>
                                 </div>
-                            `;
-                            list.appendChild(commentBlock);
+                            </div>
+                        `;
+
+                        const replyButton = document.createElement('button');
+                        replyButton.type = 'button';
+                        replyButton.dataset.commentReplyButton = '';
+                        replyButton.dataset.commentId = data.comment.id;
+                        replyButton.dataset.commentUser = data.comment.user_name;
+                        replyButton.className = 'hover:text-sky-300 text-xs text-slate-400 mt-3';
+                        replyButton.textContent = 'Trả lời';
+
+                        const replyWrapper = document.createElement('div');
+                        replyWrapper.className = 'mt-3 flex items-center gap-3';
+                        replyWrapper.appendChild(replyButton);
+
+                        const replyContainer = document.createElement('div');
+                        replyContainer.className = 'mt-3 space-y-3 pl-10';
+                        replyContainer.dataset.commentReplies = '';
+
+                        if (parentId) {
+                            const parentReplies = list.querySelector('[data-comment-id="' + parentId + '"] [data-comment-replies]');
+                            if (parentReplies) {
+                                const replyBlock = document.createElement('div');
+                                replyBlock.className = newComment.className;
+                                replyBlock.dataset.commentId = data.comment.id;
+                                replyBlock.innerHTML = newComment.innerHTML;
+                                parentReplies.appendChild(replyBlock);
+                            } else {
+                                list.appendChild(newComment);
+                                newComment.appendChild(replyWrapper);
+                                newComment.appendChild(replyContainer);
+                            }
+                        } else {
+                            newComment.appendChild(replyWrapper);
+                            newComment.appendChild(replyContainer);
+                            list.appendChild(newComment);
+                        }
+
+                        const parentInput = commentForm.querySelector('input[name="binh_luan_cha_id"]');
+                        const actionLabel = commentForm.querySelector('[data-comment-action]');
+                        const cancelBtn = commentForm.querySelector('[data-comment-cancel]');
+                        if (parentInput) {
+                            parentInput.value = '';
+                        }
+                        if (actionLabel) {
+                            actionLabel.textContent = 'Viết bình luận mới';
+                        }
+                        if (cancelBtn) {
+                            cancelBtn.classList.add('hidden');
                         }
                     }
                 })
