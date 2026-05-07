@@ -4,11 +4,13 @@ namespace App\Http\Controllers\Settings;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\App; // Bắt buộc phải có dòng này
-use Illuminate\Support\Facades\Auth; // Thêm thư viện Auth để xử lý user/logout
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Auth;
 
 class PersonalSettingsController extends Controller
 {
+    // No constructor: layout will apply session locale during view rendering.
+
     // Hiển thị giao diện Settings
     public function index(Request $request)
     {
@@ -33,11 +35,11 @@ class PersonalSettingsController extends Controller
         return response()->json(['status' => 'ok', 'theme' => $data['theme']]);
     }
 
-    // Persist language choice (e.g. vi|en)
+    // Persist language choice (e.g. vi|en|ja)
     public function setLanguage(Request $request)
     {
         $data = $request->validate([
-            'locale' => 'required|string|in:vi,en'
+            'locale' => 'required|string|in:vi,en,ja'
         ]);
 
         session(['personal_locale' => $data['locale']]);
@@ -49,33 +51,24 @@ class PersonalSettingsController extends Controller
     // CÁC HÀM XỬ LÝ NÚT BẤM DƯỚI GIAO DIỆN
     // ==========================================
 
-    // Xóa bộ nhớ đệm
     public function clearCache(Request $request)
     {
-        // Bạn có thể viết logic thực tế ở đây (VD: clear session tạm, v.v.)
-        // Artisan::call('cache:clear');
-        
         return back()->with('success', 'Đã xóa bộ nhớ đệm thành công!');
     }
 
-    // Đăng xuất (Dùng tạm nếu project chưa có Route Đăng xuất riêng)
     public function logout(Request $request)
     {
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect('/'); // Đẩy về trang chủ hoặc trang đăng nhập
+        return redirect('/'); 
     }
 
-    // Vô hiệu hóa tài khoản
     public function disableAccount(Request $request)
     {
         $user = Auth::user();
         if ($user) {
-            // Logic đánh dấu xóa user của bạn. Ví dụ:
-            // $user->update(['ngay_xoa' => now()]);
-            
             Auth::logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();

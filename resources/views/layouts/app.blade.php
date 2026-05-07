@@ -1,6 +1,10 @@
 <!DOCTYPE html>
-@php $theme = session('personal_theme', null); @endphp
-<html class="{{ $theme === 'light' ? 'light' : 'dark' }}" lang="vi">
+@php
+    // apply the user's preferred locale from session for each render
+    app()->setLocale(session('personal_locale', config('app.locale', 'vi')));
+    $theme = session('personal_theme', null);
+@endphp
+<html class="{{ $theme === 'light' ? 'light' : 'dark' }}" lang="{{ app()->getLocale() }}">
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
@@ -180,10 +184,12 @@
                 <span class="material-symbols-outlined" data-icon="person">person</span>
                 Hồ sơ
             </a>
-            <a class="flex items-center gap-3 {{ request()->routeIs('settings.*') ? 'bg-sky-400/20 text-sky-300 border border-sky-400/20' : 'text-slate-400 hover:bg-white/5 hover:text-sky-200' }} px-4 py-3 rounded-xl transition-colors cursor-pointer transition-transform active:translate-x-1 font-inter text-sm font-medium" href="{{ route('settings.index') }}">
-                <span class="material-symbols-outlined" data-icon="settings">settings</span>
-                Cài đặt
-            </a>
+            <a href="{{ route('settings.index') }}" class="flex items-center gap-4 px-4 py-3 rounded-full transition-all hover:bg-white/10 group">
+    <span class="material-symbols-outlined text-2xl group-hover:scale-110 transition-transform" data-icon="settings">
+        settings
+    </span>
+    <span class="text-lg font-medium">{{ __('messages.settings_title') }}</span>
+</a>
         </nav>
         <button class="mt-4 w-full py-3 bg-sky-400/20 border border-sky-400/30 text-sky-300 font-bold rounded-xl hover:bg-sky-400/30 transition-all active:scale-95">
             Đăng bài mới
