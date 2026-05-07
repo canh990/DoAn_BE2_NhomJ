@@ -49,50 +49,135 @@
                 <h2 class="text-3xl font-bold text-on-surface mb-2">Tạo tài khoản</h2>
                 <p class="text-on-surface-variant">Bắt đầu hành trình của bạn ngay hôm nay</p>
             </div>
+<form action="{{ route('register.post') }}" method="POST" class="space-y-5">
+    @csrf
 
-            <form action="{{ route('register.post') }}" method="POST" class="space-y-5">
-                @csrf
-                
-                <div class="space-y-1.5">
-                    <label class="text-xs font-semibold text-on-secondary-container tracking-wider uppercase ml-1">tên đăng nhập</label>
-                    <div class="relative">
-                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-xl">person</span>
-                        <input name="ten_dang_nhap" type="text" value="{{ old('ten_dang_nhap') }}" class="glass-input w-full pl-11 pr-4 py-3 rounded-xl text-on-surface placeholder:text-outline" placeholder="" required>
-                    </div>
-                    @error('ten_dang_nhap') <span class="text-error text-xs">{{ $message }}</span> @enderror
-                </div>
+    {{-- TÊN ĐĂNG NHẬP --}}
+    <div class="space-y-2">
+        <label class="text-xs font-semibold uppercase tracking-wider text-on-surface-variant ml-1">
+            Tên đăng nhập
+        </label>
 
-                <div class="space-y-1.5">
-                    <label class="text-xs font-semibold text-on-secondary-container tracking-wider uppercase ml-1">Email</label>
-                    <div class="relative">
-                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-xl">mail</span>
-                        <input name="email" type="email" value="{{ old('email') }}" class="glass-input w-full pl-11 pr-4 py-3 rounded-xl text-on-surface placeholder:text-outline" placeholder="" required>
-                    </div>
-                    @error('email') <span class="text-error text-xs">{{ $message }}</span> @enderror
-                </div>
+        <div class="relative group">
+            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary transition-colors">
+                person
+            </span>
 
-                <div class="space-y-1.5">
-                    <label class="text-xs font-semibold text-on-secondary-container tracking-wider uppercase ml-1">Số điện thoại</label>
-                    <div class="relative">
-                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-xl">call</span>
-                        <input name="so_dien_thoai" type="tel" value="{{ old('so_dien_thoai') }}" class="glass-input w-full pl-11 pr-4 py-3 rounded-xl text-on-surface placeholder:text-outline" placeholder="" required>
-                    </div>
-                    @error('so_dien_thoai') <span class="text-error text-xs">{{ $message }}</span> @enderror
-                </div>
+            <input
+                name="ten_dang_nhap"
+                type="text"
+                value="{{ old('ten_dang_nhap') }}"
+                required
+                class="w-full h-12 bg-surface-container-low border 
+                @error('ten_dang_nhap') border-error @else border-outline-variant @enderror
+                focus:border-primary focus:ring-1 focus:ring-primary/20 
+                rounded-lg pl-12 pr-4 text-on-surface 
+                placeholder:text-outline transition-all"
+                placeholder="Nhập tên đăng nhập"
+            />
+        </div>
 
-                <div class="space-y-1.5">
-                    <label class="text-xs font-semibold text-on-secondary-container tracking-wider uppercase ml-1">Mật khẩu</label>
-                    <div class="relative">
-                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-xl">lock</span>
-                        <input name="mat_khau" type="password" class="glass-input w-full pl-11 pr-4 py-3 rounded-xl text-on-surface placeholder:text-outline" placeholder="" required>
-                    </div>
-                    @error('mat_khau') <span class="text-error text-xs">{{ $message }}</span> @enderror
-                </div>
+        @error('ten_dang_nhap')
+            <p class="text-xs text-error ml-1">{{ $message }}</p>
+        @enderror
+    </div>
 
-                <button type="submit" class="w-full bg-primary/20 border border-primary/30 text-primary font-bold py-3.5 rounded-xl hover:bg-primary/30 transition-all active:scale-[0.98] mt-2 shadow-[0_0_20px_rgba(125,211,252,0.1)]">
-                    Đăng ký
-                </button>
-            </form>
+    {{-- EMAIL --}}
+    <div class="space-y-2">
+        <label class="text-xs font-semibold uppercase tracking-wider text-on-surface-variant ml-1">
+            Email
+        </label>
+
+        <div class="relative group">
+            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary transition-colors">
+                mail
+            </span>
+
+            <input
+                name="email"
+                type="email"
+                value="{{ old('email') }}"
+                required
+                class="w-full h-12 bg-surface-container-low border 
+                @error('email') border-error @else border-outline-variant @enderror
+                focus:border-primary focus:ring-1 focus:ring-primary/20 
+                rounded-lg pl-12 pr-4 text-on-surface 
+                placeholder:text-outline transition-all"
+                placeholder="example@email.com"
+            />
+        </div>
+
+        @error('email')
+            <p class="text-xs text-error ml-1">{{ $message }}</p>
+        @enderror
+    </div>
+
+    {{-- SỐ ĐIỆN THOẠI --}}
+    <div class="space-y-2">
+        <label class="text-xs font-semibold uppercase tracking-wider text-on-surface-variant ml-1">
+            Số điện thoại
+        </label>
+
+        <div class="relative group">
+            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary transition-colors">
+                call
+            </span>
+
+            <input
+                name="so_dien_thoai"
+                type="tel"
+                value="{{ old('so_dien_thoai') }}"
+                required
+                class="w-full h-12 bg-surface-container-low border 
+                @error('so_dien_thoai') border-error @else border-outline-variant @enderror
+                focus:border-primary focus:ring-1 focus:ring-primary/20 
+                rounded-lg pl-12 pr-4 text-on-surface 
+                placeholder:text-outline transition-all"
+                placeholder="nhập số điện thoại"
+            />
+        </div>
+
+        @error('so_dien_thoai')
+            <p class="text-xs text-error ml-1">{{ $message }}</p>
+        @enderror
+    </div>
+
+    {{-- MẬT KHẨU --}}
+    <div class="space-y-2">
+        <label class="text-xs font-semibold uppercase tracking-wider text-on-surface-variant ml-1">
+            Mật khẩu
+        </label>
+
+        <div class="relative group">
+            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary transition-colors">
+                lock
+            </span>
+
+            <input
+                name="mat_khau"
+                type="password"
+                required
+                class="w-full h-12 bg-surface-container-low border 
+                @error('mat_khau') border-error @else border-outline-variant @enderror
+                focus:border-primary focus:ring-1 focus:ring-primary/20 
+                rounded-lg pl-12 pr-4 text-on-surface 
+                placeholder:text-outline transition-all"
+                placeholder="••••••••"
+            />
+        </div>
+
+        @error('mat_khau')
+            <p class="text-xs text-error ml-1">{{ $message }}</p>
+        @enderror
+    </div>
+
+    {{-- BUTTON --}}
+    <button type="submit"
+        class="w-full h-12 bg-primary text-white font-semibold rounded-lg 
+        hover:opacity-90 transition-all active:scale-[0.98]">
+        Đăng ký
+    </button>
+</form>
 
             <div class="relative my-8">
                 <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-outline-variant"></div></div>

@@ -15,9 +15,9 @@
     </div>
 
     @if(session('success'))
-        <div class="mb-6 rounded-2xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-200 animate-fade-in">
-            {{ session('success') }}
-        </div>
+    <div class="mb-6 rounded-2xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-200 animate-fade-in">
+        {{ session('success') }}
+    </div>
     @endif
 
     <form action="{{ route('profile.update') }}" method="POST" enctype="multipart/form-data" class="space-y-8">
@@ -30,10 +30,9 @@
                     id="cover-preview"
                     alt="Ảnh bìa"
                     class="w-full h-full object-cover transition-opacity duration-300 opacity-70 group-hover:opacity-50"
-                    src="{{ $user->anh_bia ? asset('storage/' . $user->anh_bia) : 'https://images.unsplash.com/photo-1557683316-973673baf926?q=80&w=2029&auto=format&fit=crop' }}"
-                />
+                    src="{{ $user->anh_bia ? asset('storage/' . $user->anh_bia) : 'https://images.unsplash.com/photo-1557683316-973673baf926?q=80&w=2029&auto=format&fit=crop' }}" />
                 <div class="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent"></div>
-                
+
                 <label for="anh_bia" class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
                     <div class="flex items-center gap-2 rounded-xl bg-black/50 backdrop-blur-md px-4 py-2 text-white border border-white/20">
                         <span class="text-sm font-medium">Thay đổi ảnh bìa</span>
@@ -47,10 +46,9 @@
                     <div class="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-background overflow-hidden glass-panel-elevated shadow-2xl">
                         <img
                             id="avatar-preview"
-                            alt="{{ $user->name }}"
                             class="w-full h-full object-cover"
-                            src="{{ $user->anh_dai_dien ? asset('storage/' . $user->anh_dai_dien) : 'https://ui-avatars.com/api/?name='.urlencode($user->name).'&background=random' }}"
-                        />
+                            alt="{{ $user->name }}"
+                            src="{{ $user->anh_dai_dien ? asset('storage/' . $user->anh_dai_dien) : 'https://ui-avatars.com/api/?name='.urlencode($user->name).'&background=random' }}" />
                     </div>
                     <label for="anh_dai_dien" class="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
                         <span class="material-symbols-outlined text-white text-3xl">photo_camera</span>
@@ -70,8 +68,7 @@
                             name="ten_dang_nhap"
                             type="text"
                             value="{{ old('ten_dang_nhap', $user->ten_dang_nhap) }}"
-                            class="w-full bg-slate-900/50 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-on-surface focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all outline-none"
-                        >
+                            class="w-full bg-slate-900/50 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-on-surface focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all outline-none">
                     </div>
                     @error('ten_dang_nhap') <p class="text-xs text-red-400 mt-1">{{ $message }}</p> @enderror
                 </div>
@@ -84,8 +81,7 @@
                             type="email"
                             value="{{ $user->email }}"
                             disabled
-                            class="w-full bg-slate-900/50 border border-white/5 rounded-2xl py-3.5 pl-12 pr-4 text-slate-400 cursor-not-allowed"
-                        >
+                            class="w-full bg-slate-900/50 border border-white/5 rounded-2xl py-3.5 pl-12 pr-4 text-slate-400 cursor-not-allowed">
                     </div>
                 </div>
             </div>
@@ -98,23 +94,28 @@
                         name="tieu_su"
                         rows="3"
                         placeholder="Hãy chia sẻ điều gì đó về bản thân..."
-                        class="w-full bg-slate-900/50 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-on-surface focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all outline-none resize-none"
-                    >{{ old('tieu_su', $user->tieu_su) }}</textarea>
+                        class="w-full bg-slate-900/50 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-on-surface focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all outline-none resize-none">{{ old('tieu_su', $user->tieu_su) }}</textarea>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="space-y-2">
-                    <label class="text-xs font-bold uppercase tracking-wider text-slate-500 ml-1">Ngày sinh</label>
-                    <div class="relative">
-                        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">cake</span>
-                        <input
-                            name="ngay_sinh"
-                            type="date"
-                            value="{{ old('ngay_sinh', optional($user->ngay_sinh)->format('Y-m-d') ?? $user->ngay_sinh) }}"
-                            class="w-full bg-slate-900/50 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-on-surface focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all outline-none [color-scheme:dark]"
-                        >
+                    <label class="text-xs font-bold uppercase text-slate-500">Ngày sinh</label>
+
+                    <input
+                        type="date"
+                        name="ngay_sinh"
+                        {{-- Dùng old() để giữ lại giá trị vừa nhập nếu có lỗi --}}
+                        value="{{ old('ngay_sinh', $user->ngay_sinh ? \Carbon\Carbon::parse($user->ngay_sinh)->format('Y-m-d') : '') }}"
+                        {{-- Đổi màu viền sang đỏ nếu có lỗi --}}
+                        class="w-full bg-slate-900/50 border {{ $errors->has('ngay_sinh') ? 'border-red-500/50' : 'border-white/10' }} rounded-2xl py-3.5 px-4 text-on-surface outline-none transition-all focus:border-sky-400/50">
+
+                    @error('ngay_sinh')
+                    <div class="flex items-center gap-1 mt-1 text-red-400">
+                        <span class="material-symbols-outlined text-sm">error</span>
+                        <span class="text-xs font-medium">{{ $message }}</span>
                     </div>
+                    @enderror
                 </div>
 
                 <div class="space-y-2">
@@ -126,8 +127,7 @@
                             type="text"
                             value="{{ old('noi_o', $user->noi_o) }}"
                             placeholder="Ví dụ: Hà Nội, Việt Nam"
-                            class="w-full bg-slate-900/50 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-on-surface focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all outline-none"
-                        >
+                            class="w-full bg-slate-900/50 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-on-surface focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all outline-none">
                     </div>
                 </div>
             </div>
@@ -138,8 +138,7 @@
                     <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">lock</span>
                     <select
                         name="quyen_rieng_tu"
-                        class="w-full bg-slate-900/50 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-on-surface focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all outline-none appearance-none"
-                    >
+                        class="w-full bg-slate-900/50 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-on-surface focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all outline-none appearance-none">
                         <option value="cong_khai" @selected(old('quyen_rieng_tu', $user->quyen_rieng_tu) === 'cong_khai')>Công khai với mọi người</option>
                         <option value="ban_be" @selected(old('quyen_rieng_tu', $user->quyen_rieng_tu) === 'ban_be')>Chỉ bạn bè mới thấy</option>
                         <option value="rieng_tu" @selected(old('quyen_rieng_tu', $user->quyen_rieng_tu) === 'rieng_tu')>Chỉ mình tôi</option>
@@ -166,28 +165,60 @@
     function previewImage(input, previewId) {
         const preview = document.getElementById(previewId);
         const file = input.files[0];
-        
+
         if (file) {
-            // Kiểm tra định dạng file
+            // Kiểm tra xem file có phải là ảnh không
+            if (!file.type.startsWith('image/')) {
+                alert('Vui lòng chọn tệp hình ảnh!');
+                return;
+            }
+
             const reader = new FileReader();
-            
+
+            // Hiệu ứng bắt đầu load (làm mờ nhẹ ảnh cũ)
+            preview.style.opacity = '0.5';
+
             reader.onload = function(e) {
                 preview.src = e.target.result;
-                // Thêm hiệu ứng flash nhẹ khi đổi ảnh
-                preview.classList.add('animate-pulse');
-                setTimeout(() => preview.classList.remove('animate-pulse'), 500);
-            }
-            
+
+                // Khi ảnh mới đã load xong
+                preview.onload = function() {
+                    preview.style.opacity = '1';
+                    // Thêm hiệu ứng xuất hiện mượt mà
+                    preview.animate([{
+                            opacity: 0,
+                            transform: 'scale(0.95)'
+                        },
+                        {
+                            opacity: 1,
+                            transform: 'scale(1)'
+                        }
+                    ], {
+                        duration: 300,
+                        easing: 'ease-out'
+                    });
+                };
+            };
+
             reader.readAsDataURL(file);
         }
     }
 </script>
 
+
 <style>
     @keyframes fade-in {
-        from { opacity: 0; transform: translateY(-10px); }
-        to { opacity: 1; transform: translateY(0); }
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
+
     .animate-fade-in {
         animation: fade-in 0.3s ease-out forwards;
     }

@@ -4,18 +4,18 @@
 
 @section('content')
 @php
-    $isOwnProfile = auth()->check() && auth()->id() === $user->id;
-    $isFollowing = auth()->check() && ! $isOwnProfile
-        ? auth()->user()->following()->where('nguoi_duoc_theo_doi_id', $user->id)->exists()
-        : false;
-    $profileUrl = route('profile.public', ['username' => $user->ten_dang_nhap]);
+$isOwnProfile = auth()->check() && auth()->id() === $user->id;
+$isFollowing = auth()->check() && ! $isOwnProfile
+? auth()->user()->following()->where('nguoi_duoc_theo_doi_id', $user->id)->exists()
+: false;
+$profileUrl = route('profile.public', ['username' => $user->ten_dang_nhap]);
 @endphp
 
 <div class="max-w-4xl mx-auto pb-20">
     @if(session('success'))
-        <div class="mx-6 mt-6 rounded-2xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-200">
-            {{ session('success') }}
-        </div>
+    <div class="mx-6 mt-6 rounded-2xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-200">
+        {{ session('success') }}
+    </div>
     @endif
 
     <div class="relative">
@@ -23,8 +23,7 @@
             <img
                 class="h-full w-full object-cover opacity-60"
                 data-alt="Cover photo"
-                src="{{ !empty($user->anh_bia) ? asset('storage/' . $user->anh_bia) : 'https://lh3.googleusercontent.com/aida-public/AB6AXuAE8EPzz-gX79DnqAhi0_StOHC91uLm5YDBZwVLWbndwUQ6uK_rUjvdGCmWgdMz8vhDT_KZFa7NE8T8ihfKelL_dO6jLGlJ8sd5AE6svxEDyG59LqoA7KF1QD7pTUv6D9M81ss6aD-J7fp3RxaxKdLt7IZjLiJaECpsYmxZooT54hRgR9bp_99vkrKdEiEEJLPZHCE2LjfSk9G8-idX4qneAxORxh9pxv-y-X3poNr_QVPvLMaqwrEV3YZPUe4RW_tg-_TiSfiyeV4' }}"
-            />
+                src="{{ !empty($user->anh_bia) ? asset('storage/' . $user->anh_bia) : 'https://lh3.googleusercontent.com/aida-public/AB6AXuAE8EPzz-gX79DnqAhi0_StOHC91uLm5YDBZwVLWbndwUQ6uK_rUjvdGCmWgdMz8vhDT_KZFa7NE8T8ihfKelL_dO6jLGlJ8sd5AE6svxEDyG59LqoA7KF1QD7pTUv6D9M81ss6aD-J7fp3RxaxKdLt7IZjLiJaECpsYmxZooT54hRgR9bp_99vkrKdEiEEJLPZHCE2LjfSk9G8-idX4qneAxORxh9pxv-y-X3poNr_QVPvLMaqwrEV3YZPUe4RW_tg-_TiSfiyeV4' }}" />
         </div>
 
         <div class="relative z-10 -mt-16 flex flex-col items-start px-6 sm:-mt-24">
@@ -34,37 +33,39 @@
                         <img
                             class="h-full w-full object-cover"
                             alt="{{ $user->name }}"
-                            src="{{ $user->anh_dai_dien ? asset('storage/' . $user->anh_dai_dien) : 'https://lh3.googleusercontent.com/aida-public/AB6AXuBB2X-acXW_1cf-FYDgTbvrKUbxQxX6Cg299CVHtaNYCQRKITR_1PwPyZywPFBetIgi2qXpqS9JURFRUyt2YRSV7-DSnR4EkHhM7DuHZ8EI0F6kYBWYbNcwgDetrejvxYyfxV8o7L84z4zC_cIqlzQMLve0LR2szBxaT8jjJeINxPtQT5Wi3bLnJAUcvqBnP3dGvxatXkae_gQm1vz6CGeCT0zQJmj55dgFhyrrMYSdBkd66GagHIasFgIOcEuJehCi0TxWORmK-W0' }}"
-                        />
+                            <img
+                            id="avatar-preview"
+                            alt="{{ $user->name }}"
+                            class="w-full h-full object-cover"
+                            src="{{ $user->anh_dai_dien ? asset('storage/' . $user->anh_dai_dien) : 'https://ui-avatars.com/api/?name='.urlencode($user->name).'&background=random' }}" />
                     </div>
-                    @if($isOwnProfile)
-                        <div class="absolute bottom-2 right-2 hidden cursor-pointer rounded-full bg-sky-400 p-2 text-on-primary shadow-lg transition-transform hover:scale-110 group-hover:block">
-                            <span class="material-symbols-outlined text-base" data-icon="photo_camera">photo_camera</span>
-                        </div>
-                    @endif
+                    <!-- @if($isOwnProfile)
+                    <div class="absolute bottom-2 right-2 hidden cursor-pointer rounded-full bg-sky-400 p-2 text-on-primary shadow-lg transition-transform hover:scale-110 group-hover:block">
+                        <span class="material-symbols-outlined text-base" data-icon="photo_camera">photo_camera</span>
+                    </div>
+                    @endif -->
                 </div>
 
                 <div class="mb-2 flex gap-3">
                     @if($isOwnProfile)
-                        <a href="{{ route('profile.edit') }}" class="inline-flex items-center rounded-xl border border-sky-400/20 glass-panel px-6 py-2 font-semibold text-on-surface transition-all hover:bg-white/10 active:scale-95">
-                            Chỉnh sửa hồ sơ
-                        </a>
+                    <a href="{{ route('profile.edit') }}" class="inline-flex items-center rounded-xl border border-sky-400/20 glass-panel px-6 py-2 font-semibold text-on-surface transition-all hover:bg-white/10 active:scale-95">
+                        Chỉnh sửa hồ sơ
+                    </a>
                     @elseif(auth()->check())
-                        <button id="follow-btn" data-user-id="{{ $user->id }}" class="rounded-xl border border-sky-400/20 glass-panel px-6 py-2 font-semibold text-sky-300 transition-all hover:bg-white/10">
-                            {{ $isFollowing ? 'Bỏ theo dõi' : 'Theo dõi' }}
-                        </button>
+                    <button id="follow-btn" data-user-id="{{ $user->id }}" class="rounded-xl border border-sky-400/20 glass-panel px-6 py-2 font-semibold text-sky-300 transition-all hover:bg-white/10">
+                        {{ $isFollowing ? 'Bỏ theo dõi' : 'Theo dõi' }}
+                    </button>
                     @else
-                        <a href="{{ route('login') }}" class="inline-flex items-center rounded-xl border border-sky-400/20 glass-panel px-6 py-2 font-semibold text-sky-300 transition-all hover:bg-white/10">
-                            Đăng nhập để theo dõi
-                        </a>
+                    <a href="{{ route('login') }}" class="inline-flex items-center rounded-xl border border-sky-400/20 glass-panel px-6 py-2 font-semibold text-sky-300 transition-all hover:bg-white/10">
+                        Đăng nhập để theo dõi
+                    </a>
                     @endif
 
                     <button
                         type="button"
                         class="rounded-xl border border-sky-400/20 glass-panel p-2 text-on-surface transition-all hover:bg-white/10"
                         onclick="navigator.clipboard.writeText('{{ $profileUrl }}')"
-                        title="Sao chép liên kết hồ sơ"
-                    >
+                        title="Sao chép liên kết hồ sơ">
                         <span class="material-symbols-outlined" data-icon="share">share</span>
                     </button>
                 </div>
@@ -74,7 +75,7 @@
                 <div class="flex items-center gap-2">
                     <h1 class="text-3xl font-bold tracking-tight text-on-surface">{{ $user->name }}</h1>
                     @if($user->da_xac_thuc)
-                        <span class="material-symbols-outlined text-xl text-sky-400" data-icon="verified" style="font-variation-settings: 'FILL' 1;">verified</span>
+                    <span class="material-symbols-outlined text-xl text-sky-400" data-icon="verified" style="font-variation-settings: 'FILL' 1;">verified</span>
                     @endif
                 </div>
                 <p class="text-lg font-medium text-slate-400">{{ '@' . ($user->ten_dang_nhap ?? 'nguoidung') }}</p>
@@ -82,7 +83,7 @@
 
             <div class="mt-4 max-w-2xl">
                 <p class="leading-relaxed text-on-surface-variant">
-                    {{ $user->tieu_su ?? 'Nhà thiết kế sản phẩm số và người yêu thích công nghệ. Đang khám phá những giới hạn mới của giao diện glassmorphism và Web3.' }}
+                    {{ $user->tieu_su ?? 'Chưa có giới thiệu nào' }}
                 </p>
             </div>
 
@@ -123,15 +124,12 @@
                             <span class="text-sm">{{ $user->noi_o ?? 'Hà Nội, Việt Nam' }}</span>
                         </div>
                         @if(!empty($user->ngay_sinh) && $user->quyen_rieng_tu !== 'rieng_tu')
-                            <div class="flex items-center gap-3 text-slate-300">
-                                <span class="material-symbols-outlined text-sky-400/70" data-icon="cake">cake</span>
-                                <span class="text-sm">{{ \Illuminate\Support\Carbon::parse($user->ngay_sinh)->format('d/m/Y') }}</span>
-                            </div>
-                        @endif
                         <div class="flex items-center gap-3 text-slate-300">
-                            <span class="material-symbols-outlined text-sky-400/70" data-icon="work">work</span>
-                            <span class="text-sm">UI/UX Designer tại NHOMJ Lab</span>
+                            <span class="material-symbols-outlined text-sky-400/70" data-icon="cake">cake</span>
+                            <span class="text-sm">{{ \Illuminate\Support\Carbon::parse($user->ngay_sinh)->format('d/m/Y') }}</span>
                         </div>
+                        @endif
+
                     </div>
                 </div>
 
@@ -153,16 +151,18 @@
 
             <div class="space-y-6 md:col-span-2">
                 @if(isset($posts) && $posts->count() > 0)
-                    @foreach($posts as $post)
-                        <x-post-card :post="$post" />
-                    @endforeach
+                @foreach($posts as $post)
+                <x-post-card :post="$post" />
+                @endforeach
                 @else
-                    <x-post-card
-                        :user="$user"
-                        content="Vừa hoàn thiện xong Concept UI cho dự án NHOMJ mới. Phong cách Glacier thực sự mang lại cảm giác cao cấp và hiện đại hơn cho trải nghiệm người dùng. Ý kiến các bạn thế nào?"
-                        image="https://lh3.googleusercontent.com/aida-public/AB6AXuBaz-tnlcYkz-gWZiH-UT6jdm67JAHuTNPKhw8p3QV41fkx9ngQxGLeDRwjtYeLSmVgVIRcGxuGhNOcHAmYooWM6-ZEA3QBYwwbo47EVBQW1Mq7VEz5rvMJWPhnKaqWY-6VeWO9IOSnF-kNW9MjnqrRQN--QlVidWtaO1fkXCQTWtMsj6zpZCEXOpdssqh8hGjDXVcY0b9V6T2MwwXrdokoVVoZKdbicXU5sxf5bzaJHAhxK9n_Oh9EUwk4RwCKP8h0fze1nyziCNE"
-                        timestamp="2 giờ trước"
-                    />
+                {{-- Phần thay đổi ở đây --}}
+                <div class="glass-panel flex flex-col items-center justify-center rounded-3xl p-12 text-center">
+                    <div class="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-slate-800/50 text-slate-500">
+                        <span class="material-symbols-outlined text-4xl" data-icon="post_add">post_add</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-on-surface">Chưa có bài đăng nào</h3>
+                    <p class="mt-2 text-slate-400">Người dùng này vẫn chưa chia sẻ bài viết nào với cộng đồng.</p>
+                </div>
                 @endif
             </div>
         </div>
@@ -170,34 +170,35 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const followBtn = document.getElementById('follow-btn');
-    const followersCount = document.getElementById('followers-count');
+    document.addEventListener('DOMContentLoaded', function() {
+        const followBtn = document.getElementById('follow-btn');
+        const followersCount = document.getElementById('followers-count');
 
-    if (followBtn) {
-        followBtn.addEventListener('click', async function() {
-            const userId = this.getAttribute('data-user-id');
+        if (followBtn) {
+            followBtn.addEventListener('click', async function() {
+                const userId = this.getAttribute('data-user-id');
 
-            try {
-                const response = await fetch(`/user/${userId}/toggle-follow`, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
+                try {
+                    const response = await fetch(`/user/${userId}/toggle-follow`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        }
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        this.innerText = data.is_following ? 'Bỏ theo dõi' : 'Theo dõi';
+                        followersCount.innerText = new Intl.NumberFormat().format(data.followers_count);
                     }
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    this.innerText = data.is_following ? 'Bỏ theo dõi' : 'Theo dõi';
-                    followersCount.innerText = new Intl.NumberFormat().format(data.followers_count);
+                } catch (error) {
+                    console.error('Lỗi khi thực hiện theo dõi:', error);
                 }
-            } catch (error) {
-                console.error('Lỗi khi thực hiện theo dõi:', error);
-            }
-        });
-    }
-});
+            });
+        }
+    });
 </script>
+
 @endsection

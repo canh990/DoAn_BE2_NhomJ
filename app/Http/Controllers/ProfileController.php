@@ -14,14 +14,14 @@ class ProfileController extends Controller
         $user = auth()->user()->loadCount(['followers', 'following']);
 
         $posts = $user->posts()
-            ->with('user')
+            ->with(['user', 'media'])
             ->withCount(['reactions', 'comments'])
             ->with(['reactions' => function ($query) {
                 $query->where('nguoi_dung_id', auth()->id());
             }, 'comments' => function ($query) {
                 $query->with('user')->latest('ngay_tao')->limit(3);
             }])
-            ->where('loai', 'van_ban')
+            ->whereIn('loai', ['van_ban', 'hinh_anh'])
             ->where('da_xoa', false)
             ->latest()
             ->take(20)
@@ -41,14 +41,14 @@ class ProfileController extends Controller
             ->firstOrFail();
 
         $posts = $user->posts()
-            ->with('user')
+            ->with(['user', 'media'])
             ->withCount(['reactions', 'comments'])
             ->with(['reactions' => function ($query) {
                 $query->where('nguoi_dung_id', auth()->id());
             }, 'comments' => function ($query) {
                 $query->with('user')->latest('ngay_tao')->limit(3);
             }])
-            ->where('loai', 'van_ban')
+            ->whereIn('loai', ['van_ban', 'hinh_anh'])
             ->where('da_xoa', false)
             ->latest()
             ->take(20)
@@ -67,7 +67,7 @@ class ProfileController extends Controller
         ]);
     }
 
-    public function update(Request $request)
+  public function update(Request $request)
     {
         $user = auth()->user();
 
@@ -79,26 +79,31 @@ class ProfileController extends Controller
                 Rule::unique('nguoi_dung', 'ten_dang_nhap')->ignore($user->id),
             ],
             'tieu_su' => ['nullable', 'string', 'max:1000'],
-            'ngay_sinh' => ['nullable', 'date', 'before_or_equal:today'],
+            'ngay_sinh' => ['nullable', 'date', 'before_or_equal:today'], // Quy tắc validate
             'noi_o' => ['nullable', 'string', 'max:255'],
             'quyen_rieng_tu' => ['required', Rule::in(['cong_khai', 'ban_be', 'rieng_tu'])],
             'anh_dai_dien' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
             'anh_bia' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
+        ], [
+            // Tin nhắn lỗi tiếng Việt tương ứng
+            'ngay_sinh.date' => 'Ngày sinh không đúng định dạng ngày tháng.',
+            'ngay_sinh.before_or_equal' => 'Ngày,Tháng,Năm sinh không thể lớn hơn hiện tại.',
+            'ten_dang_nhap.unique' => 'Tên đăng nhập này đã được sử dụng.',
         ]);
 
+        // Xử lý ảnh đại diện
         if ($request->hasFile('anh_dai_dien')) {
             if ($user->anh_dai_dien) {
                 Storage::disk('public')->delete($user->anh_dai_dien);
             }
-
             $validated['anh_dai_dien'] = $request->file('anh_dai_dien')->store('avatars', 'public');
         }
 
+        // Xử lý ảnh bìa
         if ($request->hasFile('anh_bia')) {
             if ($user->anh_bia) {
                 Storage::disk('public')->delete($user->anh_bia);
             }
-
             $validated['anh_bia'] = $request->file('anh_bia')->store('covers', 'public');
         }
 
@@ -117,7 +122,7 @@ class ProfileController extends Controller
         }
 
         $status = $me->following()->toggle($user->id);
-        
+
         return response()->json([
             'is_following' => count($status['attached']) > 0,
             'followers_count' => $user->followers()->count()
