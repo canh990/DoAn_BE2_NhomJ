@@ -23,3 +23,4 @@ return [
     'danger_zone_title' => 'Danger Zone',
     'danger_zone_desc' => 'Permanently delete or disable your account.',
     'disable_account' => 'Disable Account',
+];
