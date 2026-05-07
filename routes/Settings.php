@@ -11,4 +11,7 @@ Route::prefix('settings')->name('settings.')->middleware('auth')->group(function
     // Personal sub-endpoints (your team's area)
     Route::get('/personal', [PersonalSettingsController::class, 'index'])->name('personal.index');
     Route::post('/personal/theme', [PersonalSettingsController::class, 'setTheme'])->name('personal.setTheme');
-});
+    Route::post('/personal/language', [PersonalSettingsController::class, 'setLanguage'])->name('personal.setLanguage');
+    // Ví dụ khai báo route
+    Route::get('/chat', [ChatController::class, 'index'])->name('chat');
+    });
