@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\BaiViet;
 use App\Models\MediaBaiViet;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Storage; 
 
 class PostController extends Controller
 {
@@ -27,7 +27,7 @@ class PostController extends Controller
         ->get();
 
     return view('components.home', compact('posts'));
-}
+} 
 
 
     public function store(Request $request)
