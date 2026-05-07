@@ -1,29 +1,33 @@
 <?php
 
 return [
-    // Hiển thị & Ngôn ngữ
-    'dark_mode' => 'Chế độ tối',
-    'dark_mode_desc' => 'Giảm mỏi mắt trong môi trường thiếu sáng',
-    'language' => 'Ngôn ngữ',
-    'language_desc' => 'Thay đổi ngôn ngữ hiển thị giao diện',
+    'settings_title' => 'Settings',
+    'settings_subtitle' => 'Manage your account settings and preferences.',
+    'display_and_language' => 'Display & Language',
+    'dark_mode' => 'Dark Mode',
+    'dark_mode_desc' => 'Reduce eye strain in low light environments',
+    'language' => 'Language',
+    'language_desc' => 'Change the display language of the interface',
+    'lang_vi' => 'Vietnamese',
+    'lang_en' => 'English',
     
-    // Bộ nhớ
-    'storage_usage' => 'Dung lượng bộ nhớ đệm hiện tại',
-    'clear_cache' => 'Xóa bộ nhớ đệm',
+    'storage' => 'Storage',
+    'storage_usage' => 'Current cache storage usage',
+    'clear_cache' => 'Clear Cache',
 
-    // Quản lý thiết bị
-    'device_management' => 'Quản lý thiết bị',
-    'devices_active' => 'thiết bị đang hoạt động',
-    'current' => 'HIỆN TẠI',
-    'browser_chrome' => 'Trình duyệt Chrome',
-    'minutes_ago' => 'phút trước',
+    'device_management' => 'Device Management',
+    'devices_active' => 'active devices',
+    'current' => 'CURRENT',
+    'browser_chrome' => 'Chrome Browser',
+    'minutes_ago' => 'minutes ago',
 
-    // Vùng nguy hiểm & Trợ giúp
-    'help_policies' => 'Trợ giúp & Chính sách',
-    'terms' => 'Điều khoản sử dụng',
-    'privacy' => 'Chính sách bảo mật',
-    'support' => 'Hỗ trợ khách hàng',
-    'about' => 'Giới thiệu về NHOMJ',
-    'danger_zone_title' => 'Khu vực nguy hiểm',
-    'danger_zone_desc' => 'Xóa hoặc vô hiệu hóa tài khoản của bạn vĩnh viễn.',
-    'disable_account' => 'Vô hiệu hóa tài khoản',
+    'help_policies' => 'Help & Policies',
+    'terms' => 'Terms of Service',
+    'privacy' => 'Privacy Policy',
+    'support' => 'Support',
+    'about' => 'About',
+
+    'danger_zone_title' => 'Danger Zone',
+    'danger_zone_desc' => 'Once you disable your account, there is no going back. Please be certain.',
+    'disable_account' => 'Disable Account',
+];
