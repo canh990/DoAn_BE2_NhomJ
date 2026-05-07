@@ -1,6 +1,10 @@
 <!DOCTYPE html>
-@php $theme = session('personal_theme', null); @endphp
-<html class="{{ $theme === 'light' ? 'light' : 'dark' }}" lang="vi">
+@php
+    // apply the user's preferred locale from session for each render
+    app()->setLocale(session('personal_locale', config('app.locale', 'vi')));
+    $theme = session('personal_theme', null);
+@endphp
+<html class="{{ $theme === 'light' ? 'light' : 'dark' }}" lang="{{ app()->getLocale() }}">
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
@@ -135,21 +139,28 @@
      @auth
     @php $user = Auth::user(); @endphp
 
-    <div class="mb-4 px-4 py-2">
-        <div class="flex items-center gap-3 mb-1">
+  <div class="mb-4 px-4 py-2">
+    <div class="flex items-center gap-3 mb-1">
+        <div class="w-10 h-10 overflow-hidden rounded-full border border-sky-400/30">
             <img 
-                class="w-10 h-10 rounded-full border border-sky-400/30 object-cover" 
+             
+                class="w-full h-full object-cover" 
                 alt="{{ $user->name }}" 
-<img src="{{ $user->anh_dai_dien ? asset('storage/' . $user->anh_dai_dien) : asset('storage/avatars/avtmacdinh.png') }}" 
-     alt="Avatar">            
-            <div>
-                <p class="text-sm font-bold text-sky-300 font-inter">
-                    {{ $user->name }}
-                </p>
-                
-            </div>
+                src="{{ $user->anh_dai_dien ? asset('storage/' . $user->anh_dai_dien) : 'https://ui-avatars.com/api/?name='.urlencode($user->name).'&background=random' }}" 
+            />
+        </div>
+        
+        <div>
+            <p class="text-sm font-bold text-sky-300 font-inter leading-tight">
+                {{ $user->name }}
+            </p>
+            {{-- Bạn có thể thêm @username ở đây nếu muốn --}}
+            <p class="text-[10px] text-slate-500 font-medium">
+                {{ '@' . ($user->ten_dang_nhap ?? 'nguoidung') }}
+            </p>
         </div>
     </div>
+</div>
 @endauth
         <nav class="flex flex-col gap-1 flex-1">
             <a class="flex items-center gap-3 {{ request()->routeIs('home') ? 'bg-sky-400/20 text-sky-300 border border-sky-400/20' : 'text-slate-400 hover:bg-white/5 hover:text-sky-200' }} px-4 py-3 rounded-xl transition-colors cursor-pointer transition-transform active:translate-x-1 font-inter text-sm font-medium" href="{{ route('home') }}">
@@ -173,10 +184,12 @@
                 <span class="material-symbols-outlined" data-icon="person">person</span>
                 Hồ sơ
             </a>
-            <a class="flex items-center gap-3 {{ request()->routeIs('settings.*') ? 'bg-sky-400/20 text-sky-300 border border-sky-400/20' : 'text-slate-400 hover:bg-white/5 hover:text-sky-200' }} px-4 py-3 rounded-xl transition-colors cursor-pointer transition-transform active:translate-x-1 font-inter text-sm font-medium" href="{{ route('settings.index') }}">
-                <span class="material-symbols-outlined" data-icon="settings">settings</span>
-                Cài đặt
-            </a>
+            <a href="{{ route('settings.index') }}" class="flex items-center gap-4 px-4 py-3 rounded-full transition-all hover:bg-white/10 group">
+    <span class="material-symbols-outlined text-2xl group-hover:scale-110 transition-transform" data-icon="settings">
+        settings
+    </span>
+    <span class="text-lg font-medium">{{ __('messages.settings_title') }}</span>
+</a>
         </nav>
         <button class="mt-4 w-full py-3 bg-sky-400/20 border border-sky-400/30 text-sky-300 font-bold rounded-xl hover:bg-sky-400/30 transition-all active:scale-95">
             Đăng bài mới

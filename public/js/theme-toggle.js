@@ -1,4 +1,5 @@
 // Theme toggle: toggles 'dark' class on <html> and persists choice in localStorage
+// Theme toggle: toggles 'dark' class on <html> and persists choice in localStorage
 (function(){
     const toggle = document.getElementById('theme-toggle');
     if (!toggle) return;
@@ -46,10 +47,8 @@
             const token = tokenMeta ? tokenMeta.getAttribute('content') : null;
             fetch('/settings/personal/theme', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    ...(token ? { 'X-CSRF-TOKEN': token } : {})
-                },
+                credentials: 'same-origin',
+                headers: Object.assign({ 'Content-Type': 'application/json', 'Accept': 'application/json' }, token ? { 'X-CSRF-TOKEN': token } : {}),
                 body: JSON.stringify({ theme })
             }).catch(()=>{});
         }catch(e){}
