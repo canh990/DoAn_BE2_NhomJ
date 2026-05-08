@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+use Database\Seeders\PostImgSeeders;
 use Database\Seeders\PostSeeders;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -19,14 +20,17 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-        User::create([
-            'ten_dang_nhap' => 'test_user',
-            'email' => 'test@example.com',
-            'mat_khau_hash' => Hash::make('password123'),
-            'quyen_rieng_tu' => 'cong_khai',
-            'da_xac_thuc' => true,
-        ]);
+        if (!User::where('ten_dang_nhap', 'test_user')->exists()) {
+            User::create([
+                'ten_dang_nhap' => 'test_user',
+                'email' => 'test@example.com',
+                'mat_khau_hash' => Hash::make('password123'),
+                'quyen_rieng_tu' => 'cong_khai',
+                'da_xac_thuc' => true,
+            ]);
+        }
 
         $this->call(PostSeeders::class);
+        $this->call(PostImgSeeders::class);
     }
 }
