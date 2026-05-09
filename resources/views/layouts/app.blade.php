@@ -458,6 +458,199 @@
                 });
         });
     </script>
+    
+    <!-- Global Image Lightbox -->
+    <div id="image-lightbox" class="fixed inset-0 z-[100] hidden bg-black/95 backdrop-blur-sm flex-col justify-center items-center opacity-0 transition-opacity duration-300">
+        <!-- Close button -->
+        <button id="lightbox-close" class="absolute top-4 right-4 text-white/70 hover:text-white p-2 bg-white/10 hover:bg-white/20 rounded-full transition-all z-50">
+            <span class="material-symbols-outlined text-3xl">close</span>
+        </button>
+
+        <!-- Navigation Buttons -->
+        <button id="lightbox-prev" class="absolute left-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white p-3 bg-white/5 hover:bg-white/20 rounded-full transition-all hidden z-50">
+            <span class="material-symbols-outlined text-4xl">chevron_left</span>
+        </button>
+        
+        <button id="lightbox-next" class="absolute right-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white p-3 bg-white/5 hover:bg-white/20 rounded-full transition-all hidden z-50">
+            <span class="material-symbols-outlined text-4xl">chevron_right</span>
+        </button>
+
+        <!-- Image Container -->
+        <div class="relative w-full h-full max-w-7xl max-h-screen p-4 sm:p-12 flex items-center justify-center">
+            <img id="lightbox-img" class="max-w-full max-h-full object-contain transition-transform duration-300 scale-95" src="" alt="Full view">
+        </div>
+
+        <!-- Image Counter -->
+        <div id="lightbox-counter" class="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/70 text-sm font-medium bg-black/50 px-4 py-1.5 rounded-full hidden">
+            1 / 3
+        </div>
+    </div>
+
+    <script>
+        // Lightbox logic
+        document.addEventListener('DOMContentLoaded', function() {
+            const lightbox = document.getElementById('image-lightbox');
+            const lightboxImg = document.getElementById('lightbox-img');
+            const lightboxClose = document.getElementById('lightbox-close');
+            const lightboxPrev = document.getElementById('lightbox-prev');
+            const lightboxNext = document.getElementById('lightbox-next');
+            const lightboxCounter = document.getElementById('lightbox-counter');
+            
+            let currentGallery = [];
+            let currentIndex = 0;
+
+            function openLightbox(gallery, index) {
+                currentGallery = gallery;
+                currentIndex = index;
+                updateLightbox();
+                
+                lightbox.classList.remove('hidden');
+                lightbox.classList.add('flex');
+                
+                // Allow display flex to apply before adding opacity
+                setTimeout(() => {
+                    lightbox.classList.remove('opacity-0');
+                    lightboxImg.classList.remove('scale-95');
+                    lightboxImg.classList.add('scale-100');
+                }, 10);
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeLightbox() {
+                lightbox.classList.add('opacity-0');
+                lightboxImg.classList.remove('scale-100');
+                lightboxImg.classList.add('scale-95');
+                setTimeout(() => {
+                    lightbox.classList.add('hidden');
+                    lightbox.classList.remove('flex');
+                    document.body.style.overflow = '';
+                }, 300);
+            }
+
+            function updateLightbox() {
+                if (currentGallery.length === 0) return;
+                
+                lightboxImg.src = currentGallery[currentIndex];
+                
+                if (currentGallery.length > 1) {
+                    lightboxPrev.classList.remove('hidden');
+                    lightboxNext.classList.remove('hidden');
+                    lightboxCounter.classList.remove('hidden');
+                    lightboxCounter.textContent = `${currentIndex + 1} / ${currentGallery.length}`;
+                } else {
+                    lightboxPrev.classList.add('hidden');
+                    lightboxNext.classList.add('hidden');
+                    lightboxCounter.classList.add('hidden');
+                }
+            }
+
+            function showNextImage(e) {
+                if (e) e.stopPropagation();
+                if (currentGallery.length <= 1) return;
+                currentIndex = (currentIndex + 1) % currentGallery.length;
+                updateLightbox();
+            }
+
+            function showPrevImage(e) {
+                if (e) e.stopPropagation();
+                if (currentGallery.length <= 1) return;
+                currentIndex = (currentIndex - 1 + currentGallery.length) % currentGallery.length;
+                updateLightbox();
+            }
+
+            if (lightboxClose) lightboxClose.addEventListener('click', closeLightbox);
+            if (lightboxNext) lightboxNext.addEventListener('click', showNextImage);
+            if (lightboxPrev) lightboxPrev.addEventListener('click', showPrevImage);
+            
+            if (lightbox) {
+                lightbox.addEventListener('click', function(e) {
+                    if (e.target === lightbox || e.target.closest('.relative.w-full.h-full') && e.target.id !== 'lightbox-img' && e.target.id !== 'lightbox-next' && e.target.id !== 'lightbox-prev') {
+                        closeLightbox();
+                    }
+                });
+            }
+
+            document.addEventListener('keydown', function(e) {
+                if (!lightbox || lightbox.classList.contains('hidden')) return;
+                
+                if (e.key === 'Escape') closeLightbox();
+                if (e.key === 'ArrowRight') showNextImage();
+                if (e.key === 'ArrowLeft') showPrevImage();
+            });
+
+            // Bind clicks to post images
+            document.addEventListener('click', function(e) {
+                const img = e.target.closest('.post-image-item');
+                if (img) {
+                    const postId = img.getAttribute('data-post-id');
+                    if (!postId) {
+                        openLightbox([img.src], 0);
+                        return;
+                    }
+                    const galleryImgs = document.querySelectorAll(`.post-image-item[data-post-id="${postId}"]`);
+                    const galleryUrls = Array.from(galleryImgs).map(el => el.src);
+                    const index = Array.from(galleryImgs).indexOf(img);
+                    openLightbox(galleryUrls, index);
+                }
+            });
+
+            // Video Autoplay on Scroll
+            const videoObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    const video = entry.target;
+                    if (entry.isIntersecting) {
+                        video.play().catch(e => console.log('Autoplay prevented:', e));
+                    } else {
+                        video.pause();
+                    }
+                });
+            }, {
+                threshold: 0.6 // Play when 60% visible
+            });
+
+            // Observe existing videos
+            document.querySelectorAll('video').forEach(video => {
+                videoObserver.observe(video);
+            });
+
+            // If we add new posts dynamically, we need a MutationObserver to observe new videos
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach(mutation => {
+                    mutation.addedNodes.forEach(node => {
+                        if (node.nodeType === 1) {
+                            if (node.tagName === 'VIDEO') {
+                                videoObserver.observe(node);
+                            }
+                            node.querySelectorAll('video').forEach(video => {
+                                videoObserver.observe(video);
+                            });
+                        }
+                    });
+                });
+            });
+
+            observer.observe(document.body, { childList: true, subtree: true });
+
+            // Global Dropdown Logic for Post Options
+            document.addEventListener('click', function(e) {
+                const trigger = e.target.closest('.post-dropdown-trigger');
+                if (trigger) {
+                    const menu = trigger.nextElementSibling;
+                    const isHidden = menu.classList.contains('hidden');
+                    
+                    document.querySelectorAll('.post-dropdown-menu').forEach(m => m.classList.add('hidden'));
+                    
+                    if (isHidden) {
+                        menu.classList.remove('hidden');
+                    }
+                } else {
+                    if (!e.target.closest('.post-dropdown-menu')) {
+                        document.querySelectorAll('.post-dropdown-menu').forEach(m => m.classList.add('hidden'));
+                    }
+                }
+            });
+        });
+    </script>
     <script src="/js/theme-toggle.js"></script>
     <script src="/js/language-toggle.js"></script>
 </body>

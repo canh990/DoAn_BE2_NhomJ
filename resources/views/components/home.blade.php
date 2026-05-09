@@ -26,13 +26,13 @@
                     @enderror
 
                     <!-- Nút chọn file ẩn -->
-                    <input type="file" id="post-image" name="anh[]" accept="image/*" multiple class="hidden">
+                    <input type="file" id="post-image" name="anh[]" accept="image/*,video/*" multiple class="hidden">
                     
-                    <!-- Vùng hiển thị ảnh xem trước -->
+                    <!-- Vùng hiển thị ảnh/video xem trước -->
                     <div id="image-preview-container" class="mt-3 hidden">
                         <div id="preview-grid" class="grid gap-2"></div>
                         <button type="button" id="remove-all-images" class="mt-2 text-sm text-red-400 hover:text-red-300 hidden items-center gap-1">
-                            <span class="material-symbols-outlined text-sm">delete</span> Xóa tất cả ảnh
+                            <span class="material-symbols-outlined text-sm">delete</span> Xóa tất cả tệp
                         </button>
                     </div>
 
@@ -89,8 +89,28 @@
                     <p class="text-[10px] text-slate-400">{{ $post->created_at ? $post->created_at->diffForHumans() : 'Không xác định' }}</p>
                 </div>
             </div>
-            <!-- Bạn có thể thêm nút 3 chấm (tùy chọn) ở đây -->
-        </div>
+                @if(auth()->id() === $post->nguoi_dung_id)
+                    <div class="relative">
+                        <button type="button" class="post-dropdown-trigger p-2 text-slate-400 hover:bg-white/5 hover:text-slate-300 rounded-full transition-colors">
+                            <span class="material-symbols-outlined">more_horiz</span>
+                        </button>
+                        <div class="post-dropdown-menu hidden absolute right-0 top-full mt-1 w-40 bg-slate-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden z-20">
+                            <form action="{{ route('posts.destroy', $post->id) }}" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn xóa bài viết này? Các ảnh/video đính kèm cũng sẽ bị xóa vĩnh viễn.');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="w-full text-left px-4 py-3 text-sm text-red-400 hover:bg-white/5 flex items-center gap-2 transition-colors">
+                                    <span class="material-symbols-outlined text-[18px]">delete</span>
+                                    Xóa bài viết
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                @else
+                    <button class="p-2 text-slate-400 hover:bg-white/5 hover:text-slate-300 rounded-full transition-colors">
+                        <span class="material-symbols-outlined">more_horiz</span>
+                    </button>
+                @endif
+            </div>
 
     <!-- 2. Phần Nội dung bài viết -->
 <div class="px-4 pb-3">
@@ -104,9 +124,16 @@
         <div class="mt-3 grid gap-2 {{ $mediaCount == 1 ? 'grid-cols-1' : ($mediaCount == 2 ? 'grid-cols-2' : 'grid-cols-2 sm:grid-cols-3') }}">
             @foreach($post->media as $media)
                 <div class="overflow-hidden rounded-xl border border-white/10 bg-slate-900/50 {{ $mediaCount > 1 ? 'aspect-square' : '' }}">
-                    <img src="{{ asset('storage/' . $media->duong_dan) }}" 
-                         alt="Post image" 
-                         class="w-full h-full {{ $mediaCount == 1 ? 'max-h-[500px] object-contain block mx-auto' : 'object-cover' }}">
+                    @if($media->loai === 'video' || \Illuminate\Support\Str::endsWith($media->duong_dan, ['.mp4', '.webm', '.mov']))
+                        <video src="{{ asset('storage/' . $media->duong_dan) }}" 
+                               controls controlsList="nodownload" muted playsinline loop
+                               class="w-full h-full {{ $mediaCount == 1 ? 'max-h-[500px] object-contain block mx-auto' : 'object-cover' }}"></video>
+                    @else
+                        <img src="{{ asset('storage/' . $media->duong_dan) }}" 
+                             alt="Post image" 
+                             data-post-id="{{ $post->id }}"
+                             class="post-image-item cursor-pointer hover:opacity-90 transition-opacity w-full h-full {{ $mediaCount == 1 ? 'max-h-[500px] object-contain block mx-auto' : 'object-cover' }}">
+                    @endif
                 </div>
             @endforeach
         </div>
@@ -287,13 +314,44 @@
         }
 
         if(imageInput) {
-            imageInput.addEventListener('change', function(e) {
+            imageInput.addEventListener('change', async function(e) {
                 const files = Array.from(e.target.files);
-                selectedFiles = selectedFiles.concat(files);
+                const validFiles = [];
                 
-                updateFileInput();
-                renderPreviews();
-                updateSubmitButton();
+                for (const file of files) {
+                    if (file.type.startsWith('video/')) {
+                        const isValidDuration = await checkVideoDuration(file, 120); // 120 giây = 2 phút
+                        if (!isValidDuration) {
+                            alert(`Video "${file.name}" vượt quá thời lượng cho phép (tối đa 2 phút).`);
+                            continue;
+                        }
+                    }
+                    validFiles.push(file);
+                }
+
+                if (validFiles.length > 0) {
+                    selectedFiles = selectedFiles.concat(validFiles);
+                    updateFileInput();
+                    renderPreviews();
+                    updateSubmitButton();
+                } else {
+                    updateFileInput(); // Clear input if all files are invalid so they can be selected again
+                }
+            });
+        }
+
+        function checkVideoDuration(file, maxSeconds) {
+            return new Promise((resolve) => {
+                const video = document.createElement('video');
+                video.preload = 'metadata';
+                video.onloadedmetadata = function() {
+                    window.URL.revokeObjectURL(video.src);
+                    resolve(video.duration <= maxSeconds);
+                };
+                video.onerror = function() {
+                    resolve(false); // Lỗi không đọc được
+                };
+                video.src = URL.createObjectURL(file);
             });
         }
 
@@ -319,20 +377,26 @@
             previewGrid.className = 'grid gap-2 ' + (selectedFiles.length > 1 ? 'grid-cols-2 sm:grid-cols-3' : 'grid-cols-1');
 
             selectedFiles.forEach((file, index) => {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const div = document.createElement('div');
-                    div.className = 'relative group rounded-xl overflow-hidden border border-white/10 bg-slate-900/50 ' + (selectedFiles.length > 1 ? 'aspect-square' : '');
-                    
-                    div.innerHTML = `
-                        <img src="${e.target.result}" class="w-full h-full ${selectedFiles.length > 1 ? 'object-cover' : 'max-h-64 object-contain'}">
-                        <button type="button" class="remove-single-image absolute top-2 right-2 bg-slate-900/80 hover:bg-red-500 text-white rounded-full p-1.5 transition-colors backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100" data-index="${index}" title="Xóa ảnh này">
-                            <span class="material-symbols-outlined text-sm">close</span>
-                        </button>
-                    `;
-                    previewGrid.appendChild(div);
-                };
-                reader.readAsDataURL(file);
+                const isVideo = file.type.startsWith('video/');
+                const objectUrl = URL.createObjectURL(file);
+                
+                const div = document.createElement('div');
+                div.className = 'relative group rounded-xl overflow-hidden border border-white/10 bg-slate-900/50 ' + (selectedFiles.length > 1 ? 'aspect-square' : '');
+                
+                let mediaElement = '';
+                if (isVideo) {
+                    mediaElement = `<video src="${objectUrl}" class="w-full h-full ${selectedFiles.length > 1 ? 'object-cover' : 'max-h-64 object-contain'}" controls controlsList="nodownload"></video>`;
+                } else {
+                    mediaElement = `<img src="${objectUrl}" class="w-full h-full ${selectedFiles.length > 1 ? 'object-cover' : 'max-h-64 object-contain'}">`;
+                }
+                
+                div.innerHTML = `
+                    ${mediaElement}
+                    <button type="button" class="remove-single-image absolute top-2 right-2 bg-slate-900/80 hover:bg-red-500 text-white rounded-full p-1.5 transition-colors backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 z-10" data-index="${index}" title="Xóa tệp này">
+                        <span class="material-symbols-outlined text-sm">close</span>
+                    </button>
+                `;
+                previewGrid.appendChild(div);
             });
         }
 
