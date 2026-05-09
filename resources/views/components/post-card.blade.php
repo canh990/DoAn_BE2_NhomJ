@@ -127,11 +127,9 @@
                         @if (data_get($post, 'cam_xuc') || data_get($post, 'hoat_dong'))
                             @php
                             $camXucLabels = [
-                                'thich' => 'thích',
-                                'tim' => 'yêu thích',
-                                'haha' => 'haha',
-                                'buon' => 'buồn',
+                                'vui_ve' => 'vui vẻ',
                                 'phan_no' => 'phẫn nộ',
+                                'buon' => 'buồn',
                                 'wow' => 'wow',
                             ];
                             @endphp
@@ -156,6 +154,9 @@
                                 {{ '@' . $authorUsername }} ·
                             @endif
                             {{ $displayTime }}
+                            @if (data_get($post, 'da_chinh_sua'))
+                                <span class="text-[12px] text-slate-500/70 ml-1">· Đã chỉnh sửa</span>
+                            @endif
                         </span>
                     </div>
                 </div>
@@ -167,6 +168,10 @@
                         </button>
                         <div class="post-dropdown-menu hidden absolute right-0 top-full mt-1 w-40 bg-slate-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden z-20">
                             @if($postId)
+                            <button type="button" class="w-full text-left px-4 py-3 text-sm text-sky-400 hover:bg-white/5 flex items-center gap-2 transition-colors border-b border-white/5" onclick="window.openEditModal('{{ $postId }}', this.getAttribute('data-post-content'))" data-post-content="{{ data_get($post, 'noi_dung') }}">
+                                <span class="material-symbols-outlined text-[18px]">edit</span>
+                                Chỉnh sửa bài viết
+                            </button>
                             <form action="{{ route('posts.destroy', $postId) }}" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn xóa bài viết này? Các ảnh/video đính kèm cũng sẽ bị xóa vĩnh viễn.');">
                                 @csrf
                                 @method('DELETE')

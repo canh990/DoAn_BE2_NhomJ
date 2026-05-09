@@ -25,6 +25,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/posts/{post}/comments', [CommentController::class, 'store'])
         ->name('posts.comment');
 
+    Route::put('/posts/{post}', [PostController::class, 'update'])
+        ->name('posts.update');
+
     Route::delete('/posts/{post}', [PostController::class, 'destroy'])
         ->name('posts.destroy');
 

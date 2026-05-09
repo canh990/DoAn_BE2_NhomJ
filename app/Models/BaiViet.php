@@ -21,6 +21,7 @@ class BaiViet extends Model
         'cam_xuc',
         'hoat_dong',
         'quyen_rieng_tu',
+        'da_chinh_sua',
     ];
 
     public function user(): BelongsTo
