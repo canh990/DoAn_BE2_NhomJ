@@ -29,9 +29,13 @@ class OtpMail extends Mailable
      */
     public function build()
     {
-        $subject = $this->type === 'register' 
-            ? 'Mã xác thực đăng ký tài khoản - NHOMJ' 
-            : 'Mã xác thực khôi phục mật khẩu - NHOMJ';
+        if ($this->type === 'register') {
+            $subject = 'Mã xác thực đăng ký tài khoản - NHOMJ';
+        } elseif ($this->type === 'account_action') {
+            $subject = 'Mã xác thực bảo mật tài khoản - NHOMJ';
+        } else {
+            $subject = 'Mã xác thực khôi phục mật khẩu - NHOMJ';
+        }
 
         return $this->subject($subject)
                     ->view('emails.otp');

@@ -156,8 +156,208 @@
             </div>
         </div>
     </form>
+
+    <!-- Phần vô hiệu hóa tài khoản -->
+    <div class="glass-panel border-red-500/20 rounded-3xl p-6 flex flex-col md:flex-row items-center justify-between gap-4 mt-8 mb-4 border" style="border-color: rgba(239, 68, 68, 0.2);">
+        <div>
+            <h3 class="font-bold text-red-500">Vô hiệu hóa tài khoản</h3>
+            <p class="text-xs text-slate-400">Tạm thời ẩn hồ sơ và nội dung của bạn khỏi NHOMJ.</p>
+        </div>
+        <button type="button" onclick="document.getElementById('deactivate-modal').classList.remove('hidden')" class="text-red-500 font-semibold hover:bg-red-500/10 px-4 py-2 rounded-xl transition-colors">Vô hiệu hóa</button>
+    </div>
+
+    <!-- Phần xóa vĩnh viễn tài khoản -->
+    <div class="glass-panel border-red-600/30 rounded-3xl p-6 flex flex-col md:flex-row items-center justify-between gap-4 mb-8 border" style="border-color: rgba(220, 38, 38, 0.3);">
+        <div>
+            <h3 class="font-bold text-red-600">Xóa vĩnh viễn tài khoản</h3>
+            <p class="text-xs text-slate-400">Xóa toàn bộ dữ liệu của bạn khỏi hệ thống. Hành động này không thể hoàn tác.</p>
+        </div>
+        <button type="button" onclick="document.getElementById('delete-modal').classList.remove('hidden')" class="bg-red-600/10 text-red-600 font-bold hover:bg-red-600 hover:text-white px-5 py-2.5 rounded-xl transition-all border border-red-600/20 hover:border-red-600 shadow-sm">Xóa tài khoản</button>
+    </div>
+
+    <!-- Modal vô hiệu hóa tài khoản -->
+    <div id="deactivate-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div class="glass-panel rounded-3xl p-6 w-full max-w-md animate-fade-in relative bg-[#0a0e1a] border border-red-500/20">
+            <button type="button" onclick="document.getElementById('deactivate-modal').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+            <h3 class="text-xl font-bold text-red-500 mb-2">Xác nhận vô hiệu hóa</h3>
+            @if(empty(auth()->user()->nha_cung_cap_oauth))
+                <p class="text-sm text-slate-400 mb-6">Vui lòng nhập mật khẩu của bạn để xác nhận vô hiệu hóa tài khoản. Bạn có thể khôi phục tài khoản bằng cách đăng nhập lại.</p>
+            @else
+                <p class="text-sm text-slate-400 mb-6">Vui lòng sử dụng mã OTP gửi qua email để xác nhận vô hiệu hóa tài khoản. Bạn có thể khôi phục tài khoản bằng cách đăng nhập lại.</p>
+            @endif
+            
+            <form action="{{ route('profile.deactivate') }}" method="POST">
+                @csrf
+                <div class="space-y-4">
+                    @if(empty(auth()->user()->nha_cung_cap_oauth))
+                        <div class="relative group">
+                            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-red-500 transition-colors">lock</span>
+                            <input
+                                name="password_deactivate"
+                                type="password"
+                                required
+                                placeholder="Mật khẩu của bạn"
+                                class="w-full bg-slate-900/50 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-white focus:border-red-500/50 focus:ring-4 focus:ring-red-500/10 transition-all outline-none">
+                        </div>
+                        @error('password_deactivate') <p class="text-xs text-red-400">{{ $message }}</p> @enderror
+                    @else
+                        <div class="relative group">
+                            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-red-500 transition-colors">mark_email_read</span>
+                            <input
+                                name="otp_deactivate"
+                                type="text"
+                                required
+                                placeholder="Nhập mã OTP 6 số"
+                                maxlength="6"
+                                class="w-full bg-slate-900/50 border border-white/10 rounded-2xl py-3.5 pl-12 pr-32 text-white focus:border-red-500/50 focus:ring-4 focus:ring-red-500/10 transition-all outline-none tracking-widest font-mono">
+                            <button type="button" onclick="sendOtp(this)" class="absolute right-2 top-1/2 -translate-y-1/2 text-sky-400 hover:text-sky-300 text-sm font-semibold px-3 py-1.5 rounded-lg bg-sky-400/10 hover:bg-sky-400/20 transition-colors">
+                                Gửi OTP
+                            </button>
+                        </div>
+                        @error('otp_deactivate') <p class="text-xs text-red-400">{{ $message }}</p> @enderror
+                    @endif
+                    
+                    <div class="flex justify-end gap-3 pt-4">
+                        <button type="button" onclick="document.getElementById('deactivate-modal').classList.add('hidden')" class="px-5 py-2.5 rounded-xl font-medium text-slate-400 hover:bg-white/5 transition-colors">
+                            Hủy
+                        </button>
+                        <button type="submit" class="px-5 py-2.5 bg-red-600 hover:bg-red-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-red-600/20">
+                            Vô hiệu hóa
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal xóa tài khoản -->
+    <div id="delete-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+        <div class="glass-panel rounded-3xl p-6 w-full max-w-md animate-fade-in relative bg-red-950/20 border border-red-600/30">
+            <button type="button" onclick="document.getElementById('delete-modal').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+            <div class="flex items-center gap-3 mb-2">
+                <span class="material-symbols-outlined text-red-500 text-3xl">warning</span>
+                <h3 class="text-xl font-bold text-red-500">Xóa vĩnh viễn</h3>
+            </div>
+            @if(empty(auth()->user()->nha_cung_cap_oauth))
+                <p class="text-sm text-slate-300 mb-6 font-medium">Hành động này KHÔNG THỂ hoàn tác. Vui lòng nhập mật khẩu của bạn để tiếp tục xóa toàn bộ dữ liệu khỏi hệ thống.</p>
+            @else
+                <p class="text-sm text-slate-300 mb-6 font-medium">Hành động này KHÔNG THỂ hoàn tác. Vui lòng sử dụng mã OTP gửi qua email để tiếp tục xóa toàn bộ dữ liệu khỏi hệ thống.</p>
+            @endif
+            
+            <form action="{{ route('profile.destroy') }}" method="POST">
+                @csrf
+                @method('DELETE')
+                <div class="space-y-4">
+                    @if(empty(auth()->user()->nha_cung_cap_oauth))
+                        <div class="relative group">
+                            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-red-500 transition-colors">lock</span>
+                            <input
+                                name="password_delete"
+                                type="password"
+                                required
+                                placeholder="Nhập mật khẩu để xác nhận"
+                                class="w-full bg-black/40 border border-red-500/20 rounded-2xl py-3.5 pl-12 pr-4 text-white focus:border-red-500 focus:ring-4 focus:ring-red-500/20 transition-all outline-none">
+                        </div>
+                        @error('password_delete') <p class="text-xs text-red-400 font-bold">{{ $message }}</p> @enderror
+                    @else
+                        <div class="relative group">
+                            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-red-500 transition-colors">mark_email_read</span>
+                            <input
+                                name="otp_delete"
+                                type="text"
+                                required
+                                placeholder="Nhập mã OTP 6 số"
+                                maxlength="6"
+                                class="w-full bg-black/40 border border-red-500/20 rounded-2xl py-3.5 pl-12 pr-32 text-white focus:border-red-500 focus:ring-4 focus:ring-red-500/20 transition-all outline-none tracking-widest font-mono">
+                            <button type="button" onclick="sendOtp(this)" class="absolute right-2 top-1/2 -translate-y-1/2 text-sky-400 hover:text-sky-300 text-sm font-semibold px-3 py-1.5 rounded-lg bg-sky-400/10 hover:bg-sky-400/20 transition-colors">
+                                Gửi OTP
+                            </button>
+                        </div>
+                        @error('otp_delete') <p class="text-xs text-red-400 font-bold">{{ $message }}</p> @enderror
+                    @endif
+                    
+                    <div class="flex justify-end gap-3 pt-4">
+                        <button type="button" onclick="document.getElementById('delete-modal').classList.add('hidden')" class="px-5 py-2.5 rounded-xl font-medium text-slate-400 hover:bg-white/10 transition-colors">
+                            Hủy bỏ
+                        </button>
+                        <button type="submit" class="px-5 py-2.5 bg-red-600 hover:bg-red-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-red-600/30">
+                            Xóa vĩnh viễn
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 
+@if($errors->has('password_deactivate') || $errors->has('otp_deactivate'))
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('deactivate-modal').classList.remove('hidden');
+    });
+</script>
+@endif
+@if($errors->has('password_delete') || $errors->has('otp_delete'))
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('delete-modal').classList.remove('hidden');
+    });
+</script>
+@endif
+
+<script>
+    async function sendOtp(btn) {
+        if (btn.disabled) return;
+        
+        btn.disabled = true;
+        let originalText = btn.innerText;
+        btn.innerText = 'Đang gửi...';
+        
+        try {
+            const response = await fetch('{{ route("profile.send-action-otp") }}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                alert(data.message);
+                
+                // Đếm ngược 60s
+                let timeLeft = 60;
+                btn.innerText = `Chờ ${timeLeft}s`;
+                
+                const timer = setInterval(() => {
+                    timeLeft--;
+                    btn.innerText = `Chờ ${timeLeft}s`;
+                    
+                    if (timeLeft <= 0) {
+                        clearInterval(timer);
+                        btn.disabled = false;
+                        btn.innerText = originalText;
+                    }
+                }, 1000);
+            } else {
+                alert(data.message || 'Có lỗi xảy ra khi gửi OTP.');
+                btn.disabled = false;
+                btn.innerText = originalText;
+            }
+        } catch (error) {
+            console.error('Lỗi khi gửi OTP:', error);
+            alert('Có lỗi xảy ra, vui lòng thử lại.');
+            btn.disabled = false;
+            btn.innerText = originalText;
+        }
+    }
+</script>
 <script>
     /**
      * Hàm hiển thị ảnh xem trước ngay lập tức
