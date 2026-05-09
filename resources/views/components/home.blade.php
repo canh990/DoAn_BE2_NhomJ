@@ -13,7 +13,7 @@
 
 
     <!-- ===== FORM ĐĂNG BÀI ===== -->
-    <section class="glass-panel rounded-2xl p-4 shadow-sm">
+    <section class="glass-panel rounded-2xl p-4 shadow-sm relative z-40">
         <div class="flex gap-4">
             <img class="w-12 h-12 rounded-full border border-sky-400/20 shrink-0 object-cover" alt="Avatar" src="{{ Auth::user()->anh_dai_dien ? asset('storage/' . Auth::user()->anh_dai_dien) : asset('storage/avatars/avtmacdinh.png') }}">
             <div class="w-full">
@@ -26,6 +26,19 @@
                     @error('noi_dung')
                     <p class="mt-2 text-sm text-red-400">{{ $message }}</p>
                     @enderror
+
+                    <!-- Hiển thị cảm xúc / hoạt động đang chọn -->
+                    <div id="feeling-display-container" class="mt-2 hidden items-center gap-2 text-sm text-slate-300 bg-white/5 w-fit px-3 py-1.5 rounded-full border border-white/10">
+                        <span class="material-symbols-outlined text-yellow-400 text-sm">mood</span>
+                        <span id="feeling-text">Đang cảm thấy vui</span>
+                        <button type="button" id="remove-feeling-btn" class="hover:text-red-400 transition-colors ml-1 flex items-center">
+                            <span class="material-symbols-outlined text-sm">close</span>
+                        </button>
+                    </div>
+
+                    <!-- Input ẩn để lưu dữ liệu -->
+                    <input type="hidden" name="cam_xuc" id="input-cam_xuc">
+                    <input type="hidden" name="hoat_dong" id="input-hoat_dong">
 
                     <!-- Nút chọn file ẩn -->
                     <input type="file" id="post-image" name="anh[]" accept="image/*,video/*" multiple class="hidden">
@@ -54,9 +67,23 @@
                             <button type="button" class="p-2 text-emerald-400 hover:bg-emerald-400/10 rounded-full transition-colors" title="Gắn thẻ">
                                 <span class="material-symbols-outlined" data-icon="label">label</span>
                             </button>
-                            <button type="button" class="p-2 text-yellow-400 hover:bg-yellow-400/10 rounded-full transition-colors" title="Cảm xúc">
-                                <span class="material-symbols-outlined" data-icon="mood">mood</span>
-                            </button>
+                            <div class="relative z-50">
+                                <button type="button" id="btn-feeling" class="p-2 text-yellow-400 hover:bg-yellow-400/10 rounded-full transition-colors" title="Cảm xúc/Hoạt động">
+                                    <span class="material-symbols-outlined" data-icon="mood">mood</span>
+                                </button>
+                                <!-- Dropdown cảm xúc -->
+                                <div id="feeling-dropdown" class="hidden absolute top-full left-0 mt-2 w-48 bg-slate-800 border border-white/10 rounded-xl shadow-2xl overflow-hidden flex-col py-1 text-sm text-left">
+                                    <div class="px-3 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">Cảm xúc</div>
+                                    <button type="button" class="feeling-option w-full text-left px-4 py-2 hover:bg-white/5 flex items-center gap-2 transition-colors" data-type="cam_xuc" data-val="vui_ve" data-label="Vui vẻ"><span class="text-xl">😀</span> Vui vẻ</button>
+                                    <button type="button" class="feeling-option w-full text-left px-4 py-2 hover:bg-white/5 flex items-center gap-2 transition-colors" data-type="cam_xuc" data-val="phan_no" data-label="Phẫn nộ"><span class="text-xl">😡</span> Phẫn nộ</button>
+                                    <button type="button" class="feeling-option w-full text-left px-4 py-2 hover:bg-white/5 flex items-center gap-2 transition-colors" data-type="cam_xuc" data-val="buon" data-label="Buồn"><span class="text-xl">😢</span> Buồn</button>
+                                    <button type="button" class="feeling-option w-full text-left px-4 py-2 hover:bg-white/5 flex items-center gap-2 transition-colors" data-type="cam_xuc" data-val="wow" data-label="Wow"><span class="text-xl">😮</span> Wow</button>
+                                    <div class="px-3 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider border-t border-white/10 mt-1">Hoạt động</div>
+                                    <button type="button" class="feeling-option w-full text-left px-4 py-2 hover:bg-white/5 flex items-center gap-2 transition-colors" data-type="hoat_dong" data-val="Đang xem phim" data-label="Đang xem phim"><span class="text-xl">🎬</span> Đang xem phim</button>
+                                    <button type="button" class="feeling-option w-full text-left px-4 py-2 hover:bg-white/5 flex items-center gap-2 transition-colors" data-type="hoat_dong" data-val="Đang nghe nhạc" data-label="Đang nghe nhạc"><span class="text-xl">🎵</span> Đang nghe nhạc</button>
+                                    <button type="button" class="feeling-option w-full text-left px-4 py-2 hover:bg-white/5 flex items-center gap-2 transition-colors" data-type="hoat_dong" data-val="Đang đi chơi" data-label="Đang đi chơi"><span class="text-xl">✈️</span> Đang đi chơi</button>
+                                </div>
+                            </div>
                             <button type="button" class="p-2 text-red-400 hover:bg-red-400/10 rounded-full transition-colors" title="Vị trí">
                                 <span class="material-symbols-outlined" data-icon="location_on">location_on</span>
                             </button>
@@ -89,7 +116,27 @@
             <div class="flex items-center gap-3">
                 <img class="w-10 h-10 rounded-full border border-sky-400/20 object-cover" alt="{{ $post->user?->name ?? 'Người dùng' }}" src="{{ $post->user && $post->user->anh_dai_dien ? asset('storage/' . $post->user->anh_dai_dien) : asset('storage/avatars/avtmacdinh.png') }}">
                 <div>
-                    <h3 class="font-bold text-sm text-on-surface">{{ $post->user?->name ?? 'Người dùng' }}</h3>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <h3 class="font-bold text-sm text-on-surface">{{ $post->user?->name ?? 'Người dùng' }}</h3>
+                        @if ($post->cam_xuc || $post->hoat_dong)
+                            @php
+                            $camXucLabels = [
+                                'vui_ve' => 'vui vẻ',
+                                'phan_no' => 'phẫn nộ',
+                                'buon' => 'buồn',
+                                'wow' => 'wow',
+                            ];
+                            @endphp
+                            <span class="text-sm text-slate-400 flex items-center gap-1">
+                                @if ($post->cam_xuc)
+                                    đang cảm thấy <span class="font-medium text-slate-300">{{ $camXucLabels[$post->cam_xuc] ?? strtolower($post->cam_xuc) }}</span>
+                                @endif
+                                @if ($post->hoat_dong)
+                                    {{ strtolower($post->hoat_dong) }}
+                                @endif
+                            </span>
+                        @endif
+                    </div>
                     <p class="text-[10px] text-slate-400">{{ $post->created_at ? $post->created_at->diffForHumans() : 'Không xác định' }}</p>
                 </div>
             </div>
@@ -427,6 +474,77 @@
         }
 
         updateCount();
+
+        // Feeling dropdown logic
+        const btnFeeling = document.getElementById('btn-feeling');
+        const feelingDropdown = document.getElementById('feeling-dropdown');
+        const feelingOptions = document.querySelectorAll('.feeling-option');
+        const feelingDisplayContainer = document.getElementById('feeling-display-container');
+        const feelingText = document.getElementById('feeling-text');
+        const removeFeelingBtn = document.getElementById('remove-feeling-btn');
+        const inputCamXuc = document.getElementById('input-cam_xuc');
+        const inputHoatDong = document.getElementById('input-hoat_dong');
+
+        if (btnFeeling) {
+            btnFeeling.addEventListener('click', function(e) {
+                feelingDropdown.classList.toggle('hidden');
+                feelingDropdown.classList.toggle('flex');
+            });
+        }
+
+        document.addEventListener('click', function(e) {
+            if (btnFeeling && feelingDropdown && !btnFeeling.contains(e.target) && !feelingDropdown.contains(e.target)) {
+                feelingDropdown.classList.add('hidden');
+                feelingDropdown.classList.remove('flex');
+            }
+        });
+
+        feelingOptions.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const type = this.getAttribute('data-type');
+                const val = this.getAttribute('data-val');
+                const label = this.getAttribute('data-label') || val;
+                
+                inputCamXuc.value = '';
+                inputHoatDong.value = '';
+
+                if (type === 'cam_xuc') {
+                    inputCamXuc.value = val;
+                    feelingText.textContent = `Đang cảm thấy ${label.toLowerCase()}`;
+                } else if (type === 'hoat_dong') {
+                    inputHoatDong.value = val;
+                    feelingText.textContent = label;
+                }
+
+                feelingDisplayContainer.classList.remove('hidden');
+                feelingDisplayContainer.classList.add('flex');
+                feelingDropdown.classList.add('hidden');
+                feelingDropdown.classList.remove('flex');
+                updateSubmitButton();
+            });
+        });
+
+        if (removeFeelingBtn) {
+            removeFeelingBtn.addEventListener('click', function() {
+                inputCamXuc.value = '';
+                inputHoatDong.value = '';
+                feelingDisplayContainer.classList.add('hidden');
+                feelingDisplayContainer.classList.remove('flex');
+                updateSubmitButton();
+            });
+        }
+
+        const originalUpdateSubmitButton = updateSubmitButton;
+        updateSubmitButton = function() {
+            const hasFeeling = inputCamXuc.value || inputHoatDong.value;
+            const textLength = contentTextarea.value.trim().length;
+            if (textLength > 0 || selectedFiles.length > 0 || hasFeeling) {
+                submitButton.removeAttribute('disabled');
+            } else {
+                submitButton.setAttribute('disabled', 'true');
+            }
+        };
+
     });
 </script>
 @endsection

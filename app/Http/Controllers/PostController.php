@@ -34,19 +34,23 @@ class PostController extends Controller
     {
         $validated = $request->validate([
             'noi_dung' => ['nullable', 'string', 'max:280'],
+            'cam_xuc' => ['nullable', 'string', 'max:100'],
+            'hoat_dong' => ['nullable', 'string', 'max:100'],
             'anh' => ['nullable', 'array', 'max:10'], // Tối đa 10 tệp
             'anh.*' => ['file', 'mimes:jpg,jpeg,png,gif,webp,mp4,webm,mov', 'max:512000'], // max 500MB
         ]);
 
         // Kiểm tra ít nhất có nội dung hoặc file
-        if (empty($validated['noi_dung']) && !$request->hasFile('anh')) {
-            return back()->withErrors(['noi_dung' => 'Bài viết phải có nội dung hoặc hình ảnh/video.']);
+        if (empty($validated['noi_dung']) && !$request->hasFile('anh') && empty($validated['cam_xuc']) && empty($validated['hoat_dong'])) {
+            return back()->withErrors(['noi_dung' => 'Bài viết phải có nội dung, cảm xúc, hoặc hình ảnh/video.']);
         }
 
         $post = BaiViet::create([
             'nguoi_dung_id' => auth()->id(),
             'loai' => $request->hasFile('anh') ? 'hinh_anh' : 'van_ban',
             'noi_dung' => $validated['noi_dung'] ?? null,
+            'cam_xuc' => $validated['cam_xuc'] ?? null,
+            'hoat_dong' => $validated['hoat_dong'] ?? null,
             'quyen_rieng_tu' => 'cong_khai',
         ]);
 

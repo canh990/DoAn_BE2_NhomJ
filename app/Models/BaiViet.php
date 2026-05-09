@@ -18,6 +18,8 @@ class BaiViet extends Model
         'nguoi_dung_id',
         'loai',
         'noi_dung',
+        'cam_xuc',
+        'hoat_dong',
         'quyen_rieng_tu',
     ];
 
