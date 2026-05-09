@@ -39,7 +39,11 @@ class ProfileController extends Controller
             ->where('ten_dang_nhap', $username)
             ->where('con_hoat_dong', true)
             ->withCount(['followers', 'following'])
-            ->firstOrFail();
+            ->first();
+
+        if (!$user) {
+            return redirect()->route('home')->with('error', 'Không tìm thấy tài khoản người dùng.');
+        }
 
         $posts = $user->posts()
             ->with(['user', 'media'])
@@ -154,7 +158,11 @@ class ProfileController extends Controller
             ->where('ten_dang_nhap', $username)
             ->where('con_hoat_dong', true)
             ->withCount(['followers', 'following'])
-            ->firstOrFail();
+            ->first();
+
+        if (!$user) {
+            return redirect()->route('home')->with('error', 'Không tìm thấy tài khoản người dùng.');
+        }
 
         $connections = $user->followers()->paginate(20);
 
@@ -171,7 +179,11 @@ class ProfileController extends Controller
             ->where('ten_dang_nhap', $username)
             ->where('con_hoat_dong', true)
             ->withCount(['followers', 'following'])
-            ->firstOrFail();
+            ->first();
+
+        if (!$user) {
+            return redirect()->route('home')->with('error', 'Không tìm thấy tài khoản người dùng.');
+        }
 
         $connections = $user->following()->paginate(20);
 
