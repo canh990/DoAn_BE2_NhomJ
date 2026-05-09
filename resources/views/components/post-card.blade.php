@@ -139,9 +139,29 @@
                     </div>
                 </div>
 
-                <button class="shrink-0 text-slate-500 transition-colors hover:text-sky-300" type="button" aria-label="Tùy chọn bài viết">
-                    <span class="material-symbols-outlined" data-icon="more_horiz">more_horiz</span>
-                </button>
+                @if(auth()->id() === data_get($post, 'nguoi_dung_id') || (isset($user) && auth()->id() === data_get($user, 'id')))
+                    <div class="relative shrink-0">
+                        <button type="button" class="post-dropdown-trigger text-slate-500 transition-colors hover:text-sky-300 p-2 rounded-full hover:bg-white/5" aria-label="Tùy chọn bài viết">
+                            <span class="material-symbols-outlined" data-icon="more_horiz">more_horiz</span>
+                        </button>
+                        <div class="post-dropdown-menu hidden absolute right-0 top-full mt-1 w-40 bg-slate-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden z-20">
+                            @if($postId)
+                            <form action="{{ route('posts.destroy', $postId) }}" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn xóa bài viết này? Các ảnh/video đính kèm cũng sẽ bị xóa vĩnh viễn.');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="w-full text-left px-4 py-3 text-sm text-red-400 hover:bg-white/5 flex items-center gap-2 transition-colors">
+                                    <span class="material-symbols-outlined text-[18px]">delete</span>
+                                    Xóa bài viết
+                                </button>
+                            </form>
+                            @endif
+                        </div>
+                    </div>
+                @else
+                    <button class="shrink-0 text-slate-500 transition-colors hover:text-sky-300 p-2 rounded-full hover:bg-white/5" type="button" aria-label="Tùy chọn bài viết">
+                        <span class="material-symbols-outlined" data-icon="more_horiz">more_horiz</span>
+                    </button>
+                @endif
             </div>
 
             @if (filled($body))
@@ -170,17 +190,31 @@
                             $mediaSrc = \Illuminate\Support\Str::startsWith($mediaPath, ['http://', 'https://'])
                                 ? $mediaPath
                                 : asset('storage/' . ltrim($mediaPath, '/'));
+                            $mediaLoai = data_get($media, 'loai');
+                            $isVideo = $mediaLoai === 'video' || \Illuminate\Support\Str::endsWith($mediaPath, ['.mp4', '.webm', '.mov']);
                         @endphp
                         <div class="overflow-hidden rounded-xl border border-white/10 bg-slate-900/50 {{ $mediaCount > 1 ? 'aspect-square' : '' }}">
-                            <img src="{{ $mediaSrc }}" 
-                                 alt="Post image" 
-                                 class="w-full h-full {{ $mediaCount == 1 ? 'max-h-[500px] object-contain block mx-auto' : 'object-cover' }}">
+                            @if($isVideo)
+                                <video src="{{ $mediaSrc }}" controls controlsList="nodownload" muted playsinline loop class="w-full h-full {{ $mediaCount == 1 ? 'max-h-[500px] object-contain block mx-auto' : 'object-cover' }}"></video>
+                            @else
+                                <img src="{{ $mediaSrc }}" 
+                                     alt="Post image" 
+                                     data-post-id="{{ $postId }}"
+                                     class="post-image-item cursor-pointer hover:opacity-90 transition-opacity w-full h-full {{ $mediaCount == 1 ? 'max-h-[500px] object-contain block mx-auto' : 'object-cover' }}">
+                            @endif
                         </div>
                     @endforeach
                 </div>
             @elseif ($postImage)
+                @php
+                    $isVideo = \Illuminate\Support\Str::endsWith($postImage, ['.mp4', '.webm', '.mov']);
+                @endphp
                 <div class="mt-3 overflow-hidden rounded-2xl border border-white/10 bg-slate-900/50">
-                    <img class="w-full h-auto max-h-[500px] object-contain block mx-auto" src="{{ $postImage }}" alt="Hình ảnh bài viết">
+                    @if($isVideo)
+                        <video class="w-full h-auto max-h-[500px] object-contain block mx-auto" controls controlsList="nodownload" muted playsinline loop src="{{ $postImage }}"></video>
+                    @else
+                        <img class="post-image-item cursor-pointer hover:opacity-90 transition-opacity w-full h-auto max-h-[500px] object-contain block mx-auto" data-post-id="{{ $postId }}" src="{{ $postImage }}" alt="Hình ảnh bài viết">
+                    @endif
                 </div>
             @endif
 
