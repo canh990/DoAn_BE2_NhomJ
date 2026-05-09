@@ -13,6 +13,12 @@ Route::middleware('auth')->group(function () {
         ->name('profile.edit');
     Route::put('/profile', [ProfileController::class, 'update'])
         ->name('profile.update');
+    Route::post('/profile/deactivate', [ProfileController::class, 'deactivate'])
+        ->name('profile.deactivate');
+    Route::post('/profile/send-action-otp', [ProfileController::class, 'sendActionOtp'])
+        ->name('profile.send-action-otp');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])
+        ->name('profile.destroy');
     Route::post('/user/{user}/toggle-follow', [ProfileController::class, 'toggleFollow'])
         ->name('user.toggle-follow');
 });

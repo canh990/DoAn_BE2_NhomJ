@@ -37,6 +37,7 @@ class ProfileController extends Controller
     {
         $user = User::query()
             ->where('ten_dang_nhap', $username)
+            ->where('con_hoat_dong', true)
             ->withCount(['followers', 'following'])
             ->firstOrFail();
 
@@ -151,6 +152,7 @@ class ProfileController extends Controller
     {
         $user = User::query()
             ->where('ten_dang_nhap', $username)
+            ->where('con_hoat_dong', true)
             ->withCount(['followers', 'following'])
             ->firstOrFail();
 
@@ -167,6 +169,7 @@ class ProfileController extends Controller
     {
         $user = User::query()
             ->where('ten_dang_nhap', $username)
+            ->where('con_hoat_dong', true)
             ->withCount(['followers', 'following'])
             ->firstOrFail();
 
@@ -177,5 +180,107 @@ class ProfileController extends Controller
             'connections' => $connections,
             'type' => 'following',
         ]);
+    }
+
+    public function sendActionOtp(Request $request)
+    {
+        $user = auth()->user();
+
+        if (empty($user->nha_cung_cap_oauth)) {
+            return response()->json(['success' => false, 'message' => 'Tài khoản này không sử dụng OTP cho chức năng này.']);
+        }
+
+        $otpCode = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+
+        $user->update([
+            'otp_code'    => $otpCode,
+            'otp_het_han' => \Carbon\Carbon::now()->addMinutes(5),
+        ]);
+
+        \Illuminate\Support\Facades\Mail::to($user->email)->send(new \App\Mail\OtpMail($otpCode, $user->ten_dang_nhap, 'account_action'));
+
+        return response()->json(['success' => true, 'message' => 'Mã OTP đã được gửi đến email của bạn.']);
+    }
+
+    public function deactivate(Request $request)
+    {
+        $user = auth()->user();
+
+        if (empty($user->nha_cung_cap_oauth)) {
+            $request->validate([
+                'password_deactivate' => ['required', 'string'],
+            ], [
+                'password_deactivate.required' => 'Vui lòng nhập mật khẩu.',
+            ]);
+
+            if (!\Illuminate\Support\Facades\Hash::check($request->password_deactivate, $user->mat_khau_hash)) {
+                return back()->withErrors(['password_deactivate' => 'Mật khẩu không chính xác.']);
+            }
+        } else {
+            $request->validate([
+                'otp_deactivate' => ['required', 'string', 'size:6'],
+            ], [
+                'otp_deactivate.required' => 'Vui lòng nhập mã OTP.',
+                'otp_deactivate.size' => 'Mã OTP phải có 6 chữ số.',
+            ]);
+
+            if ($request->otp_deactivate !== $user->otp_code || !$user->otp_het_han || \Carbon\Carbon::now()->greaterThan($user->otp_het_han)) {
+                return back()->withErrors(['otp_deactivate' => 'Mã OTP không hợp lệ hoặc đã hết hạn.']);
+            }
+
+            // Xóa OTP sau khi dùng
+            $user->update(['otp_code' => null, 'otp_het_han' => null]);
+        }
+
+        // Chỉ ẩn (tạm khóa) người dùng bằng cách set con_hoat_dong = false
+        $user->update(['con_hoat_dong' => false]);
+
+        auth()->logout();
+        
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('login')->with('success', 'Tài khoản của bạn đã được vô hiệu hóa. Bạn có thể đăng nhập lại để khôi phục.');
+    }
+
+    public function destroy(Request $request)
+    {
+        $user = auth()->user();
+
+        if (empty($user->nha_cung_cap_oauth)) {
+            $request->validate([
+                'password_delete' => ['required', 'string'],
+            ], [
+                'password_delete.required' => 'Vui lòng nhập mật khẩu để xác nhận.',
+            ]);
+
+            if (!\Illuminate\Support\Facades\Hash::check($request->password_delete, $user->mat_khau_hash)) {
+                return back()->withErrors(['password_delete' => 'Mật khẩu không chính xác.']);
+            }
+        } else {
+            $request->validate([
+                'otp_delete' => ['required', 'string', 'size:6'],
+            ], [
+                'otp_delete.required' => 'Vui lòng nhập mã OTP.',
+                'otp_delete.size' => 'Mã OTP phải có 6 chữ số.',
+            ]);
+
+            if ($request->otp_delete !== $user->otp_code || !$user->otp_het_han || \Carbon\Carbon::now()->greaterThan($user->otp_het_han)) {
+                return back()->withErrors(['otp_delete' => 'Mã OTP không hợp lệ hoặc đã hết hạn.']);
+            }
+
+            // Xóa OTP sau khi dùng
+            $user->update(['otp_code' => null, 'otp_het_han' => null]);
+        }
+
+        auth()->logout();
+        
+        // Permanent delete
+        $user->forceDelete();
+        
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('login')->with('success', 'Tài khoản của bạn đã được xóa vĩnh viễn khỏi hệ thống.');
     }
 }

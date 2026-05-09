@@ -14,6 +14,8 @@
         <p>Xin chào <strong>{{ $userName }}</strong>,</p>
         @if($type === 'register')
             <p>Cảm ơn bạn đã đăng ký tài khoản. Vui lòng sử dụng mã OTP dưới đây để xác thực địa chỉ email của bạn:</p>
+        @elseif($type === 'account_action')
+            <p>Chúng tôi đã nhận được yêu cầu thay đổi bảo mật quan trọng từ tài khoản của bạn (Vô hiệu hóa/Xóa tài khoản). Vui lòng sử dụng mã OTP dưới đây để xác nhận hành động này:</p>
         @else
             <p>Chúng tôi đã nhận được yêu cầu khôi phục mật khẩu từ bạn. Vui lòng sử dụng mã OTP dưới đây để tiếp tục:</p>
         @endif
@@ -25,7 +27,7 @@
         @if($type === 'register')
             <p>Mã này có hiệu lực trong vòng <strong>10 phút</strong>. Nếu bạn không thực hiện đăng ký này, bạn có thể bỏ qua email này.</p>
         @else
-            <p>Mã này có hiệu lực trong vòng <strong>5 phút</strong>. Nếu bạn không yêu cầu thay đổi này, bạn có thể bỏ qua email này.</p>
+            <p>Mã này có hiệu lực trong vòng <strong>5 phút</strong>. Nếu bạn không yêu cầu thay đổi này, bạn có thể bỏ qua email này và đổi mật khẩu nếu cần thiết.</p>
         @endif
         
         <div class="footer">
