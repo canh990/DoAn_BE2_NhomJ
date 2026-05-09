@@ -26,13 +26,13 @@
                     @enderror
 
                     <!-- Nút chọn file ẩn -->
-                    <input type="file" id="post-image" name="anh" accept="image/*" class="hidden">
+                    <input type="file" id="post-image" name="anh[]" accept="image/*" multiple class="hidden">
                     
                     <!-- Vùng hiển thị ảnh xem trước -->
-                    <div id="image-preview" class="mt-3 hidden relative inline-block">
-                        <img id="preview-img" class="max-w-full h-auto rounded-xl border border-white/10 max-h-64 object-contain">
-                        <button type="button" id="remove-image" class="absolute top-2 right-2 bg-slate-900/80 hover:bg-red-500 text-white rounded-full p-1.5 transition-colors backdrop-blur-sm flex items-center justify-center" title="Xóa ảnh">
-                            <span class="material-symbols-outlined text-sm">close</span>
+                    <div id="image-preview-container" class="mt-3 hidden">
+                        <div id="preview-grid" class="grid gap-2"></div>
+                        <button type="button" id="remove-all-images" class="mt-2 text-sm text-red-400 hover:text-red-300 hidden items-center gap-1">
+                            <span class="material-symbols-outlined text-sm">delete</span> Xóa tất cả ảnh
                         </button>
                     </div>
 
@@ -98,12 +98,15 @@
 
     <!-- Hiển thị danh sách ảnh từ quan hệ media -->
     @if($post->media && $post->media->count() > 0)
-        <div class="mt-3 grid gap-2">
+        @php
+            $mediaCount = $post->media->count();
+        @endphp
+        <div class="mt-3 grid gap-2 {{ $mediaCount == 1 ? 'grid-cols-1' : ($mediaCount == 2 ? 'grid-cols-2' : 'grid-cols-2 sm:grid-cols-3') }}">
             @foreach($post->media as $media)
-                <div class="overflow-hidden rounded-xl border border-white/10 bg-slate-900/50">
+                <div class="overflow-hidden rounded-xl border border-white/10 bg-slate-900/50 {{ $mediaCount > 1 ? 'aspect-square' : '' }}">
                     <img src="{{ asset('storage/' . $media->duong_dan) }}" 
                          alt="Post image" 
-                         class="w-full h-auto max-h-[500px] object-contain block mx-auto">
+                         class="w-full h-full {{ $mediaCount == 1 ? 'max-h-[500px] object-contain block mx-auto' : 'object-cover' }}">
                 </div>
             @endforeach
         </div>
@@ -242,9 +245,10 @@
         const submitButton = document.getElementById('post-submit-button');
         const imageBtn = document.getElementById('image-btn');
         const imageInput = document.getElementById('post-image');
-        const imagePreview = document.getElementById('image-preview');
-        const previewImg = document.getElementById('preview-img');
-        const removeImageBtn = document.getElementById('remove-image');
+        const imagePreviewContainer = document.getElementById('image-preview-container');
+        const previewGrid = document.getElementById('preview-grid');
+        const removeAllBtn = document.getElementById('remove-all-images');
+        let selectedFiles = [];
 
         if (!textarea || !counter || !submitButton) {
             return;
@@ -260,7 +264,7 @@
 
         const updateSubmitButton = function() {
             const hasText = textarea.value.trim().length > 0;
-            const hasImage = imageInput.files && imageInput.files.length > 0;
+            const hasImage = selectedFiles.length > 0;
             submitButton.disabled = !hasText && !hasImage;
         };
 
@@ -275,23 +279,72 @@
 
         if(imageInput) {
             imageInput.addEventListener('change', function(e) {
-                const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        previewImg.src = e.target.result;
-                        imagePreview.classList.remove('hidden');
-                    };
-                    reader.readAsDataURL(file);
-                }
+                const files = Array.from(e.target.files);
+                selectedFiles = selectedFiles.concat(files);
+                
+                updateFileInput();
+                renderPreviews();
                 updateSubmitButton();
             });
         }
 
-        if(removeImageBtn) {
-            removeImageBtn.addEventListener('click', function() {
-                imageInput.value = '';
-                imagePreview.classList.add('hidden');
+        function updateFileInput() {
+            const dt = new DataTransfer();
+            selectedFiles.forEach(file => dt.items.add(file));
+            imageInput.files = dt.files;
+        }
+
+        function renderPreviews() {
+            if (!previewGrid) return;
+            previewGrid.innerHTML = '';
+            
+            if (selectedFiles.length === 0) {
+                imagePreviewContainer.classList.add('hidden');
+                if (removeAllBtn) removeAllBtn.style.display = 'none';
+                return;
+            }
+            
+            imagePreviewContainer.classList.remove('hidden');
+            if (removeAllBtn) removeAllBtn.style.display = 'inline-flex';
+            
+            previewGrid.className = 'grid gap-2 ' + (selectedFiles.length > 1 ? 'grid-cols-2 sm:grid-cols-3' : 'grid-cols-1');
+
+            selectedFiles.forEach((file, index) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const div = document.createElement('div');
+                    div.className = 'relative group rounded-xl overflow-hidden border border-white/10 bg-slate-900/50 ' + (selectedFiles.length > 1 ? 'aspect-square' : '');
+                    
+                    div.innerHTML = `
+                        <img src="${e.target.result}" class="w-full h-full ${selectedFiles.length > 1 ? 'object-cover' : 'max-h-64 object-contain'}">
+                        <button type="button" class="remove-single-image absolute top-2 right-2 bg-slate-900/80 hover:bg-red-500 text-white rounded-full p-1.5 transition-colors backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100" data-index="${index}" title="Xóa ảnh này">
+                            <span class="material-symbols-outlined text-sm">close</span>
+                        </button>
+                    `;
+                    previewGrid.appendChild(div);
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        if (previewGrid) {
+            previewGrid.addEventListener('click', function(e) {
+                const removeBtn = e.target.closest('.remove-single-image');
+                if (removeBtn) {
+                    const index = parseInt(removeBtn.getAttribute('data-index'));
+                    selectedFiles.splice(index, 1);
+                    updateFileInput();
+                    renderPreviews();
+                    updateSubmitButton();
+                }
+            });
+        }
+
+        if (removeAllBtn) {
+            removeAllBtn.addEventListener('click', function() {
+                selectedFiles = [];
+                updateFileInput();
+                renderPreviews();
                 updateSubmitButton();
             });
         }

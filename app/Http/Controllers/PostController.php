@@ -34,7 +34,8 @@ class PostController extends Controller
     {
         $validated = $request->validate([
             'noi_dung' => ['nullable', 'string', 'max:280'],
-            'anh' => ['nullable', 'image', 'mimes:jpg,jpeg,png,gif,webp', 'max:5120'],
+            'anh' => ['nullable', 'array', 'max:10'], // Tối đa 10 ảnh
+            'anh.*' => ['image', 'mimes:jpg,jpeg,png,gif,webp', 'max:5120'],
         ]);
 
         // Kiểm tra ít nhất có nội dung hoặc ảnh
@@ -51,16 +52,17 @@ class PostController extends Controller
 
         // Xử lý upload ảnh
         if ($request->hasFile('anh')) {
-            $file = $request->file('anh');
-            $path = $file->store('posts', 'public');
+            foreach ($request->file('anh') as $index => $file) {
+                $path = $file->store('posts', 'public');
 
-            MediaBaiViet::create([
-                'bai_viet_id' => $post->id,
-                'loai' => 'hinh_anh',
-                'duong_dan' => $path,
-                'thu_tu' => 0,
-                'ngay_tao' => now(),
-            ]);
+                MediaBaiViet::create([
+                    'bai_viet_id' => $post->id,
+                    'loai' => 'hinh_anh',
+                    'duong_dan' => $path,
+                    'thu_tu' => $index,
+                    'ngay_tao' => now(),
+                ]);
+            }
         }
 
         return redirect()
