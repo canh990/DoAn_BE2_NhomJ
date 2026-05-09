@@ -109,6 +109,24 @@ class NguoiDungSeeder extends Seeder
             ],
         ];
 
-        DB::table('nguoi_dung')->insert($users);
+        // Chỉ insert những user chưa tồn tại
+        $existingUsernames = DB::table('nguoi_dung')->pluck('ten_dang_nhap')->toArray();
+        $existingEmails = DB::table('nguoi_dung')->whereNotNull('email')->pluck('email')->toArray();
+        $existingPhones = DB::table('nguoi_dung')->whereNotNull('so_dien_thoai')->pluck('so_dien_thoai')->toArray();
+
+        $usersToInsert = [];
+        foreach ($users as $user) {
+            $usernameExists = in_array($user['ten_dang_nhap'], $existingUsernames);
+            $emailExists = $user['email'] && in_array($user['email'], $existingEmails);
+            $phoneExists = $user['so_dien_thoai'] && in_array($user['so_dien_thoai'], $existingPhones);
+
+            if (!$usernameExists && !$emailExists && !$phoneExists) {
+                $usersToInsert[] = $user;
+            }
+        }
+
+        if (!empty($usersToInsert)) {
+            DB::table('nguoi_dung')->insert($usersToInsert);
+        }
     }
 }

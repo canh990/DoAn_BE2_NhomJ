@@ -30,6 +30,9 @@ class DatabaseSeeder extends Seeder
             ]);
         }
 
+        $this->call(BinhLuanSeeder::class);
+        $this->call(Camxucseeder::class);
+        $this->call(NguoiDungSeeder::class);
         $this->call(PostSeeders::class);
         $this->call(PostImgSeeders::class);
     }
