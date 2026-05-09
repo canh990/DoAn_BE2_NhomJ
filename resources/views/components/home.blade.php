@@ -133,26 +133,35 @@
             @endphp
 
             <div class="relative">
-                <div class="flex items-center gap-2">
-                    <button type="button" data-reaction-trigger class="flex items-center gap-2 rounded-full border px-3 py-2 text-sm font-medium transition-all duration-200 {{ $selected ? 'border-sky-400/20 bg-sky-400/10 text-sky-300' : 'border-white/10 bg-slate-950/80 text-slate-300 hover:border-sky-400/20 hover:bg-sky-400/10 hover:text-sky-300' }}">
-                        <span class="material-symbols-outlined {{ $selectedColor }}" data-reaction-trigger-icon>{{ $selectedIcon }}</span>
-                        <span data-reaction-trigger-label>{{ $selectedLabel }}</span>
-                    </button>
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-1 sm:gap-2">
+                        <button type="button" data-reaction-trigger class="group flex items-center gap-1.5 rounded-full px-3 py-1.5 sm:px-4 sm:py-2 transition-all duration-300 {{ $selected ? 'bg-sky-400/10 text-sky-400' : 'text-slate-400 hover:bg-slate-800/60 hover:text-sky-300' }}">
+                            <div class="relative flex items-center justify-center transition-transform group-hover:scale-110 group-active:scale-95">
+                                <span class="material-symbols-outlined text-[20px] sm:text-[22px] {{ $selectedColor }}" data-reaction-trigger-icon style="{{ $selected ? 'font-variation-settings: \'FILL\' 1;' : '' }}">{{ $selectedIcon }}</span>
+                            </div>
+                            <span class="text-[13px] sm:text-sm font-semibold tracking-wide" data-reaction-trigger-label>{{ $selectedLabel }}</span>
+                        </button>
 
-                    <button type="button" data-comment-toggle class="flex items-center gap-2 text-slate-400 hover:text-sky-300 transition-colors py-1.5 px-4 rounded-full hover:bg-sky-400/10">
-                        <span class="material-symbols-outlined" data-icon="chat_bubble">chat_bubble</span>
-                        <span class="text-sm font-medium">Bình luận</span>
-                        <!-- Thêm ?? 0 để sửa lỗi hiển thị () khi không có bình luận -->
-                        <span class="text-sm text-slate-400" data-comment-count>({{ $post->comments_count ?? 0 }})</span>
-                    </button>
+                        <button type="button" data-comment-toggle class="group flex items-center gap-1.5 rounded-full px-3 py-1.5 sm:px-4 sm:py-2 text-slate-400 transition-all duration-300 hover:bg-slate-800/60 hover:text-sky-300">
+                            <div class="relative flex items-center justify-center transition-transform group-hover:scale-110 group-active:scale-95">
+                                <span class="material-symbols-outlined text-[20px] sm:text-[22px]" data-icon="chat_bubble_outline">chat_bubble</span>
+                            </div>
+                            <span class="text-[13px] sm:text-sm font-semibold tracking-wide hidden sm:block">Bình luận</span>
+                            <span class="text-[13px] sm:text-sm font-bold text-slate-500 group-hover:text-sky-400/80" data-comment-count>{{ $post->comments_count > 0 ? '('.$post->comments_count.')' : '' }}</span>
+                        </button>
 
-                    <button class="flex items-center gap-2 text-slate-400 hover:text-sky-300 transition-colors py-1.5 px-4 rounded-full hover:bg-sky-400/10">
-                        <span class="material-symbols-outlined" data-icon="share">share</span>
-                        <span class="text-sm font-medium">Chia sẻ</span>
-                    </button>
+                        <button class="group flex items-center gap-1.5 rounded-full px-3 py-1.5 sm:px-4 sm:py-2 text-slate-400 transition-all duration-300 hover:bg-slate-800/60 hover:text-emerald-400">
+                            <div class="relative flex items-center justify-center transition-transform group-hover:scale-110 group-active:scale-95">
+                                <span class="material-symbols-outlined text-[20px] sm:text-[22px]" data-icon="share">share</span>
+                            </div>
+                            <span class="text-[13px] sm:text-sm font-semibold tracking-wide hidden sm:block">Chia sẻ</span>
+                        </button>
+                    </div>
 
-                    <!-- Thêm ?? 0 để sửa lỗi hiển thị khoảng trống khi không có cảm xúc -->
-                    <span class="ml-auto text-xs text-slate-400" data-reaction-count>{{ $post->reactions_count ?? 0 }} cảm xúc</span>
+                    <!-- Số lượng cảm xúc -->
+                    <div class="flex items-center gap-1.5 pl-2">
+                        <span class="text-[13px] sm:text-sm text-slate-400 font-medium" data-reaction-count>{{ $post->reactions_count ?? 0 }} cảm xúc</span>
+                    </div>
                 </div>
 
                 <!-- ... Phần ẩn chọn cảm xúc & bình luận giữ nguyên ... -->
