@@ -11,6 +11,20 @@
             <p class="text-on-surface-variant text-sm">Vui lòng tạo mật khẩu mới mạnh mẽ.</p>
         </div>
 
+        {{-- Thông báo thành công --}}
+        @if (session('success'))
+            <div class="mb-6 p-4 rounded-lg bg-green-500/10 border border-green-500/30 text-sm text-green-400">
+                {{ session('success') }}
+            </div>
+        @endif
+
+        {{-- Thông báo lỗi --}}
+        @if (session('error') || $errors->any())
+            <div class="mb-6 p-4 rounded-lg bg-error-container border border-error/30 text-sm text-on-error-container">
+                {{ session('error') ?: $errors->first() }}
+            </div>
+        @endif
+
         <form action="{{ route('password.update') }}" method="POST" class="space-y-5">
             @csrf
             <input type="hidden" name="email" value="{{ session('email_reset') }}">
