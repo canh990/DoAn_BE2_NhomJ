@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\BaiViet;
+use App\Models\Tin24h;
 use Illuminate\Http\Request;
 
 class HomeController extends Controller
@@ -22,8 +23,16 @@ class HomeController extends Controller
             ->take(20)
             ->get();
 
+        // Lấy stories chưa hết hạn, eager-load user
+        $stories = Tin24h::with('user')
+            ->conHan()  // scope trong model: het_han > now()
+            ->latest('ngay_tao')
+            ->take(30)
+            ->get();
+
         return view('components.home', [
-            'posts' => $posts,
+            'posts'   => $posts,
+            'stories' => $stories,
         ]);
     }
 }
