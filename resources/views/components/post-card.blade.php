@@ -124,6 +124,27 @@
                             {{ $authorName }}
                         </span>
 
+                        @if (data_get($post, 'cam_xuc') || data_get($post, 'hoat_dong'))
+                            @php
+                            $camXucLabels = [
+                                'thich' => 'thích',
+                                'tim' => 'yêu thích',
+                                'haha' => 'haha',
+                                'buon' => 'buồn',
+                                'phan_no' => 'phẫn nộ',
+                                'wow' => 'wow',
+                            ];
+                            @endphp
+                            <span class="text-sm text-slate-400 flex items-center gap-1">
+                                @if (data_get($post, 'cam_xuc'))
+                                    đang cảm thấy <span class="font-medium text-slate-300">{{ $camXucLabels[data_get($post, 'cam_xuc')] ?? strtolower(data_get($post, 'cam_xuc')) }}</span>
+                                @endif
+                                @if (data_get($post, 'hoat_dong'))
+                                    {{ strtolower(data_get($post, 'hoat_dong')) }}
+                                @endif
+                            </span>
+                        @endif
+
                         @if ($isVerified)
                             <span class="material-symbols-outlined text-base text-sky-400" data-icon="verified" style="font-variation-settings: 'FILL' 1;">
                                 verified
