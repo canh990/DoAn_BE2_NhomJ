@@ -27,9 +27,16 @@ class ProfileController extends Controller
             ->take(20)
             ->get();
 
+        $stories = \App\Models\Tin24h::with('user')
+            ->where('nguoi_dung_id', $user->id)
+            ->conHan()
+            ->latest('ngay_tao')
+            ->get();
+
         return view('profile.profile', [
             'user' => $user,
             'posts' => $posts,
+            'stories' => $stories,
         ]);
     }
 
@@ -59,9 +66,16 @@ class ProfileController extends Controller
             ->take(20)
             ->get();
 
+        $stories = \App\Models\Tin24h::with('user')
+            ->where('nguoi_dung_id', $user->id)
+            ->conHan()
+            ->latest('ngay_tao')
+            ->get();
+
         return view('profile.profile', [
             'user' => $user,
             'posts' => $posts,
+            'stories' => $stories,
         ]);
     }
 
