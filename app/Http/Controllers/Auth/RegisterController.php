@@ -3,11 +3,14 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Mail\OtpMail;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Validator;
 
 class RegisterController extends Controller
 {
@@ -20,22 +23,147 @@ class RegisterController extends Controller
     }
 
     /**
-     * Xử lý lưu trữ người dùng mới
+     * Xử lý đăng ký tài khoản mới (postRegister).
+     *
+     * Luồng:
+     * 1. Validate dữ liệu đầu vào
+     * 2. Tạo bản ghi với da_xac_thuc = false
+     * 3. Tạo mã OTP 6 số, lưu vào DB (otp_code + otp_het_han)
+     * 4. Gửi OTP qua email
+     * 5. Redirect đến form xác thực OTP
      */
     public function register(Request $request)
     {
         // 1. Kiểm tra dữ liệu đầu vào (Validation)
         $this->validator($request->all())->validate();
 
-        // 2. Tạo người dùng mới
+        // 2. Tạo người dùng mới với da_xac_thuc = false
         $user = $this->create($request->all());
 
-        // // 3. Đăng nhập ngay sau khi đăng ký thành công
-        // Auth::login($user);
+        // 3. Tạo mã OTP 6 số ngẫu nhiên
+        $otpCode = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 
-        // 4. Chuyển hướng về trang chủ hoặc dashboard
-       // return redirect()->intended('/home')->with('success', 'Chào mừng bạn đã gia nhập NHOMJ!');
-       return redirect()->route('login')->with('success', 'Đăng ký thành công! Vui lòng đăng nhập để tiếp tục.');
+        // 4. Lưu OTP vào database (hết hạn sau 10 phút)
+        $user->update([
+            'otp_code'    => $otpCode,
+            'otp_het_han' => Carbon::now()->addMinutes(10),
+        ]);
+
+        // 5. Gửi OTP qua email
+        Mail::to($user->email)->send(new OtpMail($otpCode, $user->ten_dang_nhap));
+
+        // 6. Đăng nhập tạm thời (da_xac_thuc vẫn = false)
+        Auth::login($user);
+
+        // 7. Redirect đến trang xác thực OTP
+        return redirect()->route('otp.show', ['user_id' => $user->id]);
+    }
+
+    /**
+     * Hiển thị form xác thực OTP.
+     */
+    public function showOtpForm(Request $request)
+    {
+        $userId = $request->query('user_id', Auth::id());
+
+        return view('auth.verify-otp', [
+            'user_id' => $userId,
+            'email'   => Auth::user()->email ?? '',
+        ]);
+    }
+
+    /**
+     * Xử lý xác thực mã OTP (verifyOtp).
+     *
+     * - Nếu đúng mã + chưa hết hạn → da_xac_thuc = true, xoá OTP, redirect trang chủ
+     * - Nếu sai hoặc hết hạn → quay lại form với thông báo lỗi
+     */
+    public function verifyOtp(Request $request)
+    {
+        $request->validate([
+            'otp_code' => ['required', 'string', 'size:6'],
+            'user_id'  => ['required', 'integer'],
+        ], [
+            'otp_code.required' => 'Vui lòng nhập mã OTP.',
+            'otp_code.size'     => 'Mã OTP phải có đúng 6 chữ số.',
+        ]);
+
+        $user = User::findOrFail($request->user_id);
+
+        // Kiểm tra OTP đã hết hạn chưa
+        if (Carbon::now()->greaterThan($user->otp_het_han)) {
+            return redirect()
+                ->route('otp.show', ['user_id' => $user->id])
+                ->with('error', 'Mã OTP đã hết hạn. Vui lòng yêu cầu gửi lại.');
+        }
+
+        // Kiểm tra mã OTP có đúng không
+        if ($request->otp_code !== $user->otp_code) {
+            return redirect()
+                ->route('otp.show', ['user_id' => $user->id])
+                ->with('error', 'Mã OTP không chính xác. Vui lòng thử lại.');
+        }
+
+        // ✅ Xác thực thành công → cập nhật da_xac_thuc = true (tích xanh)
+        $user->update([
+            'da_xac_thuc' => true,
+            'otp_code'    => null,
+            'otp_het_han' => null,
+        ]);
+
+        // Đảm bảo user đã đăng nhập
+        if (!Auth::check()) {
+            Auth::login($user);
+        }
+
+        return redirect()->route('home')->with('success', 'Xác thực email thành công! Chào mừng bạn đến với NHOMJ.');
+    }
+
+    /**
+     * Bỏ qua xác thực OTP (skipVerification).
+     *
+     * Redirect về trang chủ ngay lập tức, giữ nguyên da_xac_thuc = false.
+     */
+    public function skipVerification(Request $request)
+    {
+        $user = User::findOrFail($request->user_id);
+
+        // Xoá OTP khỏi database (không cần nữa)
+        $user->update([
+            'otp_code'    => null,
+            'otp_het_han' => null,
+        ]);
+
+        // Đảm bảo user đã đăng nhập
+        if (!Auth::check()) {
+            Auth::login($user);
+        }
+
+        // Redirect về trang chủ — da_xac_thuc vẫn = false
+        return redirect()->route('home');
+    }
+
+    /**
+     * Gửi lại mã OTP mới.
+     */
+    public function resendOtp(Request $request)
+    {
+        $user = User::findOrFail($request->user_id);
+
+        // Tạo OTP mới
+        $otpCode = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+
+        $user->update([
+            'otp_code'    => $otpCode,
+            'otp_het_han' => Carbon::now()->addMinutes(10),
+        ]);
+
+        // Gửi lại email
+        Mail::to($user->email)->send(new OtpMail($otpCode, $user->ten_dang_nhap));
+
+        return redirect()
+            ->route('otp.show', ['user_id' => $user->id])
+            ->with('success', 'Mã OTP mới đã được gửi đến email của bạn.');
     }
 
     /**
@@ -79,6 +207,7 @@ protected function create(array $data)
         'email'         => $data['email'],
         'so_dien_thoai' => $data['so_dien_thoai'],
         'mat_khau_hash' => Hash::make($data['mat_khau']), // Chú ý: mat_khau_hash
+        'da_xac_thuc'   => false, // ← Mặc định chưa xác thực
     ]);
 }
 }
