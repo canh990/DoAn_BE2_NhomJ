@@ -11,14 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-       Schema::create('tin_24h', function (Blueprint $table) {
-    $table->id();
-    $table->foreignId('nguoi_dung_id')->constrained('nguoi_dung')->cascadeOnDelete();
-    $table->string('duong_dan_media', 500);
-    $table->string('loai_media', 20);   // 'hinh_anh', 'video'
-    $table->timestamp('het_han');       // tự xóa sau 24h
-    $table->timestamp('ngay_tao')->useCurrent();
-});
+        Schema::create('tin_24h', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('nguoi_dung_id')->constrained('nguoi_dung')->cascadeOnDelete();
+            $table->string('duong_dan_media', 500);
+            $table->string('loai_media', 20);        // 'hinh_anh', 'video'
+            $table->string('quyen_rieng_tu', 20)->default('cong_khai'); // 'cong_khai', 'ban_be'
+            $table->timestamp('het_han');             // tự xóa sau 24h
+            $table->timestamp('ngay_tao')->useCurrent();
+
+            $table->index('nguoi_dung_id');
+            $table->index('het_han');
+        });
     }
 
     /**

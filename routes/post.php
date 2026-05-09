@@ -6,6 +6,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\CommentController;
 
 use App\Http\Controllers\PostController;
+use App\Http\Controllers\StoryController;
 use Illuminate\Support\Facades\Route;
 
 // -----------------------------------------------
@@ -26,4 +27,16 @@ Route::middleware('auth')->group(function () {
 
     Route::delete('/posts/{post}', [PostController::class, 'destroy'])
         ->name('posts.destroy');
+
+    // -----------------------------------------------
+    // Story (Tin 24h) routes
+    // -----------------------------------------------
+    Route::get('/stories/create', [StoryController::class, 'create'])
+        ->name('stories.create');
+
+    Route::post('/stories', [StoryController::class, 'store'])
+        ->name('stories.store');
+
+    Route::delete('/stories/{story}', [StoryController::class, 'destroy'])
+        ->name('stories.destroy');
 });

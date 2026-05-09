@@ -10,6 +10,8 @@
     </div>
     @endif
 
+
+
     <!-- ===== FORM ĐĂNG BÀI ===== -->
     <section class="glass-panel rounded-2xl p-4 shadow-sm">
         <div class="flex gap-4">
@@ -76,6 +78,8 @@
         </div>
     </section>
 
+    {{-- ===== STORIES BAR ===== --}}
+    @include('components.stories-bar', ['stories' => $stories ?? collect()])
    <!-- ===== DANH SÁCH BÀI VIẾT ===== -->
     @forelse($posts as $post)
     <article class="glass-panel rounded-2xl overflow-hidden mb-6"> <!-- Thêm mb-6 để tạo khoảng cách giữa các bài -->

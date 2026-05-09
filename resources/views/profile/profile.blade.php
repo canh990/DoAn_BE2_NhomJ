@@ -150,6 +150,9 @@ $profileUrl = route('profile.public', ['username' => $user->ten_dang_nhap]);
             </div>
 
             <div class="space-y-6 md:col-span-2">
+                {{-- ===== STORIES BAR ===== --}}
+                @include('components.stories-bar', ['stories' => $stories ?? collect()])
+
                 @if(isset($posts) && $posts->count() > 0)
                 @foreach($posts as $post)
                 <x-post-card :post="$post" />
