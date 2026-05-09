@@ -14,7 +14,7 @@ return new class extends Migration
     Schema::create('dat_lai_mat_khau', function (Blueprint $table) {
         $table->id();
         $table->foreignId('nguoi_dung_id')->constrained('nguoi_dung')->cascadeOnDelete();
-        $table->string('ma_otp', 10);
+        $table->string('ma_otp', 6);
         $table->timestamp('het_han');
         $table->boolean('da_su_dung')->default(false);
         $table->timestamp('ngay_tao')->useCurrent();

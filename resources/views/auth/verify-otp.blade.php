@@ -3,12 +3,23 @@
 @section('content')
 <section class="w-full max-w-md">
     <div class="glass-card p-8 rounded-xl glow-subtle">
+        @php
+            $isRegisterFlow = request()->routeIs('otp.show');
+            $verifyRoute = $isRegisterFlow ? route('otp.verify') : route('password.otp.verify');
+            $resendRoute = $isRegisterFlow ? route('otp.resend') : route('password.email');
+        @endphp
+
         <div class="mb-8 text-center">
             <div class="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-primary/20">
                 <span class="material-symbols-outlined text-primary text-3xl">vpn_key</span>
             </div>
-            <h2 class="text-2xl font-bold font-headline text-on-surface mb-2 tracking-tight">Xác thực OTP</h2>
-            <p class="text-on-surface-variant text-sm">Mã OTP đã được gửi đến email <span class="font-semibold text-primary">{{ session('email_reset', Auth::user()->email ?? '') }}</span>. Vui lòng nhập mã để tiếp tục.</p>
+            @if($isRegisterFlow)
+                <h2 class="text-2xl font-bold font-headline text-on-surface mb-2 tracking-tight">Xác thực Email</h2>
+                <p class="text-on-surface-variant text-sm">Mã OTP đã được gửi đến email <span class="font-semibold text-primary">{{ session('email_reset', Auth::user()->email ?? '') }}</span>. Vui lòng nhập mã để hoàn tất đăng ký tài khoản.</p>
+            @else
+                <h2 class="text-2xl font-bold font-headline text-on-surface mb-2 tracking-tight">Khôi phục mật khẩu</h2>
+                <p class="text-on-surface-variant text-sm">Mã OTP đã được gửi đến email <span class="font-semibold text-primary">{{ session('email_reset') }}</span>. Vui lòng nhập mã để đặt lại mật khẩu của bạn.</p>
+            @endif
         </div>
 
         {{-- Thông báo lỗi --}}
@@ -25,11 +36,6 @@
             </div>
         @endif
 
-        @php
-            $isRegisterFlow = request()->routeIs('otp.show');
-            $verifyRoute = $isRegisterFlow ? route('otp.verify') : route('password.otp.verify');
-            $resendRoute = $isRegisterFlow ? route('otp.resend') : route('password.email');
-        @endphp
 
         {{-- Form nhập OTP --}}
         <form action="{{ $verifyRoute }}" method="POST" class="space-y-6">
