@@ -34,12 +34,14 @@ class ForgotPasswordController extends Controller
         $user = User::where('email', $email)->first();
         $userName = $user ? $user->ten_dang_nhap : 'Người dùng';
 
-        // Lưu OTP vào bảng password_reset_tokens (hoặc bảng riêng)
-        DB::table('password_reset_tokens')->updateOrInsert(
-            ['email' => $email],
+        // Lưu OTP vào bảng dat_lai_mat_khau
+        DB::table('dat_lai_mat_khau')->updateOrInsert(
+            ['nguoi_dung_id' => $user->id],
             [
-                'token' => Hash::make($otp),
-                'created_at' => Carbon::now()
+                'ma_otp' => $otp,
+                'het_han' => Carbon::now()->addMinutes(5),
+                'da_su_dung' => false,
+                'ngay_tao' => Carbon::now()
             ]
         );
 
@@ -69,21 +71,29 @@ class ForgotPasswordController extends Controller
         $otpCode = implode('', $request->otp); // Ghép mảng 6 ô input thành chuỗi
 
         $email = session('email_reset');
-        $record = DB::table('password_reset_tokens')->where('email', $email)->first();
+        $user = User::where('email', $email)->first();
 
-        // Kiểm tra thời gian hết hạn của OTP (ví dụ: 5 phút)
-        $otpExpirationMinutes = 5;
-        if ($record && Carbon::parse($record->created_at)->addMinutes($otpExpirationMinutes)->isBefore(Carbon::now())) {
+        if (!$user) {
+            return redirect()->route('password.request')->with('error', 'Không tìm thấy người dùng.');
+        }
+
+        $record = DB::table('dat_lai_mat_khau')->where('nguoi_dung_id', $user->id)->first();
+
+        if (!$record || $record->da_su_dung) {
+            return back()->with('error', 'Mã OTP không chính xác hoặc đã được sử dụng.');
+        }
+
+        if (Carbon::now()->isAfter($record->het_han)) {
             return back()->with('error', 'Mã OTP đã hết hạn. Vui lòng yêu cầu gửi lại.');
         }
 
-        if (!$record || !Hash::check($otpCode, $record->token)) {
-            return back()->with('error', 'Mã OTP không chính xác hoặc đã hết hạn.');
+        if ($otpCode !== $record->ma_otp) {
+            return back()->with('error', 'Mã OTP không chính xác.');
         }
 
         // OTP đúng, cho phép sang trang đổi mật khẩu
         session(['otp_verified' => true]);
-        return redirect()->route('password.reset');
+        return redirect()->route('password.reset')->with('success', 'Xác thực OTP thành công. Vui lòng đặt lại mật khẩu mới.');
     }
 
     // BƯỚC 3: Hiển thị trang đặt lại mật khẩu
@@ -116,8 +126,8 @@ class ForgotPasswordController extends Controller
             // Đổi 'password' thành 'mat_khau_hash' để khớp với bảng nguoi_dung
             $user->update(['mat_khau_hash' => Hash::make($request->password)]);
 
-            // Xóa token và session sau khi xong
-            DB::table('password_reset_tokens')->where('email', $email)->delete();
+            // Đánh dấu OTP đã sử dụng và xóa session sau khi xong
+            DB::table('dat_lai_mat_khau')->where('nguoi_dung_id', $user->id)->update(['da_su_dung' => true]);
             session()->forget(['email_reset', 'otp_verified']);
 
             return redirect()->route('login')->with('success', 'Mật khẩu đã được cập nhật thành công!');

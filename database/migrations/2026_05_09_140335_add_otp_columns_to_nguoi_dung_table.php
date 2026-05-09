@@ -10,13 +10,13 @@ return new class extends Migration
      * Thêm cột otp_code và otp_het_han vào bảng nguoi_dung
      * để hỗ trợ xác thực OTP qua email sau khi đăng ký.
      */
-    public function up(): void
-    {
+   public function up(): void
+{
         Schema::table('nguoi_dung', function (Blueprint $table) {
             $table->string('otp_code', 6)->nullable()->after('da_xac_thuc');
             $table->timestamp('otp_het_han')->nullable()->after('otp_code');
-        });
-    }
+    });
+}
 
     /**
      * Reverse the migrations.
