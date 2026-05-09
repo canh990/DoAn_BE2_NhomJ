@@ -145,6 +145,19 @@
                             class="w-full bg-transparent border-none focus:ring-0 text-slate-100 placeholder-slate-500 resize-none text-base leading-relaxed p-0"
                             placeholder="Bạn đang nghĩ gì?">{{ old('noi_dung') }}</textarea>
 
+                        <!-- Hiển thị cảm xúc / hoạt động đang chọn -->
+                        <div id="story-feeling-display" class="mt-2 hidden items-center gap-2 text-sm text-slate-300 bg-white/5 w-fit px-3 py-1.5 rounded-full border border-white/10">
+                            <span class="material-symbols-outlined text-yellow-400 text-sm">mood</span>
+                            <span id="story-feeling-text">Đang cảm thấy vui</span>
+                            <button type="button" id="story-remove-feeling" class="hover:text-red-400 transition-colors ml-1 flex items-center">
+                                <span class="material-symbols-outlined text-sm">close</span>
+                            </button>
+                        </div>
+
+                        <!-- Input ẩn để lưu dữ liệu -->
+                        <input type="hidden" name="cam_xuc" id="story-input-cam_xuc">
+                        <input type="hidden" name="hoat_dong" id="story-input-hoat_dong">
+
                         <!-- Preview ảnh/video bài viết -->
                         <div id="post-preview-container" class="hidden">
                             <div id="post-preview-grid" class="grid gap-2"></div>
@@ -162,9 +175,23 @@
                                 <button type="button" id="post-image-btn" class="p-2 text-sky-400 hover:bg-sky-400/10 rounded-full transition-colors" title="Ảnh/Video">
                                     <span class="material-symbols-outlined">image</span>
                                 </button>
-                                <button type="button" class="p-2 text-yellow-400 hover:bg-yellow-400/10 rounded-full transition-colors" title="Cảm xúc">
-                                    <span class="material-symbols-outlined">mood</span>
-                                </button>
+                                <div class="relative z-50">
+                                    <button type="button" id="story-btn-feeling" class="p-2 text-yellow-400 hover:bg-yellow-400/10 rounded-full transition-colors" title="Cảm xúc/Hoạt động">
+                                        <span class="material-symbols-outlined">mood</span>
+                                    </button>
+                                    <!-- Dropdown cảm xúc -->
+                                    <div id="story-feeling-dropdown" class="hidden absolute top-full left-0 mt-2 w-48 bg-slate-800 border border-white/10 rounded-xl shadow-2xl overflow-hidden flex-col py-1 text-sm text-left">
+                                        <div class="px-3 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">Cảm xúc</div>
+                                        <button type="button" class="story-feeling-option w-full text-left px-4 py-2 hover:bg-white/5 flex items-center gap-2 transition-colors" data-type="cam_xuc" data-val="vui_ve" data-label="Vui vẻ"><span class="text-xl">😀</span> Vui vẻ</button>
+                                        <button type="button" class="story-feeling-option w-full text-left px-4 py-2 hover:bg-white/5 flex items-center gap-2 transition-colors" data-type="cam_xuc" data-val="phan_no" data-label="Phẫn nộ"><span class="text-xl">😡</span> Phẫn nộ</button>
+                                        <button type="button" class="story-feeling-option w-full text-left px-4 py-2 hover:bg-white/5 flex items-center gap-2 transition-colors" data-type="cam_xuc" data-val="buon" data-label="Buồn"><span class="text-xl">😢</span> Buồn</button>
+                                        <button type="button" class="story-feeling-option w-full text-left px-4 py-2 hover:bg-white/5 flex items-center gap-2 transition-colors" data-type="cam_xuc" data-val="wow" data-label="Wow"><span class="text-xl">😮</span> Wow</button>
+                                        <div class="px-3 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider border-t border-white/10 mt-1">Hoạt động</div>
+                                        <button type="button" class="story-feeling-option w-full text-left px-4 py-2 hover:bg-white/5 flex items-center gap-2 transition-colors" data-type="hoat_dong" data-val="Đang xem phim"><span class="text-xl">🎬</span> Đang xem phim</button>
+                                        <button type="button" class="story-feeling-option w-full text-left px-4 py-2 hover:bg-white/5 flex items-center gap-2 transition-colors" data-type="hoat_dong" data-val="Đang nghe nhạc"><span class="text-xl">🎵</span> Đang nghe nhạc</button>
+                                        <button type="button" class="story-feeling-option w-full text-left px-4 py-2 hover:bg-white/5 flex items-center gap-2 transition-colors" data-type="hoat_dong" data-val="Đang đi chơi"><span class="text-xl">✈️</span> Đang đi chơi</button>
+                                    </div>
+                                </div>
                                 <button type="button" class="p-2 text-red-400 hover:bg-red-400/10 rounded-full transition-colors" title="Vị trí">
                                     <span class="material-symbols-outlined">location_on</span>
                                 </button>
@@ -339,10 +366,70 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     function updatePostBtn() {
-        const hasContent = postContent.value.trim().length > 0 || selectedFiles.length > 0;
+        const hasContent = postContent.value.trim().length > 0 || selectedFiles.length > 0 || document.getElementById('story-input-cam_xuc').value || document.getElementById('story-input-hoat_dong').value;
         postSubmitBtn.disabled = !hasContent;
     }
     updatePostBtn();
+
+    // Feeling dropdown logic
+    const storyBtnFeeling = document.getElementById('story-btn-feeling');
+    const storyFeelingDropdown = document.getElementById('story-feeling-dropdown');
+    const storyFeelingOptions = document.querySelectorAll('.story-feeling-option');
+    const storyFeelingDisplay = document.getElementById('story-feeling-display');
+    const storyFeelingText = document.getElementById('story-feeling-text');
+    const storyRemoveFeelingBtn = document.getElementById('story-remove-feeling');
+    const storyInputCamXuc = document.getElementById('story-input-cam_xuc');
+    const storyInputHoatDong = document.getElementById('story-input-hoat_dong');
+
+    if (storyBtnFeeling) {
+        storyBtnFeeling.addEventListener('click', function(e) {
+            storyFeelingDropdown.classList.toggle('hidden');
+            storyFeelingDropdown.classList.toggle('flex');
+        });
+    }
+
+    document.addEventListener('click', function(e) {
+        if (storyBtnFeeling && storyFeelingDropdown && !storyBtnFeeling.contains(e.target) && !storyFeelingDropdown.contains(e.target)) {
+            storyFeelingDropdown.classList.add('hidden');
+            storyFeelingDropdown.classList.remove('flex');
+        }
+    });
+
+    storyFeelingOptions.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const type = this.getAttribute('data-type');
+            const val = this.getAttribute('data-val');
+            const label = this.getAttribute('data-label') || val;
+            
+            storyInputCamXuc.value = '';
+            storyInputHoatDong.value = '';
+
+            if (type === 'cam_xuc') {
+                storyInputCamXuc.value = val;
+                storyFeelingText.textContent = `Đang cảm thấy ${label.toLowerCase()}`;
+            } else if (type === 'hoat_dong') {
+                storyInputHoatDong.value = val;
+                storyFeelingText.textContent = label;
+            }
+
+            storyFeelingDisplay.classList.remove('hidden');
+            storyFeelingDisplay.classList.add('flex');
+            storyFeelingDropdown.classList.add('hidden');
+            storyFeelingDropdown.classList.remove('flex');
+            updatePostBtn();
+        });
+    });
+
+    if (storyRemoveFeelingBtn) {
+        storyRemoveFeelingBtn.addEventListener('click', function() {
+            storyInputCamXuc.value = '';
+            storyInputHoatDong.value = '';
+            storyFeelingDisplay.classList.add('hidden');
+            storyFeelingDisplay.classList.remove('flex');
+            updatePostBtn();
+        });
+    }
+
 });
 </script>
 @endsection
