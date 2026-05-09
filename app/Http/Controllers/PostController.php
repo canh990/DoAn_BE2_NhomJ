@@ -76,6 +76,25 @@ class PostController extends Controller
             ->with('success', 'Bài viết đã được đăng thành công.');
     }
 
+    public function update(Request $request, BaiViet $post)
+    {
+        // Kiểm tra quyền (chỉ tác giả mới được sửa)
+        if ($post->nguoi_dung_id !== auth()->id()) {
+            return back()->withErrors(['error' => 'Bạn không có quyền chỉnh sửa bài viết này.']);
+        }
+
+        $validated = $request->validate([
+            'noi_dung' => ['required', 'string', 'max:280'],
+        ]);
+
+        $post->update([
+            'noi_dung' => $validated['noi_dung'],
+            'da_chinh_sua' => true,
+        ]);
+
+        return back()->with('success', 'Bài viết đã được chỉnh sửa thành công.');
+    }
+
     public function destroy(BaiViet $post)
     {
         // Kiểm tra quyền xóa (chỉ tác giả mới được xóa)

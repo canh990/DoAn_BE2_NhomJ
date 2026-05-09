@@ -324,6 +324,8 @@
     @endforelse
 </div>
 
+</div>
+
 <!-- ===== SCRIPTS ===== -->
 <script>
     document.addEventListener('DOMContentLoaded', function() {
