@@ -97,6 +97,12 @@ class ProfileController extends Controller
                 'max:50',
                 Rule::unique('nguoi_dung', 'ten_dang_nhap')->ignore($user->id),
             ],
+            'so_dien_thoai' => [
+                'nullable',
+                'string',
+                'max:20',
+                Rule::unique('nguoi_dung', 'so_dien_thoai')->ignore($user->id),
+            ],
             'tieu_su' => ['nullable', 'string', 'max:1000'],
             'ngay_sinh' => ['nullable', 'date', 'before_or_equal:today'], // Quy tắc validate
             'noi_o' => ['nullable', 'string', 'max:255'],
@@ -108,6 +114,7 @@ class ProfileController extends Controller
             'ngay_sinh.date' => 'Ngày sinh không đúng định dạng ngày tháng.',
             'ngay_sinh.before_or_equal' => 'Ngày,Tháng,Năm sinh không thể lớn hơn hiện tại.',
             'ten_dang_nhap.unique' => 'Tên đăng nhập này đã được sử dụng.',
+            'so_dien_thoai.unique' => 'Số điện thoại này đã được sử dụng.',
         ]);
 
         // Xử lý ảnh đại diện
@@ -140,7 +147,15 @@ class ProfileController extends Controller
             return response()->json(['message' => 'Bạn không thể tự theo dõi chính mình.'], 400);
         }
 
-        $status = $me->following()->toggle($user->id);
+        $trangThai = $user->quyen_rieng_tu === 'rieng_tu' ? 'cho_chap_nhan' : 'da_chap_nhan';
+        
+        $status = $me->following()->toggle([
+            $user->id => [
+                'trang_thai' => $trangThai,
+                'ngay_tao' => now(),
+            ]
+        ]);
+        
         $isFollowing = count($status['attached']) > 0;
 
         if ($isFollowing) {

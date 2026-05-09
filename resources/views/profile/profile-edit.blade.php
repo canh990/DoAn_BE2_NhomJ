@@ -84,6 +84,20 @@
                             class="w-full bg-slate-900/50 border border-white/5 rounded-2xl py-3.5 pl-12 pr-4 text-slate-400 cursor-not-allowed">
                     </div>
                 </div>
+
+                <div class="space-y-2 md:col-span-2">
+                    <label class="text-xs font-bold uppercase tracking-wider text-slate-500 ml-1">Số điện thoại</label>
+                    <div class="relative group">
+                        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-primary transition-colors">call</span>
+                        <input
+                            name="so_dien_thoai"
+                            type="tel"
+                            value="{{ old('so_dien_thoai', $user->so_dien_thoai) }}"
+                            placeholder="Ví dụ: 0987654321"
+                            class="w-full bg-slate-900/50 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-on-surface focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all outline-none">
+                    </div>
+                    @error('so_dien_thoai') <p class="text-xs text-red-400 mt-1">{{ $message }}</p> @enderror
+                </div>
             </div>
 
             <div class="space-y-2">

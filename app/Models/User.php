@@ -66,13 +66,15 @@ class User extends Authenticatable
     // Người theo dõi tôi
     public function followers()
     {
-        return $this->belongsToMany(User::class, 'theo_doi', 'nguoi_duoc_theo_doi_id', 'nguoi_theo_doi_id');
+        return $this->belongsToMany(User::class, 'theo_doi', 'nguoi_duoc_theo_doi_id', 'nguoi_theo_doi_id')
+                    ->withPivot('trang_thai', 'ngay_tao');
     }
 
     // Những người tôi đang theo dõi
     public function following()
     {
-        return $this->belongsToMany(User::class, 'theo_doi', 'nguoi_theo_doi_id', 'nguoi_duoc_theo_doi_id');
+        return $this->belongsToMany(User::class, 'theo_doi', 'nguoi_theo_doi_id', 'nguoi_duoc_theo_doi_id')
+                    ->withPivot('trang_thai', 'ngay_tao');
     }
 
     public function posts()

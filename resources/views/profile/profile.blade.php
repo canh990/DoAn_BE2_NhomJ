@@ -119,17 +119,33 @@ $profileUrl = route('profile.public', ['username' => $user->ten_dang_nhap]);
                 <div class="glass-panel space-y-4 rounded-2xl p-5">
                     <h3 class="text-lg font-bold text-sky-300">Giới thiệu</h3>
                     <div class="space-y-3">
+                        @if(!empty($user->noi_o) && ($isOwnProfile || $user->quyen_rieng_tu !== 'rieng_tu'))
                         <div class="flex items-center gap-3 text-slate-300">
                             <span class="material-symbols-outlined text-sky-400/70" data-icon="location_on">location_on</span>
-                            <span class="text-sm">{{ $user->noi_o ?? 'Hà Nội, Việt Nam' }}</span>
+                            <span class="text-sm">{{ $user->noi_o }}</span>
                         </div>
-                        @if(!empty($user->ngay_sinh) && $user->quyen_rieng_tu !== 'rieng_tu')
+                        @endif
+                        
+                        @if(!empty($user->ngay_sinh) && ($isOwnProfile || $user->quyen_rieng_tu !== 'rieng_tu'))
                         <div class="flex items-center gap-3 text-slate-300">
                             <span class="material-symbols-outlined text-sky-400/70" data-icon="cake">cake</span>
                             <span class="text-sm">{{ \Illuminate\Support\Carbon::parse($user->ngay_sinh)->format('d/m/Y') }}</span>
                         </div>
                         @endif
 
+                        @if(!empty($user->so_dien_thoai) && ($isOwnProfile || $user->quyen_rieng_tu !== 'rieng_tu'))
+                        <div class="flex items-center gap-3 text-slate-300">
+                            <span class="material-symbols-outlined text-sky-400/70" data-icon="call">call</span>
+                            <span class="text-sm">{{ $user->so_dien_thoai }}</span>
+                        </div>
+                        @endif
+
+                        @if(!empty($user->email) && ($isOwnProfile || $user->quyen_rieng_tu !== 'rieng_tu'))
+                        <div class="flex items-center gap-3 text-slate-300">
+                            <span class="material-symbols-outlined text-sky-400/70" data-icon="mail">mail</span>
+                            <span class="text-sm">{{ $user->email }}</span>
+                        </div>
+                        @endif
                     </div>
                 </div>
 
@@ -150,22 +166,32 @@ $profileUrl = route('profile.public', ['username' => $user->ten_dang_nhap]);
             </div>
 
             <div class="space-y-6 md:col-span-2">
-                {{-- ===== STORIES BAR ===== --}}
-                @include('components.stories-bar', ['stories' => $stories ?? collect()])
-
-                @if(isset($posts) && $posts->count() > 0)
-                @foreach($posts as $post)
-                <x-post-card :post="$post" />
-                @endforeach
-                @else
-                {{-- Phần thay đổi ở đây --}}
-                <div class="glass-panel flex flex-col items-center justify-center rounded-3xl p-12 text-center">
-                    <div class="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-slate-800/50 text-slate-500">
-                        <span class="material-symbols-outlined text-4xl" data-icon="post_add">post_add</span>
+                @if(!$isOwnProfile && $user->quyen_rieng_tu === 'rieng_tu')
+                <div class="glass-panel flex flex-col items-center justify-center rounded-3xl p-12 text-center h-full min-h-[300px]">
+                    <div class="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-slate-800/50 text-slate-500 border border-slate-700/50">
+                        <span class="material-symbols-outlined text-4xl" data-icon="lock">lock</span>
                     </div>
-                    <h3 class="text-xl font-bold text-on-surface">Chưa có bài đăng nào</h3>
-                    <p class="mt-2 text-slate-400">Người dùng này vẫn chưa chia sẻ bài viết nào với cộng đồng.</p>
+                    <h3 class="text-xl font-bold text-on-surface">Đây là tài khoản riêng tư</h3>
+                    <p class="mt-2 text-slate-400">Chỉ những người được cấp quyền mới có thể xem nội dung của người dùng này.</p>
                 </div>
+                @else
+                    {{-- ===== STORIES BAR ===== --}}
+                    @include('components.stories-bar', ['stories' => $stories ?? collect()])
+
+                    @if(isset($posts) && $posts->count() > 0)
+                    @foreach($posts as $post)
+                    <x-post-card :post="$post" />
+                    @endforeach
+                    @else
+                    {{-- Phần thay đổi ở đây --}}
+                    <div class="glass-panel flex flex-col items-center justify-center rounded-3xl p-12 text-center">
+                        <div class="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-slate-800/50 text-slate-500">
+                            <span class="material-symbols-outlined text-4xl" data-icon="post_add">post_add</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-on-surface">Chưa có bài đăng nào</h3>
+                        <p class="mt-2 text-slate-400">Người dùng này vẫn chưa chia sẻ bài viết nào với cộng đồng.</p>
+                    </div>
+                    @endif
                 @endif
             </div>
         </div>
