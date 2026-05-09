@@ -26,6 +26,15 @@ Route::post('/logout', [LoginController::class, 'logout'])
 Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register')->middleware('guest');
 Route::post('/register', [RegisterController::class, 'register'])->name('register.post')->middleware('guest');
 
+// -----------------------------------------------
+// OTP Verification (xác thực email sau đăng ký)
+// Bỏ qua bước này nếu login bằng Facebook/Google (mặc định tích xanh)
+// -----------------------------------------------
+Route::get('/verify-email-otp', [RegisterController::class, 'showOtpForm'])->name('otp.show')->middleware('auth');
+Route::post('/verify-email-otp', [RegisterController::class, 'verifyOtp'])->name('otp.verify')->middleware('auth');
+Route::post('/skip-email-verification', [RegisterController::class, 'skipVerification'])->name('otp.skip')->middleware('auth');
+Route::post('/resend-email-otp', [RegisterController::class, 'resendOtp'])->name('otp.resend')->middleware('auth');
+
 Route::get('/forgot-password', function () {
     return view('auth.forgot-password');
 })->name('password.request');

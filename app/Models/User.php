@@ -36,6 +36,8 @@ class User extends Authenticatable
         'noi_o',
         'quyen_rieng_tu',
         'da_xac_thuc',
+        'otp_code',
+        'otp_het_han',
         'con_hoat_dong',
         'nha_cung_cap_oauth',
         'id_oauth',
