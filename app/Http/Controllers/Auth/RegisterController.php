@@ -53,7 +53,7 @@ class RegisterController extends Controller
         ]);
 
         // 5. Gửi OTP qua email
-        Mail::to($user->email)->send(new OtpMail($otpCode, $user->ten_dang_nhap));
+        Mail::to($user->email)->send(new OtpMail($otpCode, $user->ten_dang_nhap, 'register'));
 
         // 6. Đăng nhập tạm thời (da_xac_thuc vẫn = false)
         Auth::login($user);
@@ -169,7 +169,7 @@ class RegisterController extends Controller
         ]);
 
         // Gửi lại email
-        Mail::to($user->email)->send(new OtpMail($otpCode, $user->ten_dang_nhap));
+        Mail::to($user->email)->send(new OtpMail($otpCode, $user->ten_dang_nhap, 'register'));
 
         return redirect()->route('otp.show')
             ->with('email_reset', $user->email)
