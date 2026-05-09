@@ -79,4 +79,14 @@ class User extends Authenticatable
     {
         return $this->hasMany(BaiViet::class, 'nguoi_dung_id');
     }
+
+    public function thongBaos()
+    {
+        return $this->hasMany(ThongBao::class, 'nguoi_dung_id');
+    }
+
+    public function unreadThongBaos()
+    {
+        return $this->hasMany(ThongBao::class, 'nguoi_dung_id')->where('da_doc', false);
+    }
 }

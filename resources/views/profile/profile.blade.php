@@ -88,14 +88,14 @@ $profileUrl = route('profile.public', ['username' => $user->ten_dang_nhap]);
             </div>
 
             <div class="mt-6 flex flex-wrap gap-6">
-                <div class="group flex cursor-pointer items-center gap-1.5">
+                <a href="{{ route('profile.following', ['username' => $user->ten_dang_nhap]) }}" class="group flex cursor-pointer items-center gap-1.5">
                     <span class="font-bold text-on-surface group-hover:text-sky-300">{{ number_format($user->following_count ?? 0) }}</span>
                     <span class="text-slate-400 group-hover:text-slate-300">Đang theo dõi</span>
-                </div>
-                <div class="group flex cursor-pointer items-center gap-1.5">
+                </a>
+                <a href="{{ route('profile.followers', ['username' => $user->ten_dang_nhap]) }}" class="group flex cursor-pointer items-center gap-1.5">
                     <span id="followers-count" class="font-bold text-on-surface group-hover:text-sky-300">{{ number_format($user->followers_count ?? 0) }}</span>
                     <span class="text-slate-400 group-hover:text-slate-300">Người theo dõi</span>
-                </div>
+                </a>
                 <div class="flex items-center gap-1.5 text-slate-400">
                     <span class="material-symbols-outlined text-sm" data-icon="calendar_month">calendar_month</span>
                     <span>Đã tham gia {{ isset($user->created_at) ? $user->created_at->format('m/Y') : '10/2023' }}</span>
