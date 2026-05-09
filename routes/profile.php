@@ -17,6 +17,12 @@ Route::middleware('auth')->group(function () {
         ->name('user.toggle-follow');
 });
 
+Route::get('/profile/{username}/followers', [ProfileController::class, 'followers'])
+    ->name('profile.followers');
+
+Route::get('/profile/{username}/following', [ProfileController::class, 'following'])
+    ->name('profile.following');
+
 Route::get('/profile/{username}', [ProfileController::class, 'showByUsername'])
     ->where('username', '^(?!edit$).+')
     ->name('profile.public');

@@ -122,10 +122,60 @@ class ProfileController extends Controller
         }
 
         $status = $me->following()->toggle($user->id);
+        $isFollowing = count($status['attached']) > 0;
+
+        if ($isFollowing) {
+            // Tạo thông báo cho người được theo dõi
+            \App\Models\ThongBao::create([
+                'nguoi_dung_id' => $user->id,
+                'nguoi_thuc_hien_id' => $me->id,
+                'loai' => 'theo_doi',
+                'ngay_tao' => now(),
+            ]);
+        } else {
+            // Xóa thông báo nếu bỏ theo dõi
+            \App\Models\ThongBao::where([
+                'nguoi_dung_id' => $user->id,
+                'nguoi_thuc_hien_id' => $me->id,
+                'loai' => 'theo_doi',
+            ])->delete();
+        }
 
         return response()->json([
-            'is_following' => count($status['attached']) > 0,
+            'is_following' => $isFollowing,
             'followers_count' => $user->followers()->count()
+        ]);
+    }
+
+    public function followers(string $username)
+    {
+        $user = User::query()
+            ->where('ten_dang_nhap', $username)
+            ->withCount(['followers', 'following'])
+            ->firstOrFail();
+
+        $connections = $user->followers()->paginate(20);
+
+        return view('profile.connections', [
+            'user' => $user,
+            'connections' => $connections,
+            'type' => 'followers',
+        ]);
+    }
+
+    public function following(string $username)
+    {
+        $user = User::query()
+            ->where('ten_dang_nhap', $username)
+            ->withCount(['followers', 'following'])
+            ->firstOrFail();
+
+        $connections = $user->following()->paginate(20);
+
+        return view('profile.connections', [
+            'user' => $user,
+            'connections' => $connections,
+            'type' => 'following',
         ]);
     }
 }
