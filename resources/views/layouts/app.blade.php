@@ -225,6 +225,7 @@
             const commentToggle = event.target.closest('[data-comment-toggle]');
             const commentReplyButton = event.target.closest('[data-comment-reply-button]');
             const commentCancel = event.target.closest('[data-comment-cancel]');
+            const shareButton = event.target.closest('[data-share-button]');
             const reactionAreas = document.querySelectorAll('[data-reaction-area]');
 
             if (commentCancel) {
@@ -323,6 +324,12 @@
                         }
                     });
 
+                return;
+            }
+
+            if (shareButton) {
+                event.stopPropagation();
+                window.openShareModal(shareButton.dataset.shareUrl, shareButton);
                 return;
             }
 
@@ -434,18 +441,29 @@
                             // but since [data-comment-replies] is unique inside the thread wrapper, we can just use descendant selector:
                             const parentReplies = list.querySelector('[data-comment-id="' + parentId + '"] [data-comment-replies]');
                             if (parentReplies) {
-                                // Add vertical line if it doesn't exist
-                                if (!parentReplies.querySelector('.absolute.bg-white\\/10')) {
-                                    const verticalLine = document.createElement('div');
+                                let verticalLine = parentReplies.querySelector('.absolute.bg-white\\/10');
+                                if (!verticalLine) {
+                                    verticalLine = document.createElement('div');
                                     verticalLine.className = 'absolute left-[15px] sm:left-[27px] top-0 bottom-0 w-px bg-white/10';
-                                    parentReplies.appendChild(verticalLine);
+                                    parentReplies.insertBefore(verticalLine, parentReplies.firstChild);
                                 }
-                                parentReplies.appendChild(newThread);
+                                if (verticalLine && verticalLine.nextSibling) {
+                                    parentReplies.insertBefore(newThread, verticalLine.nextSibling);
+                                } else {
+                                    parentReplies.appendChild(newThread);
+                                }
                             } else {
-                                list.appendChild(newThread);
+                                if (list.firstChild) list.insertBefore(newThread, list.firstChild);
+                                else list.appendChild(newThread);
                             }
                         } else {
-                            list.appendChild(newThread);
+                            if (list.firstChild && list.firstChild.dataset && list.firstChild.dataset.noComments !== undefined) {
+                                list.innerHTML = '';
+                                list.appendChild(newThread);
+                            } else {
+                                if (list.firstChild) list.insertBefore(newThread, list.firstChild);
+                                else list.appendChild(newThread);
+                            }
                         }
                         
                         // "phải trả lời bình luận liên tiếp nhau": do not reset parentInput, actionLabel, cancelBtn
@@ -699,17 +717,160 @@
             }, 300);
         };
 
+        // ===== TOAST NOTIFICATION =====
+        window.showToast = function(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            const isSuccess = type === 'success';
+            
+            toast.className = `flex items-center gap-3 px-4 py-3 rounded-2xl shadow-xl border backdrop-blur-md transform transition-all duration-300 translate-y-10 opacity-0 ${
+                isSuccess 
+                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' 
+                : 'bg-rose-500/10 border-rose-500/20 text-rose-400'
+            }`;
+            
+            const icon = isSuccess ? 'check_circle' : 'error';
+            
+            toast.innerHTML = `
+                <span class="material-symbols-outlined">${icon}</span>
+                <span class="font-medium text-sm">${message}</span>
+            `;
+
+            container.appendChild(toast);
+
+            // Animate in
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-10', 'opacity-0');
+            });
+
+            // Remove after 3s
+            setTimeout(() => {
+                toast.classList.add('translate-y-10', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        };
+
+        // ===== SHARE MODAL LOGIC =====
+        let currentShareUrl = null;
+        let currentShareButton = null;
+
+        window.openShareModal = function(shareUrl, buttonEl) {
+            const modal = document.getElementById('share-post-modal');
+            const contentInput = document.getElementById('share-post-content');
+            if (!modal) return;
+            
+            currentShareUrl = shareUrl;
+            currentShareButton = buttonEl;
+            if (contentInput) contentInput.value = '';
+
+            modal.classList.remove('hidden');
+            // Allow display block to apply before adding opacity
+            requestAnimationFrame(() => {
+                modal.classList.remove('opacity-0');
+                const modalContent = modal.querySelector('.glass-panel');
+                if (modalContent) modalContent.classList.remove('scale-95');
+            });
+        };
+
+        window.closeShareModal = function() {
+            const modal = document.getElementById('share-post-modal');
+            const modalContent = modal ? modal.querySelector('.glass-panel') : null;
+
+            if (!modal) return;
+            modal.classList.add('opacity-0');
+            if (modalContent) modalContent.classList.add('scale-95');
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                currentShareUrl = null;
+                currentShareButton = null;
+            }, 300);
+        };
+
+        window.submitShare = function() {
+            if (!currentShareUrl) return;
+            
+            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            if (!token) return;
+
+            const contentInput = document.getElementById('share-post-content');
+            const noiDung = contentInput ? contentInput.value : '';
+            
+            const body = new URLSearchParams();
+            body.append('_token', token);
+            if (noiDung.trim() !== '') {
+                body.append('noi_dung', noiDung);
+            }
+
+            const btnSubmit = document.getElementById('confirm-share-btn');
+            if (btnSubmit) {
+                btnSubmit.disabled = true;
+                btnSubmit.innerHTML = '<span class="material-symbols-outlined text-[18px] animate-spin">refresh</span> Đang chia sẻ...';
+            }
+
+            fetch(currentShareUrl, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                },
+                body,
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.showToast('Đã chia sẻ bài viết thành công!', 'success');
+                    if (currentShareButton) {
+                        const shareCountSpan = currentShareButton.querySelector('[data-share-count]');
+                        if (shareCountSpan && data.shares_count > 0) {
+                            shareCountSpan.textContent = `(${data.shares_count})`;
+                        }
+                    }
+                    window.closeShareModal();
+                } else {
+                    window.showToast(data.message || 'Có lỗi xảy ra khi chia sẻ.', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                window.showToast('Lỗi kết nối đến máy chủ.', 'error');
+            })
+            .finally(() => {
+                if (btnSubmit) {
+                    btnSubmit.disabled = false;
+                    btnSubmit.innerHTML = '<span class="material-symbols-outlined text-[18px]">share</span> Chia sẻ ngay';
+                }
+            });
+        };
+
         document.addEventListener('DOMContentLoaded', function() {
             const btnCloseEditModal = document.getElementById('close-edit-modal');
             const btnCancelEdit = document.getElementById('cancel-edit-btn');
             const editModal = document.getElementById('edit-post-modal');
 
+            const btnCloseShareModal = document.getElementById('close-share-modal');
+            const btnCancelShare = document.getElementById('cancel-share-btn');
+            const btnConfirmShare = document.getElementById('confirm-share-btn');
+            const shareModal = document.getElementById('share-post-modal');
+
             if (btnCloseEditModal) btnCloseEditModal.addEventListener('click', window.closeEditModal);
             if (btnCancelEdit) btnCancelEdit.addEventListener('click', window.closeEditModal);
+            
+            if (btnCloseShareModal) btnCloseShareModal.addEventListener('click', window.closeShareModal);
+            if (btnCancelShare) btnCancelShare.addEventListener('click', window.closeShareModal);
+            if (btnConfirmShare) btnConfirmShare.addEventListener('click', window.submitShare);
 
             if (editModal) {
                 editModal.addEventListener('click', function(e) {
                     if (e.target === editModal) window.closeEditModal();
+                });
+            }
+
+            if (shareModal) {
+                shareModal.addEventListener('click', function(e) {
+                    if (e.target === shareModal) window.closeShareModal();
                 });
             }
         });
@@ -736,6 +897,31 @@
             </form>
         </div>
     </div>
+
+    <!-- ===== MODAL CHIA SẺ BÀI VIẾT ===== -->
+    <div id="share-post-modal" class="hidden fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+        <div class="glass-panel rounded-2xl w-full max-w-lg shadow-2xl scale-95 transition-transform duration-300">
+            <div class="flex items-center justify-between p-4 border-b border-sky-400/10">
+                <h3 class="text-lg font-bold text-on-surface">Chia sẻ bài viết</h3>
+                <button type="button" id="close-share-modal" class="p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-full transition-colors">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="p-4 flex flex-col gap-4">
+                <textarea id="share-post-content" rows="4" placeholder="Viết cảm nghĩ của bạn về bài viết này..." class="w-full bg-slate-900/50 border border-sky-400/20 rounded-xl focus:ring-1 focus:ring-sky-400 text-slate-100 placeholder-slate-500 resize-none p-3"></textarea>
+                <div class="flex justify-end gap-3 pt-2">
+                    <button type="button" id="cancel-share-btn" class="px-5 py-2 text-sm font-semibold text-slate-300 hover:text-white hover:bg-white/5 rounded-xl transition-colors">Hủy</button>
+                    <button type="button" id="confirm-share-btn" class="px-5 py-2 text-sm font-semibold bg-sky-500 hover:bg-sky-400 text-white rounded-xl shadow-lg shadow-sky-500/20 transition-all active:scale-95 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[18px]">share</span> Chia sẻ ngay
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== TOAST NOTIFICATION CONTAINER ===== -->
+    <div id="toast-container" class="fixed bottom-20 left-1/2 -translate-x-1/2 sm:bottom-6 sm:left-auto sm:right-6 sm:translate-x-0 z-[110] flex flex-col gap-2 pointer-events-none"></div>
+
 </body>
 
 </html>

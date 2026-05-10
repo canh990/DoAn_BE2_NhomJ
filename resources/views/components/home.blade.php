@@ -228,11 +228,12 @@
                             <span class="text-[13px] sm:text-sm font-bold text-slate-500 group-hover:text-sky-400/80" data-comment-count>{{ $post->comments_count > 0 ? '('.$post->comments_count.')' : '' }}</span>
                         </button>
 
-                        <button class="group flex items-center gap-1.5 rounded-full px-3 py-1.5 sm:px-4 sm:py-2 text-slate-400 transition-all duration-300 hover:bg-slate-800/60 hover:text-emerald-400">
+                        <button type="button" data-share-button data-share-url="{{ route('posts.share', ['post' => $post->id]) }}" class="group flex items-center gap-1.5 rounded-full px-3 py-1.5 sm:px-4 sm:py-2 text-slate-400 transition-all duration-300 hover:bg-slate-800/60 hover:text-emerald-400">
                             <div class="relative flex items-center justify-center transition-transform group-hover:scale-110 group-active:scale-95">
                                 <span class="material-symbols-outlined text-[20px] sm:text-[22px]" data-icon="share">share</span>
                             </div>
                             <span class="text-[13px] sm:text-sm font-semibold tracking-wide hidden sm:block">Chia sẻ</span>
+                            <span class="text-[13px] sm:text-sm font-bold text-slate-500 group-hover:text-emerald-400/80" data-share-count>{{ $post->shares_count > 0 ? '('.$post->shares_count.')' : '' }}</span>
                         </button>
                     </div>
 

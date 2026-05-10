@@ -17,6 +17,7 @@ class BaiViet extends Model
     protected $fillable = [
         'nguoi_dung_id',
         'loai',
+        'bai_goc_id',
         'noi_dung',
         'cam_xuc',
         'hoat_dong',
@@ -46,5 +47,15 @@ class BaiViet extends Model
     public function comments(): HasMany
     {
         return $this->hasMany(BinhLuan::class, 'bai_viet_id')->latest('ngay_tao');
+    }
+
+    public function originalPost(): BelongsTo
+    {
+        return $this->belongsTo(BaiViet::class, 'bai_goc_id');
+    }
+
+    public function shares(): HasMany
+    {
+        return $this->hasMany(BaiViet::class, 'bai_goc_id');
     }
 }

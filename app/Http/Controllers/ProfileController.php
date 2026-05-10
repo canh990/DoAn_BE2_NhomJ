@@ -14,14 +14,14 @@ class ProfileController extends Controller
         $user = auth()->user()->loadCount(['followers', 'following']);
 
         $posts = $user->posts()
-            ->with(['user', 'media'])
-            ->withCount(['reactions', 'comments'])
+            ->with(['user', 'media', 'originalPost.user', 'originalPost.media'])
+            ->withCount(['reactions', 'comments', 'shares'])
             ->with(['reactions' => function ($query) {
                 $query->where('nguoi_dung_id', auth()->id());
             }, 'comments' => function ($query) {
                 $query->whereNull('binh_luan_cha_id')->with(['user', 'nestedChildren'])->latest('ngay_tao');
             }])
-            ->whereIn('loai', ['van_ban', 'hinh_anh'])
+            ->whereIn('loai', ['van_ban', 'hinh_anh', 'chia_se'])
             ->where('da_xoa', false)
             ->latest()
             ->take(20)
@@ -53,14 +53,14 @@ class ProfileController extends Controller
         }
 
         $posts = $user->posts()
-            ->with(['user', 'media'])
-            ->withCount(['reactions', 'comments'])
+            ->with(['user', 'media', 'originalPost.user', 'originalPost.media'])
+            ->withCount(['reactions', 'comments', 'shares'])
             ->with(['reactions' => function ($query) {
                 $query->where('nguoi_dung_id', auth()->id());
             }, 'comments' => function ($query) {
                 $query->whereNull('binh_luan_cha_id')->with(['user', 'nestedChildren'])->latest('ngay_tao');
             }])
-            ->whereIn('loai', ['van_ban', 'hinh_anh'])
+            ->whereIn('loai', ['van_ban', 'hinh_anh', 'chia_se'])
             ->where('da_xoa', false)
             ->latest()
             ->take(20)

@@ -22,6 +22,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/posts/{post}/reaction', [\App\Http\Controllers\ReactionController::class, 'store'])
         ->name('posts.react');
 
+    Route::post('/posts/{post}/share', [PostController::class, 'share'])
+        ->name('posts.share');
+
     Route::post('/posts/{post}/comments', [CommentController::class, 'store'])
         ->name('posts.comment');
 
