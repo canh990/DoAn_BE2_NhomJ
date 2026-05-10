@@ -23,6 +23,17 @@ class BinhLuan extends Model
     public const CREATED_AT = 'ngay_tao';
     public const UPDATED_AT = 'ngay_cap_nhat';
 
+    protected static function booted()
+    {
+        static::deleting(function ($comment) {
+            foreach ($comment->media as $media) {
+                if (\Illuminate\Support\Facades\Storage::disk('public')->exists($media->duong_dan)) {
+                    \Illuminate\Support\Facades\Storage::disk('public')->delete($media->duong_dan);
+                }
+            }
+        });
+    }
+
     public function post(): BelongsTo
     {
         return $this->belongsTo(BaiViet::class, 'bai_viet_id');
@@ -45,6 +56,11 @@ class BinhLuan extends Model
 
     public function nestedChildren(): HasMany
     {
-        return $this->children()->with(['user', 'nestedChildren']);
+        return $this->children()->with(['user', 'media', 'nestedChildren']);
+    }
+
+    public function media(): HasMany
+    {
+        return $this->hasMany(MediaBinhLuan::class, 'binh_luan_id');
     }
 }
