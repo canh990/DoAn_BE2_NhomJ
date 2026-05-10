@@ -388,9 +388,13 @@
                         }
 
                         const parentId = data.comment.parent_id;
+                        
+                        const newThread = document.createElement('div');
+                        newThread.className = 'comment-thread w-full';
+                        newThread.dataset.commentId = data.comment.id;
+
                         const newComment = document.createElement('div');
                         newComment.className = 'rounded-2xl border border-white/10 bg-slate-950 p-3';
-                        newComment.dataset.commentId = data.comment.id;
                         newComment.innerHTML = `
                             <div class="flex gap-3 items-start">
                                 <img class="w-8 h-8 rounded-full object-cover border border-slate-700" src="${data.comment.user_avatar}" alt="${data.comment.user_name}">
@@ -415,58 +419,35 @@
                         const replyWrapper = document.createElement('div');
                         replyWrapper.className = 'mt-3 flex items-center gap-3';
                         replyWrapper.appendChild(replyButton);
+                        
+                        newComment.querySelector('.flex-1').appendChild(replyWrapper);
+                        newThread.appendChild(newComment);
 
                         const replyContainer = document.createElement('div');
-                        replyContainer.className = 'mt-3 space-y-3 pl-4 sm:pl-10';
+                        replyContainer.className = 'mt-2 space-y-2 pl-6 sm:pl-12 relative';
                         replyContainer.dataset.commentReplies = '';
+                        newThread.appendChild(replyContainer);
 
                         if (parentId) {
+                            // Find the parent's reply container which is a direct sibling of the parent's comment block
+                            // actually it's list.querySelector('[data-comment-id="..."] > [data-comment-replies]')
+                            // but since [data-comment-replies] is unique inside the thread wrapper, we can just use descendant selector:
                             const parentReplies = list.querySelector('[data-comment-id="' + parentId + '"] [data-comment-replies]');
                             if (parentReplies) {
-                                const replyBlock = document.createElement('div');
-                                replyBlock.className = newComment.className;
-                                replyBlock.dataset.commentId = data.comment.id;
-                                replyBlock.innerHTML = newComment.innerHTML;
-                                
-                                const childReplyButton = document.createElement('button');
-                                childReplyButton.type = 'button';
-                                childReplyButton.dataset.commentReplyButton = '';
-                                childReplyButton.dataset.commentId = data.comment.id; // Reply directly to this child
-                                childReplyButton.dataset.commentUser = data.comment.user_name;
-                                childReplyButton.className = 'hover:text-sky-300 text-xs text-slate-400 mt-3';
-                                childReplyButton.textContent = 'Trả lời';
-
-                                const childReplyWrapper = document.createElement('div');
-                                childReplyWrapper.className = 'mt-3 flex items-center gap-3 text-xs text-slate-400';
-                                childReplyWrapper.appendChild(childReplyButton);
-                                
-                                const flexContainer = replyBlock.querySelector('.flex-1');
-                                if(flexContainer) {
-                                    flexContainer.appendChild(childReplyWrapper);
-                                    const childReplyContainer = document.createElement('div');
-                                    childReplyContainer.className = 'mt-3 space-y-3 pl-4 sm:pl-10';
-                                    childReplyContainer.dataset.commentReplies = '';
-                                    flexContainer.appendChild(childReplyContainer);
+                                // Add vertical line if it doesn't exist
+                                if (!parentReplies.querySelector('.absolute.bg-white\\/10')) {
+                                    const verticalLine = document.createElement('div');
+                                    verticalLine.className = 'absolute left-[15px] sm:left-[27px] top-0 bottom-0 w-px bg-white/10';
+                                    parentReplies.appendChild(verticalLine);
                                 }
-
-                                parentReplies.appendChild(replyBlock);
+                                parentReplies.appendChild(newThread);
                             } else {
-                                const flexContainer = newComment.querySelector('.flex-1');
-                                if(flexContainer) {
-                                    flexContainer.appendChild(replyWrapper);
-                                    flexContainer.appendChild(replyContainer);
-                                }
-                                list.appendChild(newComment);
+                                list.appendChild(newThread);
                             }
                         } else {
-                            const flexContainer = newComment.querySelector('.flex-1');
-                            if(flexContainer) {
-                                flexContainer.appendChild(replyWrapper);
-                                flexContainer.appendChild(replyContainer);
-                            }
-                            list.appendChild(newComment);
+                            list.appendChild(newThread);
                         }
-
+                        
                         // "phải trả lời bình luận liên tiếp nhau": do not reset parentInput, actionLabel, cancelBtn
                         // so the user can continue replying to the same comment if they want.
                     }
