@@ -317,10 +317,17 @@
 
                     <div data-comment-box class="hidden mt-3 rounded-3xl border border-white/10 bg-slate-950/80 p-3">
                         @if($hasPersistedPost)
-                            <form class="comment-submit-form" method="POST" action="{{ route('posts.comment', ['post' => $postId]) }}">
+                            <form class="comment-submit-form" method="POST" action="{{ route('posts.comment', ['post' => $postId]) }}" enctype="multipart/form-data">
                                 @csrf
                                 <input type="hidden" name="binh_luan_cha_id" value="">
-                                <textarea name="noi_dung" rows="2" required class="w-full bg-transparent border border-white/10 focus:border-sky-400 focus:ring-0 rounded-3xl p-3 text-sm text-slate-100 placeholder:text-slate-500" placeholder="Viết bình luận..."></textarea>
+                                <div class="relative">
+                                    <textarea name="noi_dung" rows="2" class="w-full bg-transparent border border-white/10 focus:border-sky-400 focus:ring-0 rounded-3xl p-3 pr-12 text-sm text-slate-100 placeholder:text-slate-500" placeholder="Viết bình luận..."></textarea>
+                                    <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-sky-400 transition-colors" onclick="this.closest('form').querySelector('input[type=file]').click()">
+                                        <span class="material-symbols-outlined">image</span>
+                                    </button>
+                                </div>
+                                <input type="file" name="media[]" multiple accept="image/*,video/*,.gif" class="hidden comment-media-input" onchange="window.handleCommentMediaSelect(this)">
+                                <div class="comment-media-preview hidden mt-3 flex flex-wrap gap-3"></div>
                                 <div class="mt-3 flex items-center justify-between gap-3">
                                     <span class="text-xs text-slate-500" data-comment-action>Viết bình luận mới</span>
                                     <button type="button" data-comment-cancel class="hidden text-xs text-slate-400 hover:text-white">Hủy trả lời</button>

@@ -386,6 +386,14 @@
                         textarea.value = '';
                     }
 
+                    const mediaInput = commentForm.querySelector('.comment-media-input');
+                    const mediaPreview = commentForm.querySelector('.comment-media-preview');
+                    if (mediaInput) mediaInput.value = '';
+                    if (mediaPreview) {
+                        mediaPreview.innerHTML = '';
+                        mediaPreview.classList.add('hidden');
+                    }
+
                     if (box) {
                         const noComments = box.querySelector('[data-no-comments]');
                         const list = box.querySelector('[data-comment-list]');
@@ -411,6 +419,18 @@
                                         <span class="text-xs text-slate-500">${data.comment.created_at}</span>
                                     </div>
                                     <p class="mt-1 text-sm leading-relaxed text-slate-300">${data.comment.content}</p>
+                                    ${data.comment.media && data.comment.media.length > 0 ? `
+                                    <div class="mt-2 grid gap-2 ${data.comment.media.length == 1 ? 'grid-cols-1' : (data.comment.media.length == 2 ? 'grid-cols-2' : 'grid-cols-2 sm:grid-cols-3')} max-w-sm">
+                                        ${data.comment.media.map(m => `
+                                            <div class="overflow-hidden rounded-xl border border-white/10 bg-slate-900/50 ${data.comment.media.length > 1 ? 'aspect-square' : ''}">
+                                                ${m.loai === 'video' 
+                                                    ? `<video src="${m.url}" controls controlsList="nodownload" muted playsinline loop class="w-full h-full ${data.comment.media.length == 1 ? 'max-h-[300px] object-contain block' : 'object-cover'}"></video>`
+                                                    : `<img src="${m.url}" alt="Comment media" data-post-id="comment-${data.comment.id}" class="post-image-item cursor-pointer hover:opacity-90 transition-opacity w-full h-full ${data.comment.media.length == 1 ? 'max-h-[300px] object-contain block' : 'object-cover'}">`
+                                                }
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                    ` : ''}
                                 </div>
                             </div>
                         `;
@@ -476,6 +496,63 @@
         });
     </script>
     
+    <script>
+        window.handleCommentMediaSelect = function(input) {
+            const previewContainer = input.parentElement.querySelector('.comment-media-preview');
+            if (!previewContainer) return;
+            previewContainer.innerHTML = '';
+            
+            if (input.files && input.files.length > 0) {
+                previewContainer.classList.remove('hidden');
+                
+                const dt = new DataTransfer();
+                Array.from(input.files).forEach((file, index) => {
+                    dt.items.add(file);
+                    
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'relative w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden border border-white/20 shadow-sm group shrink-0 bg-slate-900/50';
+                    
+                    const removeBtn = document.createElement('button');
+                    removeBtn.type = 'button';
+                    removeBtn.className = 'absolute top-1 right-1 bg-slate-900/80 hover:bg-rose-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-all duration-200 flex items-center justify-center z-10';
+                    removeBtn.innerHTML = '<span class="material-symbols-outlined text-[14px]">close</span>';
+                    removeBtn.onclick = function() {
+                        wrapper.remove();
+                        const newDt = new DataTransfer();
+                        Array.from(input.files).forEach((f, i) => {
+                            if (i !== index) newDt.items.add(f);
+                        });
+                        input.files = newDt.files;
+                        if (input.files.length === 0) previewContainer.classList.add('hidden');
+                    };
+                    
+                    if (file.type.startsWith('video/')) {
+                        const video = document.createElement('video');
+                        video.src = URL.createObjectURL(file);
+                        video.className = 'w-full h-full object-cover';
+                        wrapper.appendChild(video);
+                        
+                        const playIcon = document.createElement('div');
+                        playIcon.className = 'absolute inset-0 flex items-center justify-center pointer-events-none bg-black/20';
+                        playIcon.innerHTML = '<span class="material-symbols-outlined text-white text-2xl drop-shadow-md" style="font-variation-settings: \'FILL\' 1;">play_circle</span>';
+                        wrapper.appendChild(playIcon);
+                    } else {
+                        const img = document.createElement('img');
+                        img.src = URL.createObjectURL(file);
+                        img.className = 'w-full h-full object-cover';
+                        wrapper.appendChild(img);
+                    }
+                    wrapper.appendChild(removeBtn);
+                    previewContainer.appendChild(wrapper);
+                });
+                
+                input.files = dt.files;
+            } else {
+                previewContainer.classList.add('hidden');
+            }
+        };
+    </script>
+
     <!-- Global Image Lightbox -->
     <div id="image-lightbox" class="fixed inset-0 z-[100] hidden bg-black/95 backdrop-blur-sm flex-col justify-center items-center opacity-0 transition-opacity duration-300">
         <!-- Close button -->
@@ -669,6 +746,53 @@
         });
 
         // --- Logic Chỉnh sửa bài viết Toàn cầu ---
+    
+        // --- Global Confirm Modal ---
+        let confirmActionCallback = null;
+        window.openConfirmModal = function(title, message, callback) {
+            const modal = document.getElementById('global-confirm-modal');
+            if (!modal) return;
+            
+            document.getElementById('confirm-modal-title').textContent = title;
+            document.getElementById('confirm-modal-message').textContent = message;
+            confirmActionCallback = callback;
+            
+            const content = document.getElementById('confirm-modal-content');
+            modal.classList.remove('hidden');
+            
+            // Trigger animation
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                content.classList.remove('scale-95');
+            }, 10);
+        };
+        
+        window.closeConfirmModal = function() {
+            const modal = document.getElementById('global-confirm-modal');
+            if (!modal) return;
+            
+            const content = document.getElementById('confirm-modal-content');
+            content.classList.add('scale-95');
+            modal.classList.add('opacity-0');
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                confirmActionCallback = null;
+            }, 300);
+        };
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const submitBtn = document.getElementById('confirm-modal-submit');
+            if(submitBtn) {
+                submitBtn.addEventListener('click', function() {
+                    if (confirmActionCallback) {
+                        confirmActionCallback();
+                    }
+                    window.closeConfirmModal();
+                });
+            }
+        });
+    
         // --- Logic Chỉnh sửa bài viết Toàn cầu ---
         window.openEditModal = function(postId, content) {
             const editModal = document.getElementById('edit-post-modal');
@@ -914,6 +1038,24 @@
                     <button type="button" id="confirm-share-btn" class="px-5 py-2 text-sm font-semibold bg-sky-500 hover:bg-sky-400 text-white rounded-xl shadow-lg shadow-sky-500/20 transition-all active:scale-95 flex items-center gap-2">
                         <span class="material-symbols-outlined text-[18px]">share</span> Chia sẻ ngay
                     </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== GLOBAL CONFIRM MODAL ===== -->
+    <div id="global-confirm-modal" class="hidden fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+        <div id="confirm-modal-content" class="glass-panel rounded-2xl w-full max-w-sm shadow-2xl scale-95 transition-transform duration-300 relative overflow-hidden">
+            <div class="p-6 text-center">
+                <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-rose-500/10 mb-4 border border-rose-500/20">
+                    <span class="material-symbols-outlined text-rose-500 text-3xl">warning</span>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-2" id="confirm-modal-title">Xác nhận xóa</h3>
+                <p class="text-sm text-slate-400 mb-6" id="confirm-modal-message">Bạn có chắc chắn muốn thực hiện hành động này không?</p>
+                
+                <div class="flex gap-3">
+                    <button type="button" onclick="window.closeConfirmModal()" class="flex-1 px-5 py-2.5 text-sm font-semibold text-slate-300 bg-slate-800 hover:bg-slate-700 rounded-xl transition-colors">Hủy</button>
+                    <button type="button" id="confirm-modal-submit" class="flex-1 px-5 py-2.5 text-sm font-semibold bg-rose-500 hover:bg-rose-600 text-white rounded-xl shadow-lg shadow-rose-500/20 transition-all active:scale-95">Xóa ngay</button>
                 </div>
             </div>
         </div>
