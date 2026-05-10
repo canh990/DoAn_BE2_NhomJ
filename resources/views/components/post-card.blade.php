@@ -326,7 +326,7 @@
                                         <span class="material-symbols-outlined">image</span>
                                     </button>
                                 </div>
-                                <input type="file" name="media[]" multiple accept="image/*,video/*,.gif" class="hidden comment-media-input" onchange="window.handleCommentMediaSelect(this)">
+                                <input type="file" name="media[]" multiple accept="image/*,video/*,.gif,.webp,.bmp,.svg,.heic,.heif" class="hidden comment-media-input" onchange="window.handleCommentMediaSelect(this)">
                                 <div class="comment-media-preview hidden mt-3 flex flex-wrap gap-3"></div>
                                 <div class="mt-3 flex items-center justify-between gap-3">
                                     <span class="text-xs text-slate-500" data-comment-action>Viết bình luận mới</span>
