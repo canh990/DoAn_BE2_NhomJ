@@ -89,14 +89,12 @@
                     <p class="text-[10px] text-slate-400">{{ $post->created_at ? $post->created_at->diffForHumans() : 'Không xác định' }}</p>
                 </div>
             </div>
-            <!-- Bạn có thể thêm nút 3 chấm (tùy chọn) ở đây -->
         </div>
 
     <!-- 2. Phần Nội dung bài viết -->
 <div class="px-4 pb-3">
     <p class="text-sm leading-relaxed text-on-surface-variant whitespace-pre-line">{{ $post->noi_dung }}</p>
 
-    <!-- Hiển thị danh sách ảnh từ quan hệ media -->
     @if($post->media && $post->media->count() > 0)
         <div class="mt-3 grid gap-2">
             @foreach($post->media as $media)
@@ -110,8 +108,7 @@
     @endif
 </div>
 
-        
-        <!-- 3. Phần Thanh tương tác (Like, Comment, Share) -->
+        <!-- 3. Phần Thanh tương tác -->
         <div class="p-4 border-t border-white/5" data-reaction-area>
             @php
                 $reactionButtons = [
@@ -139,7 +136,6 @@
                     <button type="button" data-comment-toggle class="flex items-center gap-2 text-slate-400 hover:text-sky-300 transition-colors py-1.5 px-4 rounded-full hover:bg-sky-400/10">
                         <span class="material-symbols-outlined" data-icon="chat_bubble">chat_bubble</span>
                         <span class="text-sm font-medium">Bình luận</span>
-                        <!-- Thêm ?? 0 để sửa lỗi hiển thị () khi không có bình luận -->
                         <span class="text-sm text-slate-400" data-comment-count>({{ $post->comments_count ?? 0 }})</span>
                     </button>
 
@@ -148,81 +144,87 @@
                         <span class="text-sm font-medium">Chia sẻ</span>
                     </button>
 
-                    <!-- Thêm ?? 0 để sửa lỗi hiển thị khoảng trống khi không có cảm xúc -->
                     <span class="ml-auto text-xs text-slate-400" data-reaction-count>{{ $post->reactions_count ?? 0 }} cảm xúc</span>
                 </div>
 
-                <!-- ... Phần ẩn chọn cảm xúc & bình luận giữ nguyên ... -->
-                <div data-reaction-picker class="hidden absolute left-0 bottom-full z-10 mb-2 w-auto rounded-[32px] border border-white/10 bg-slate-950/95 p-3 shadow-[0_12px_35px_rgba(0,0,0,0.25)] backdrop-blur-sm transition-all duration-200">
-                    <div class="flex items-center gap-2">
-                        @foreach($reactionButtons as $type => $button)
-                            <button type="button" data-reaction-option data-reaction="{{ $type }}" data-reaction-label="{{ $button['label'] }}" data-reaction-color="{{ $button['color'] }}" data-reaction-icon="{{ $button['icon'] }}" class="flex flex-col items-center justify-center rounded-3xl bg-slate-900 px-3 py-2 text-center text-slate-300 transition duration-200 hover:-translate-y-1 hover:bg-sky-400/10 hover:text-sky-300">
-                                <span class="material-symbols-outlined {{ $button['color'] }} text-xl">{{ $button['icon'] }}</span>
-                                <span class="text-[10px]">{{ $button['label'] }}</span>
-                            </button>
-                        @endforeach
-                    </div>
-                </div>
-            </div>
+                <div data-comment-box class="hidden mt-3 rounded-3xl border border-white/10 bg-slate-950/80 p-3">
+                    <form class="comment-submit-form" method="POST" action="{{ route('posts.comment', $post) }}">
+                        @csrf
+                        <input type="hidden" name="binh_luan_cha_id" value="">
+                        <textarea name="noi_dung" rows="2" required class="w-full bg-transparent border border-white/10 focus:border-sky-400 focus:ring-0 rounded-3xl p-3 text-sm text-slate-100 placeholder:text-slate-500" placeholder="Viết bình luận..."></textarea>
+                        <div class="mt-3 flex items-center justify-between gap-3">
+                            <span class="text-xs text-slate-500" data-comment-action>Viết bình luận mới</span>
+                            <button type="button" data-comment-cancel class="hidden text-xs text-slate-400 hover:text-white">Hủy trả lời</button>
+                            <button type="submit" class="rounded-full bg-sky-400/10 text-sky-300 px-4 py-2 text-sm font-semibold hover:bg-sky-400/20">Gửi</button>
+                        </div>
+                    </form>
 
-            <form class="reaction-submit-form hidden" method="POST" action="{{ route('posts.react', $post) }}">
-                @csrf
-                <input type="hidden" name="loai_cam_xuc" value="">
-            </form>
+                    <div data-comment-list class="mt-4 space-y-3 text-slate-300">
+                        @php
+                            $rootComments = $post->comments->whereNull('binh_luan_cha_id');
+                        @endphp
+                        @if($post->comments->isEmpty())
+                            <div data-no-comments class="text-sm text-slate-500">Chưa có bình luận nào. Hãy là người đầu tiên bình luận.</div>
+                        @else
+                            @foreach($rootComments as $comment)
+                                <div class="rounded-2xl border border-white/10 bg-slate-950 p-3" data-comment-id="{{ $comment->id }}">
+                                    <div class="flex gap-3 items-start">
+                                        <img class="w-8 h-8 rounded-full object-cover border border-slate-700" src="{{ $comment->user && $comment->user->anh_dai_dien ? asset('storage/' . $comment->user->anh_dai_dien) : asset('storage/avatars/avtmacdinh.png') }}" alt="{{ $comment->user?->name ?? 'Người dùng' }}">
+                                        <div class="flex-1">
+                                            <div class="flex items-center justify-between gap-2 text-sm text-slate-200">
+                                                <span class="font-semibold">{{ $comment->user?->name ?? 'Người dùng' }}</span>
+                                                <span class="text-xs text-slate-500">{{ $comment->ngay_tao?->diffForHumans() ?? '' }}</span>
+                                            </div>
+                                            <p class="mt-1 text-sm leading-relaxed text-slate-300">{{ $comment->noi_dung }}</p>
 
-            <div data-comment-box class="hidden mt-3 rounded-3xl border border-white/10 bg-slate-950/80 p-3">
-                <form class="comment-submit-form" method="POST" action="{{ route('posts.comment', $post) }}">
-                    @csrf
-                    <input type="hidden" name="binh_luan_cha_id" value="">
-                    <textarea name="noi_dung" rows="2" required class="w-full bg-transparent border border-white/10 focus:border-sky-400 focus:ring-0 rounded-3xl p-3 text-sm text-slate-100 placeholder:text-slate-500" placeholder="Viết bình luận..."></textarea>
-                    <div class="mt-3 flex items-center justify-between gap-3">
-                        <span class="text-xs text-slate-500" data-comment-action>Viết bình luận mới</span>
-                        <button type="button" data-comment-cancel class="hidden text-xs text-slate-400 hover:text-white">Hủy trả lời</button>
-                        <button type="submit" class="rounded-full bg-sky-400/10 text-sky-300 px-4 py-2 text-sm font-semibold hover:bg-sky-400/20">Gửi</button>
-                    </div>
-                </form>
+                                            <div class="mt-3 flex items-center gap-3 text-xs text-slate-400">
+                                                <button type="button"
+                                                    data-comment-reply-button
+                                                    data-comment-id="{{ $comment->id }}"
+                                                    data-comment-user="{{ $comment->user?->name ?? 'Người dùng' }}"
+                                                    class="hover:text-sky-300">
+                                                    Trả lời
+                                                </button>
+                                            </div>
 
-                <div data-comment-list class="mt-4 space-y-3 text-slate-300">
-                    @php
-                        $rootComments = $post->comments->whereNull('binh_luan_cha_id');
-                    @endphp
-                    @if($post->comments->isEmpty())
-                        <div data-no-comments class="text-sm text-slate-500">Chưa có bình luận nào. Hãy là người đầu tiên bình luận.</div>
-                    @else
-                        @foreach($rootComments as $comment)
-                            <div class="rounded-2xl border border-white/10 bg-slate-950 p-3" data-comment-id="{{ $comment->id }}">
-                                <div class="flex gap-3 items-start">
-                                    <img class="w-8 h-8 rounded-full object-cover border border-slate-700" src="{{ $comment->user && $comment->user->anh_dai_dien ? asset('storage/' . $comment->user->anh_dai_dien) : asset('storage/avatars/avtmacdinh.png') }}" alt="{{ $comment->user?->name ?? 'Người dùng' }}">
-                                    <div class="flex-1">
-                                        <div class="flex items-center justify-between gap-2 text-sm text-slate-200">
-                                            <span class="font-semibold">{{ $comment->user?->name ?? 'Người dùng' }}</span>
-                                            <span class="text-xs text-slate-500">{{ $comment->ngay_tao?->diffForHumans() ?? '' }}</span>
-                                        </div>
-                                        <p class="mt-1 text-sm leading-relaxed text-slate-300">{{ $comment->noi_dung }}</p>
-                                        <div class="mt-3 flex items-center gap-3 text-xs text-slate-400">
-                                            <button type="button" data-comment-reply-button data-comment-id="{{ $comment->id }}" data-comment-user="{{ $comment->user?->name ?? 'Người dùng' }}" class="hover:text-sky-300">Trả lời</button>
-                                        </div>
-                                        <div class="mt-3 space-y-3 pl-10" data-comment-replies>
-                                            @foreach($comment->children as $reply)
-                                                <div class="rounded-2xl border border-white/10 bg-slate-950 p-3" data-comment-id="{{ $reply->id }}">
-                                                    <div class="flex gap-3 items-start">
-                                                        <img class="w-8 h-8 rounded-full object-cover border border-slate-700" src="{{ $reply->user && $reply->user->anh_dai_dien ? asset('storage/' . $reply->user->anh_dai_dien) : asset('storage/avatars/avtmacdinh.png') }}" alt="{{ $reply->user?->name ?? 'Người dùng' }}">
-                                                        <div class="flex-1">
-                                                            <div class="flex items-center justify-between gap-2 text-sm text-slate-200">
-                                                                <span class="font-semibold">{{ $reply->user?->name ?? 'Người dùng' }}</span>
-                                                                <span class="text-xs text-slate-500">{{ $reply->ngay_tao?->diffForHumans() ?? '' }}</span>
+                                            <div class="mt-3 space-y-3 pl-10" data-comment-replies>
+                                                @foreach($comment->children as $reply)
+                                                    <div class="rounded-2xl border border-white/10 bg-slate-950 p-3" data-comment-id="{{ $reply->id }}">
+                                                        <div class="flex gap-3 items-start">
+                                                            <img class="w-8 h-8 rounded-full object-cover border border-slate-700" src="{{ $reply->user && $reply->user->anh_dai_dien ? asset('storage/' . $reply->user->anh_dai_dien) : asset('storage/avatars/avtmacdinh.png') }}" alt="{{ $reply->user?->name ?? 'Người dùng' }}">
+                                                            <div class="flex-1">
+                                                                <div class="flex items-center justify-between gap-2 text-sm text-slate-200">
+                                                                    <span class="font-semibold">{{ $reply->user?->name ?? 'Người dùng' }}</span>
+                                                                    <span class="text-xs text-slate-500">{{ $reply->ngay_tao?->diffForHumans() ?? '' }}</span>
+                                                                </div>
+                                                                <p class="mt-1 text-sm leading-relaxed text-slate-300">{{ $reply->noi_dung }}</p>
+
+                                                                {{-- ✅ Added reply chain support --}}
+                                                                <div class="mt-3 flex items-center gap-3 text-xs text-slate-400">
+                                                                    <button type="button"
+                                                                        data-comment-reply-button
+                                                                        data-comment-id="{{ $reply->id }}"
+                                                                        data-comment-user="{{ $reply->user?->name ?? 'Người dùng' }}"
+                                                                        class="hover:text-sky-300">
+                                                                        Trả lời
+                                                                    </button>
+                                                                </div>
+
+                                                                <div class="mt-3 space-y-3 pl-10" data-comment-replies>
+                                                                    {{-- deeper replies (if any) --}}
+                                                                </div>
+                                                                {{-- ✅ end --}}
                                                             </div>
-                                                            <p class="mt-1 text-sm leading-relaxed text-slate-300">{{ $reply->noi_dung }}</p>
                                                         </div>
                                                     </div>
-                                                </div>
-                                            @endforeach
+                                                @endforeach
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        @endforeach
-                    @endif
+                            @endforeach
+                        @endif
+                    </div>
                 </div>
             </div>
         </div>
@@ -266,7 +268,6 @@
 
         textarea.addEventListener('input', updateCount);
 
-        // Image upload handling
         if(imageBtn) {
             imageBtn.addEventListener('click', function() {
                 imageInput.click();

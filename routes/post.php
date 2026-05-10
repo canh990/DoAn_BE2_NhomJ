@@ -15,6 +15,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/home', [HomeController::class, 'index'])
         ->name('home');
 
+    Route::get('/posts/{post}/comments/thread-sync', [\App\Http\Controllers\CommentSyncController::class, 'thread'])
+        ->name('posts.comments.threadSync');
+
     Route::post('/posts', [PostController::class, 'store'])
         ->name('posts.store');
 

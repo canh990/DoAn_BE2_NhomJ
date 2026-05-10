@@ -14,7 +14,7 @@ class HomeController extends Controller
             ->with(['reactions' => function ($query) {
                 $query->where('nguoi_dung_id', auth()->id());
             }, 'comments' => function ($query) {
-                $query->with('user')->latest('ngay_tao')->limit(3);
+                $query->with('user')->latest('ngay_tao');
             }])
             ->where('da_xoa', false)
             ->whereIn('loai', ['van_ban', 'hinh_anh'])

@@ -19,7 +19,7 @@ class ProfileController extends Controller
             ->with(['reactions' => function ($query) {
                 $query->where('nguoi_dung_id', auth()->id());
             }, 'comments' => function ($query) {
-                $query->with('user')->latest('ngay_tao')->limit(3);
+                $query->with('user')->latest('ngay_tao');
             }])
             ->whereIn('loai', ['van_ban', 'hinh_anh'])
             ->where('da_xoa', false)
@@ -46,7 +46,7 @@ class ProfileController extends Controller
             ->with(['reactions' => function ($query) {
                 $query->where('nguoi_dung_id', auth()->id());
             }, 'comments' => function ($query) {
-                $query->with('user')->latest('ngay_tao')->limit(3);
+                $query->with('user')->latest('ngay_tao');
             }])
             ->whereIn('loai', ['van_ban', 'hinh_anh'])
             ->where('da_xoa', false)
@@ -83,7 +83,7 @@ class ProfileController extends Controller
             'noi_o' => ['nullable', 'string', 'max:255'],
             'quyen_rieng_tu' => ['required', Rule::in(['cong_khai', 'ban_be', 'rieng_tu'])],
             'anh_dai_dien' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
-            'anh_bia' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
+            'anh_bia' => ['nullable', 'image', 'mimes:jpg,jpeg,png,gif,webp', 'max:4096'],
         ]);
 
         if ($request->hasFile('anh_dai_dien')) {
@@ -117,7 +117,7 @@ class ProfileController extends Controller
         }
 
         $status = $me->following()->toggle($user->id);
-        
+
         return response()->json([
             'is_following' => count($status['attached']) > 0,
             'followers_count' => $user->followers()->count()

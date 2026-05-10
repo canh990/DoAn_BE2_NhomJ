@@ -245,6 +245,18 @@
                                                                         <span class="text-xs text-slate-500">{{ $reply->ngay_tao?->diffForHumans() ?? '' }}</span>
                                                                     </div>
                                                                     <p class="mt-1 text-sm leading-relaxed text-slate-300">{{ $reply->noi_dung }}</p>
+
+                                                                    <div class="mt-3 flex items-center gap-3 text-xs text-slate-400">
+                                                                        <button type="button"
+                                                                            data-comment-reply-button
+                                                                            data-comment-id="{{ $reply->id }}"
+                                                                            data-comment-user="{{ $reply->user?->name ?? 'Người dùng' }}"
+                                                                            class="hover:text-sky-300">
+                                                                            Trả lời
+                                                                        </button>
+                                                                    </div>
+
+                                                                    <div class="mt-3 space-y-3 pl-10" data-comment-replies></div>
                                                                 </div>
                                                             </div>
                                                         </div>

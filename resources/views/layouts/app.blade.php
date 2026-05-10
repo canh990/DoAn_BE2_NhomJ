@@ -51,19 +51,7 @@
                         "error-container": "#3d1414",
                         "tertiary": "#c8a0f0",
                         "on-tertiary-fixed": "#1a002e",
-                        "on-secondary-fixed": "#0d1f2b",
-                        "surface-variant": "#1a2438",
-                        "surface-container-low": "#111828",
-                        "surface-container-high": "#1a2438",
-                        "on-primary-fixed-variant": "#004d73",
-                        "outline": "#4a6070",
                         "on-secondary-container": "#c0d8e8",
-                        "secondary-fixed": "#c0d8e8",
-                        "on-secondary": "#001f2e",
-                        "background": "#0a0e1a",
-                        "on-surface-variant": "#a0b4c4",
-                        "surface-bright": "#1a2438",
-                        "on-primary-container": "#c8eaff",
                         "secondary-fixed-dim": "#88b4cc"
                     },
                     "borderRadius": {
@@ -393,7 +381,7 @@
 
                         const replyButton = document.createElement('button');
                         replyButton.type = 'button';
-                        replyButton.dataset.commentReplyButton = '';
+                        replyButton.setAttribute('data-comment-reply-button', '');
                         replyButton.dataset.commentId = data.comment.id;
                         replyButton.dataset.commentUser = data.comment.user_name;
                         replyButton.className = 'hover:text-sky-300 text-xs text-slate-400 mt-3';
@@ -410,11 +398,9 @@
                         if (parentId) {
                             const parentReplies = list.querySelector('[data-comment-id="' + parentId + '"] [data-comment-replies]');
                             if (parentReplies) {
-                                const replyBlock = document.createElement('div');
-                                replyBlock.className = newComment.className;
-                                replyBlock.dataset.commentId = data.comment.id;
-                                replyBlock.innerHTML = newComment.innerHTML;
-                                parentReplies.appendChild(replyBlock);
+                                newComment.appendChild(replyWrapper);
+                                newComment.appendChild(replyContainer);
+                                parentReplies.appendChild(newComment);
                             } else {
                                 list.appendChild(newComment);
                                 newComment.appendChild(replyWrapper);
