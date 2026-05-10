@@ -42,4 +42,9 @@ class BinhLuan extends Model
     {
         return $this->hasMany(BinhLuan::class, 'binh_luan_cha_id')->latest('ngay_tao');
     }
+
+    public function nestedChildren(): HasMany
+    {
+        return $this->children()->with(['user', 'nestedChildren']);
+    }
 }

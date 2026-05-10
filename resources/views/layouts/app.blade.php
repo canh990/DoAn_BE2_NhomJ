@@ -417,7 +417,7 @@
                         replyWrapper.appendChild(replyButton);
 
                         const replyContainer = document.createElement('div');
-                        replyContainer.className = 'mt-3 space-y-3 pl-10';
+                        replyContainer.className = 'mt-3 space-y-3 pl-4 sm:pl-10';
                         replyContainer.dataset.commentReplies = '';
 
                         if (parentId) {
@@ -427,30 +427,48 @@
                                 replyBlock.className = newComment.className;
                                 replyBlock.dataset.commentId = data.comment.id;
                                 replyBlock.innerHTML = newComment.innerHTML;
+                                
+                                const childReplyButton = document.createElement('button');
+                                childReplyButton.type = 'button';
+                                childReplyButton.dataset.commentReplyButton = '';
+                                childReplyButton.dataset.commentId = data.comment.id; // Reply directly to this child
+                                childReplyButton.dataset.commentUser = data.comment.user_name;
+                                childReplyButton.className = 'hover:text-sky-300 text-xs text-slate-400 mt-3';
+                                childReplyButton.textContent = 'Trả lời';
+
+                                const childReplyWrapper = document.createElement('div');
+                                childReplyWrapper.className = 'mt-3 flex items-center gap-3 text-xs text-slate-400';
+                                childReplyWrapper.appendChild(childReplyButton);
+                                
+                                const flexContainer = replyBlock.querySelector('.flex-1');
+                                if(flexContainer) {
+                                    flexContainer.appendChild(childReplyWrapper);
+                                    const childReplyContainer = document.createElement('div');
+                                    childReplyContainer.className = 'mt-3 space-y-3 pl-4 sm:pl-10';
+                                    childReplyContainer.dataset.commentReplies = '';
+                                    flexContainer.appendChild(childReplyContainer);
+                                }
+
                                 parentReplies.appendChild(replyBlock);
                             } else {
+                                const flexContainer = newComment.querySelector('.flex-1');
+                                if(flexContainer) {
+                                    flexContainer.appendChild(replyWrapper);
+                                    flexContainer.appendChild(replyContainer);
+                                }
                                 list.appendChild(newComment);
-                                newComment.appendChild(replyWrapper);
-                                newComment.appendChild(replyContainer);
                             }
                         } else {
-                            newComment.appendChild(replyWrapper);
-                            newComment.appendChild(replyContainer);
+                            const flexContainer = newComment.querySelector('.flex-1');
+                            if(flexContainer) {
+                                flexContainer.appendChild(replyWrapper);
+                                flexContainer.appendChild(replyContainer);
+                            }
                             list.appendChild(newComment);
                         }
 
-                        const parentInput = commentForm.querySelector('input[name="binh_luan_cha_id"]');
-                        const actionLabel = commentForm.querySelector('[data-comment-action]');
-                        const cancelBtn = commentForm.querySelector('[data-comment-cancel]');
-                        if (parentInput) {
-                            parentInput.value = '';
-                        }
-                        if (actionLabel) {
-                            actionLabel.textContent = 'Viết bình luận mới';
-                        }
-                        if (cancelBtn) {
-                            cancelBtn.classList.add('hidden');
-                        }
+                        // "phải trả lời bình luận liên tiếp nhau": do not reset parentInput, actionLabel, cancelBtn
+                        // so the user can continue replying to the same comment if they want.
                     }
                 })
                 .catch(function (error) {
