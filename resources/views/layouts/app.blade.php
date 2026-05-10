@@ -388,9 +388,13 @@
                         }
 
                         const parentId = data.comment.parent_id;
+                        
+                        const newThread = document.createElement('div');
+                        newThread.className = 'comment-thread w-full';
+                        newThread.dataset.commentId = data.comment.id;
+
                         const newComment = document.createElement('div');
                         newComment.className = 'rounded-2xl border border-white/10 bg-slate-950 p-3';
-                        newComment.dataset.commentId = data.comment.id;
                         newComment.innerHTML = `
                             <div class="flex gap-3 items-start">
                                 <img class="w-8 h-8 rounded-full object-cover border border-slate-700" src="${data.comment.user_avatar}" alt="${data.comment.user_name}">
@@ -415,42 +419,37 @@
                         const replyWrapper = document.createElement('div');
                         replyWrapper.className = 'mt-3 flex items-center gap-3';
                         replyWrapper.appendChild(replyButton);
+                        
+                        newComment.querySelector('.flex-1').appendChild(replyWrapper);
+                        newThread.appendChild(newComment);
 
                         const replyContainer = document.createElement('div');
-                        replyContainer.className = 'mt-3 space-y-3 pl-10';
+                        replyContainer.className = 'mt-2 space-y-2 pl-6 sm:pl-12 relative';
                         replyContainer.dataset.commentReplies = '';
+                        newThread.appendChild(replyContainer);
 
                         if (parentId) {
+                            // Find the parent's reply container which is a direct sibling of the parent's comment block
+                            // actually it's list.querySelector('[data-comment-id="..."] > [data-comment-replies]')
+                            // but since [data-comment-replies] is unique inside the thread wrapper, we can just use descendant selector:
                             const parentReplies = list.querySelector('[data-comment-id="' + parentId + '"] [data-comment-replies]');
                             if (parentReplies) {
-                                const replyBlock = document.createElement('div');
-                                replyBlock.className = newComment.className;
-                                replyBlock.dataset.commentId = data.comment.id;
-                                replyBlock.innerHTML = newComment.innerHTML;
-                                parentReplies.appendChild(replyBlock);
+                                // Add vertical line if it doesn't exist
+                                if (!parentReplies.querySelector('.absolute.bg-white\\/10')) {
+                                    const verticalLine = document.createElement('div');
+                                    verticalLine.className = 'absolute left-[15px] sm:left-[27px] top-0 bottom-0 w-px bg-white/10';
+                                    parentReplies.appendChild(verticalLine);
+                                }
+                                parentReplies.appendChild(newThread);
                             } else {
-                                list.appendChild(newComment);
-                                newComment.appendChild(replyWrapper);
-                                newComment.appendChild(replyContainer);
+                                list.appendChild(newThread);
                             }
                         } else {
-                            newComment.appendChild(replyWrapper);
-                            newComment.appendChild(replyContainer);
-                            list.appendChild(newComment);
+                            list.appendChild(newThread);
                         }
-
-                        const parentInput = commentForm.querySelector('input[name="binh_luan_cha_id"]');
-                        const actionLabel = commentForm.querySelector('[data-comment-action]');
-                        const cancelBtn = commentForm.querySelector('[data-comment-cancel]');
-                        if (parentInput) {
-                            parentInput.value = '';
-                        }
-                        if (actionLabel) {
-                            actionLabel.textContent = 'Viết bình luận mới';
-                        }
-                        if (cancelBtn) {
-                            cancelBtn.classList.add('hidden');
-                        }
+                        
+                        // "phải trả lời bình luận liên tiếp nhau": do not reset parentInput, actionLabel, cancelBtn
+                        // so the user can continue replying to the same comment if they want.
                     }
                 })
                 .catch(function (error) {
