@@ -14,7 +14,7 @@ class CommentController extends Controller
             'noi_dung' => ['required_without:media', 'nullable', 'string', 'max:1000'],
             'binh_luan_cha_id' => ['nullable', 'integer', 'exists:binh_luan,id'],
             'media' => ['nullable', 'array', 'max:10'],
-            'media.*' => ['file', 'mimes:jpeg,png,jpg,gif,mp4,mov,webm', 'max:51200'],
+            'media.*' => ['file', 'mimes:jpeg,png,jpg,gif,webp,bmp,svg,heic,heif,mp4,mov,webm,avi,mkv,wmv', 'max:51200'],
         ]);
 
         if (!empty($validated['binh_luan_cha_id'])) {

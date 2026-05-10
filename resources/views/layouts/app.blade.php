@@ -369,7 +369,23 @@
                     return response.json();
                 })
                 .then(function (data) {
-                    if (!data.success) {
+                    // Nếu Laravel trả về lỗi validation (422)
+                    if (data.errors) {
+                        const firstError = Object.values(data.errors)[0][0];
+                        if (typeof window.showToast === 'function') {
+                            window.showToast(firstError, 'error');
+                        } else {
+                            alert(firstError);
+                        }
+                        return;
+                    }
+                    
+                    if (data.success === false) {
+                        if (typeof window.showToast === 'function') {
+                            window.showToast(data.message || 'Có lỗi xảy ra', 'error');
+                        } else {
+                            alert(data.message || 'Có lỗi xảy ra');
+                        }
                         return;
                     }
 
@@ -388,7 +404,10 @@
 
                     const mediaInput = commentForm.querySelector('.comment-media-input');
                     const mediaPreview = commentForm.querySelector('.comment-media-preview');
-                    if (mediaInput) mediaInput.value = '';
+                    if (mediaInput) {
+                        mediaInput.value = '';
+                        mediaInput._selectedFiles = [];
+                    }
                     if (mediaPreview) {
                         mediaPreview.innerHTML = '';
                         mediaPreview.classList.add('hidden');
@@ -440,12 +459,47 @@
                         replyButton.dataset.commentReplyButton = '';
                         replyButton.dataset.commentId = data.comment.id;
                         replyButton.dataset.commentUser = data.comment.user_name;
-                        replyButton.className = 'hover:text-sky-300 text-xs text-slate-400 mt-3';
+                        replyButton.className = 'hover:text-sky-300 transition-colors';
                         replyButton.textContent = 'Trả lời';
 
                         const replyWrapper = document.createElement('div');
-                        replyWrapper.className = 'mt-3 flex items-center gap-3';
+                        replyWrapper.className = 'mt-3 flex items-center gap-3 text-xs text-slate-400';
                         replyWrapper.appendChild(replyButton);
+                        
+                        // Thêm nút Xóa cho bình luận vừa tạo (vì user vừa tạo chắc chắn có quyền xoá)
+                        const deleteButton = document.createElement('button');
+                        deleteButton.type = 'button';
+                        deleteButton.className = 'hover:text-red-400 transition-colors';
+                        deleteButton.textContent = 'Xóa';
+                        deleteButton.onclick = function() {
+                            window.openConfirmModal('Xóa bình luận?', 'Thao tác này sẽ xoá luôn các ảnh/video đính kèm.', () => {
+                                fetch('/comments/' + data.comment.id, {
+                                    method: 'DELETE',
+                                    headers: {
+                                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                                        'Accept': 'application/json'
+                                    }
+                                })
+                                .then(res => res.json())
+                                .then(resData => {
+                                    if(resData.success) {
+                                        const thread = document.querySelector('.comment-thread[data-comment-id="' + data.comment.id + '"]');
+                                        if(thread) thread.remove();
+                                        if(typeof window.showToast === 'function') {
+                                            window.showToast('Bình luận đã được xoá', 'success');
+                                        }
+                                    } else {
+                                        if(typeof window.showToast === 'function') {
+                                            window.showToast(resData.message || 'Có lỗi xảy ra', 'error');
+                                        }
+                                    }
+                                })
+                                .catch(err => {
+                                    if(typeof window.showToast === 'function') window.showToast('Lỗi kết nối.', 'error');
+                                });
+                            });
+                        };
+                        replyWrapper.appendChild(deleteButton);
                         
                         newComment.querySelector('.flex-1').appendChild(replyWrapper);
                         newThread.appendChild(newComment);
@@ -492,21 +546,43 @@
                 })
                 .catch(function (error) {
                     console.error('Lỗi khi gửi bình luận:', error);
+                    if (typeof window.showToast === 'function') {
+                        window.showToast('Lỗi kết nối. Không thể đăng bình luận.', 'error');
+                    } else {
+                        alert('Lỗi kết nối. Không thể đăng bình luận.');
+                    }
                 });
         });
     </script>
     
     <script>
-        window.handleCommentMediaSelect = function(input) {
+        window.handleCommentMediaSelect = function(input, isUpdate = false) {
             const previewContainer = input.parentElement.querySelector('.comment-media-preview');
             if (!previewContainer) return;
+            
+            // Khởi tạo mảng lưu trữ file nếu chưa có
+            if (!input._selectedFiles) {
+                input._selectedFiles = [];
+            }
+            
+            // Nếu người dùng vừa chọn file mới (không phải gọi từ hàm xoá)
+            if (!isUpdate && input.files && input.files.length > 0) {
+                Array.from(input.files).forEach(file => {
+                    // Tránh thêm trùng file (kiểm tra theo tên và dung lượng)
+                    const exists = input._selectedFiles.some(f => f.name === file.name && f.size === file.size);
+                    if (!exists) {
+                        input._selectedFiles.push(file);
+                    }
+                });
+            }
+            
             previewContainer.innerHTML = '';
             
-            if (input.files && input.files.length > 0) {
+            if (input._selectedFiles.length > 0) {
                 previewContainer.classList.remove('hidden');
                 
                 const dt = new DataTransfer();
-                Array.from(input.files).forEach((file, index) => {
+                input._selectedFiles.forEach((file, index) => {
                     dt.items.add(file);
                     
                     const wrapper = document.createElement('div');
@@ -516,14 +592,11 @@
                     removeBtn.type = 'button';
                     removeBtn.className = 'absolute top-1 right-1 bg-slate-900/80 hover:bg-rose-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-all duration-200 flex items-center justify-center z-10';
                     removeBtn.innerHTML = '<span class="material-symbols-outlined text-[14px]">close</span>';
-                    removeBtn.onclick = function() {
+                    removeBtn.onclick = function(e) {
+                        e.preventDefault();
                         wrapper.remove();
-                        const newDt = new DataTransfer();
-                        Array.from(input.files).forEach((f, i) => {
-                            if (i !== index) newDt.items.add(f);
-                        });
-                        input.files = newDt.files;
-                        if (input.files.length === 0) previewContainer.classList.add('hidden');
+                        input._selectedFiles.splice(index, 1);
+                        window.handleCommentMediaSelect(input, true);
                     };
                     
                     if (file.type.startsWith('video/')) {
@@ -549,6 +622,7 @@
                 input.files = dt.files;
             } else {
                 previewContainer.classList.add('hidden');
+                input.files = new DataTransfer().files; // Clear files
             }
         };
     </script>

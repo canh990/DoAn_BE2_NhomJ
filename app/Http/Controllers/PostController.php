@@ -33,11 +33,11 @@ class PostController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'noi_dung' => ['nullable', 'string', 'max:280'],
+            'noi_dung' => ['nullable', 'string', 'max:2000'],
             'cam_xuc' => ['nullable', 'string', 'max:100'],
             'hoat_dong' => ['nullable', 'string', 'max:100'],
             'anh' => ['nullable', 'array', 'max:10'], // Tối đa 10 tệp
-            'anh.*' => ['file', 'mimes:jpg,jpeg,png,gif,webp,mp4,webm,mov', 'max:512000'], // max 500MB
+            'anh.*' => ['file', 'mimes:jpeg,png,jpg,gif,webp,bmp,svg,heic,heif,mp4,mov,webm,avi,mkv,wmv', 'max:51200'], 
         ]);
 
         // Kiểm tra ít nhất có nội dung hoặc file
