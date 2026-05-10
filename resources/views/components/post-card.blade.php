@@ -4,6 +4,7 @@
     'content' => null,
     'image' => null,
     'timestamp' => null,
+    'isShared' => false,
 ])
 
 @php
@@ -143,6 +144,12 @@
                             </span>
                         @endif
 
+                        @if (data_get($post, 'loai') === 'chia_se')
+                            <span class="text-sm text-slate-400 flex items-center gap-1">
+                                đã chia sẻ một bài viết
+                            </span>
+                        @endif
+
                         @if ($isVerified)
                             <span class="material-symbols-outlined text-base text-sky-400" data-icon="verified" style="font-variation-settings: 'FILL' 1;">
                                 verified
@@ -244,6 +251,19 @@
                 </div>
             @endif
 
+            @if(data_get($post, 'loai') === 'chia_se' && data_get($post, 'originalPost'))
+                <div class="mt-4 border border-white/10 rounded-2xl overflow-hidden relative">
+                    <div class="absolute inset-0 bg-slate-900/50 pointer-events-none"></div>
+                    <div class="relative z-10 p-1 pointer-events-none">
+                        <!-- Make the inner post non-interactive (or we can just render the UI simply) -->
+                        <div class="pointer-events-auto">
+                            @include('components.post-card', ['post' => data_get($post, 'originalPost'), 'isShared' => true])
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+            @if (!$isShared)
             <div class="flex flex-col gap-3 pt-4 border-t border-white/5 mt-4 text-slate-400">
                 <div class="relative" data-reaction-area>
                     <div class="flex items-center justify-between">
@@ -263,11 +283,12 @@
                                 <span class="text-[13px] sm:text-sm font-bold text-slate-500 group-hover:text-sky-400/80" data-comment-count>{{ $commentCount > 0 ? '('.$commentCount.')' : '' }}</span>
                             </button>
 
-                            <button class="group flex items-center gap-1.5 rounded-full px-3 py-1.5 sm:px-4 sm:py-2 text-slate-400 transition-all duration-300 hover:bg-slate-800/60 hover:text-emerald-400">
+                            <button type="button" data-share-button data-share-url="{{ route('posts.share', ['post' => $postId]) }}" class="group flex items-center gap-1.5 rounded-full px-3 py-1.5 sm:px-4 sm:py-2 text-slate-400 transition-all duration-300 hover:bg-slate-800/60 hover:text-emerald-400">
                                 <div class="relative flex items-center justify-center transition-transform group-hover:scale-110 group-active:scale-95">
                                     <span class="material-symbols-outlined text-[20px] sm:text-[22px]" data-icon="share">share</span>
                                 </div>
                                 <span class="text-[13px] sm:text-sm font-semibold tracking-wide hidden sm:block">Chia sẻ</span>
+                                <span class="text-[13px] sm:text-sm font-bold text-slate-500 group-hover:text-emerald-400/80" data-share-count>{{ $shareCount > 0 ? '('.$shareCount.')' : '' }}</span>
                             </button>
                         </div>
 
@@ -327,6 +348,7 @@
                     </div>
                 </div>
             </div>
+            @endif
         </div>
     </div>
 </article>

@@ -12,15 +12,15 @@ class PostController extends Controller
 
   public function index()
 {
-    $posts = BaiViet::with(['user', 'media']) // THÊM 'media' ở đây
-        ->withCount(['reactions', 'comments'])
+    $posts = BaiViet::with(['user', 'media', 'originalPost.user', 'originalPost.media']) // THÊM 'media' ở đây
+        ->withCount(['reactions', 'comments', 'shares'])
         ->with(['reactions' => function ($query) {
             $query->where('nguoi_dung_id', auth()->id());
         }, 'comments' => function ($query) {
             $query->whereNull('binh_luan_cha_id')->with(['user', 'nestedChildren'])->latest('ngay_tao');
         }])
         // XÓA HOẶC SỬA dòng ->where('loai', 'van_ban')
-        ->whereIn('loai', ['van_ban', 'hinh_anh']) // Lấy cả bài chữ và bài ảnh
+        ->whereIn('loai', ['van_ban', 'hinh_anh', 'chia_se']) // Lấy cả bài chữ và bài ảnh
         ->where('da_xoa', false)
         ->latest()
         ->take(20)
@@ -117,5 +117,39 @@ class PostController extends Controller
         $post->save();
         
         return back()->with('success', 'Bài viết đã được xóa thành công.');
+    }
+
+    public function share(Request $request, BaiViet $post)
+    {
+        // Kiểm tra xem bài gốc có phải là bài đã xóa không
+        if ($post->da_xoa) {
+            return response()->json(['success' => false, 'message' => 'Bài viết gốc không còn tồn tại.'], 404);
+        }
+
+        // Kiểm tra xem người dùng đã chia sẻ bài viết này chưa
+        $alreadyShared = BaiViet::where('bai_goc_id', $post->id)
+            ->where('nguoi_dung_id', auth()->id())
+            ->exists();
+
+        if ($alreadyShared) {
+            return response()->json(['success' => false, 'message' => 'Bạn đã chia sẻ bài viết này rồi.'], 400);
+        }
+
+        // Tạo bài viết mới với loại là chia_se
+        $sharedPost = BaiViet::create([
+            'nguoi_dung_id' => auth()->id(),
+            'loai' => 'chia_se',
+            'bai_goc_id' => $post->id,
+            'noi_dung' => $request->input('noi_dung', null),
+            'quyen_rieng_tu' => 'ban_be',
+        ]);
+
+        $sharesCount = BaiViet::where('bai_goc_id', $post->id)->count();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Chia sẻ bài viết thành công!',
+            'shares_count' => $sharesCount,
+        ]);
     }
 }

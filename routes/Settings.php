@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Settings\PersonalSettingsController;
+use App\Http\Controllers\ChatController;
 
 // --- THÊM CÁC ROUTE CÒN THIẾU VÀO ĐÂY ---
 // Đặt ngoài group 'settings.' để tên route khớp chuẩn 100% với file Blade

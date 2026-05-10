@@ -10,15 +10,15 @@ class HomeController extends Controller
 {
     public function index()
     {
-        $posts = BaiViet::with(['user', 'media'])
-            ->withCount(['reactions', 'comments'])
+        $posts = BaiViet::with(['user', 'media', 'originalPost.user', 'originalPost.media'])
+            ->withCount(['reactions', 'comments', 'shares'])
             ->with(['reactions' => function ($query) {
                 $query->where('nguoi_dung_id', auth()->id());
             }, 'comments' => function ($query) {
                 $query->whereNull('binh_luan_cha_id')->with(['user', 'nestedChildren'])->latest('ngay_tao');
             }])
             ->where('da_xoa', false)
-            ->whereIn('loai', ['van_ban', 'hinh_anh'])
+            ->whereIn('loai', ['van_ban', 'hinh_anh', 'chia_se'])
             ->latest()
             ->take(20)
             ->get();
