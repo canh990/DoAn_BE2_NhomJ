@@ -33,10 +33,15 @@ class ProfileController extends Controller
             ->latest('ngay_tao')
             ->get();
 
+        $userMedia = \App\Models\MediaBaiViet::whereIn('bai_viet_id', $user->posts()->pluck('id'))
+            ->latest('ngay_tao')
+            ->get();
+            
         return view('profile.profile', [
             'user' => $user,
             'posts' => $posts,
             'stories' => $stories,
+            'userMedia' => $userMedia,
         ]);
     }
 
@@ -72,10 +77,15 @@ class ProfileController extends Controller
             ->latest('ngay_tao')
             ->get();
 
+        $userMedia = \App\Models\MediaBaiViet::whereIn('bai_viet_id', $user->posts()->pluck('id'))
+            ->latest('ngay_tao')
+            ->get();
+
         return view('profile.profile', [
             'user' => $user,
             'posts' => $posts,
             'stories' => $stories,
+            'userMedia' => $userMedia,
         ]);
     }
 
