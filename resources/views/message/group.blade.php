@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('title', 'Nhom')
 
@@ -127,35 +127,46 @@
                                     <div class="mb-1 text-xs font-bold text-sky-300">{{ $displayName($chatMessage->sender) }}</div>
                                 @endunless
                                 <div class="rounded-[22px] border px-5 py-4 text-base font-semibold leading-relaxed {{ $isMine ? 'border-sky-300/30 bg-sky-400/20' : 'border-[#1d344e] bg-[#101827]' }}">
-                                    @if ($chatMessage->noi_dung)
-                                        <div class="whitespace-pre-wrap break-words">{{ $chatMessage->noi_dung }}</div>
-                                    @endif
-                                    @if ($chatMessage->media->isNotEmpty())
-                                        <div class="{{ $chatMessage->noi_dung ? 'mt-3' : '' }} space-y-3">
-                                            @foreach ($chatMessage->media as $media)
-                                                @if ($media->loai === 'hinh_anh')
-                                                    <a href="{{ asset($media->duong_dan) }}" target="_blank" class="block overflow-hidden rounded-2xl border border-white/10">
-                                                        <img src="{{ asset($media->duong_dan) }}" alt="{{ $attachmentName($media) }}" class="max-h-80 w-full object-cover">
-                                                    </a>
-                                                @elseif ($media->loai === 'video')
-                                                    <video controls class="max-h-80 w-full rounded-2xl border border-white/10 bg-black">
-                                                        <source src="{{ asset($media->duong_dan) }}">
-                                                    </video>
-                                                @elseif ($media->loai === 'am_thanh')
-                                                    <audio controls class="w-72 max-w-full">
-                                                        <source src="{{ asset($media->duong_dan) }}">
-                                                    </audio>
-                                                @else
-                                                    <a href="{{ asset($media->duong_dan) }}" target="_blank" class="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[.05] px-4 py-3 text-sm font-bold hover:bg-white/[.08]">
-                                                        <span class="grid h-9 w-9 place-items-center rounded-xl bg-sky-300 text-[#07111f]">F</span>
-                                                        <span class="min-w-0 truncate">{{ $attachmentName($media) }}</span>
-                                                    </a>
-                                                @endif
-                                            @endforeach
-                                        </div>
+                                    @if ($chatMessage->da_thu_hoi)
+                                        <div class="italic text-slate-400">Tin nhắn đã bị thu hồi</div>
+                                    @else
+                                        @if ($chatMessage->noi_dung)
+                                            <div class="whitespace-pre-wrap break-words">{{ $chatMessage->noi_dung }}</div>
+                                        @endif
+                                        @if ($chatMessage->media->isNotEmpty())
+                                            <div class="{{ $chatMessage->noi_dung ? 'mt-3' : '' }} space-y-3">
+                                                @foreach ($chatMessage->media as $media)
+                                                    @if ($media->loai === 'hinh_anh')
+                                                        <a href="{{ asset($media->duong_dan) }}" target="_blank" class="block overflow-hidden rounded-2xl border border-white/10">
+                                                            <img src="{{ asset($media->duong_dan) }}" alt="{{ $attachmentName($media) }}" class="max-h-80 w-full object-cover">
+                                                        </a>
+                                                    @elseif ($media->loai === 'video')
+                                                        <video controls class="max-h-80 w-full rounded-2xl border border-white/10 bg-black">
+                                                            <source src="{{ asset($media->duong_dan) }}">
+                                                        </video>
+                                                    @elseif ($media->loai === 'am_thanh')
+                                                        <audio controls class="w-72 max-w-full">
+                                                            <source src="{{ asset($media->duong_dan) }}">
+                                                        </audio>
+                                                    @else
+                                                        <a href="{{ asset($media->duong_dan) }}" target="_blank" class="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[.05] px-4 py-3 text-sm font-bold hover:bg-white/[.08]">
+                                                            <span class="grid h-9 w-9 place-items-center rounded-xl bg-sky-300 text-[#07111f]">F</span>
+                                                            <span class="min-w-0 truncate">{{ $attachmentName($media) }}</span>
+                                                        </a>
+                                                    @endif
+                                                @endforeach
+                                            </div>
+                                        @endif
                                     @endif
                                 </div>
-                                <div class="mt-1 text-xs font-semibold text-slate-500 {{ $isMine ? 'text-right' : '' }}">{{ optional($chatMessage->ngay_tao)->format('H:i') }}</div>
+                                <div class="mt-1 flex items-center gap-2 text-xs font-semibold text-slate-500 {{ $isMine ? 'justify-end' : 'justify-start' }}">
+                                    <span>{{ optional($chatMessage->ngay_tao)->format('H:i') }}</span>
+                                    @if ($isMine && !$chatMessage->da_thu_hoi)
+                                        <button type="button" class="delete-group-message text-red-400 hover:text-red-300" data-message-id="{{ $chatMessage->id }}" title="Thu hồi tin nhắn">
+                                            <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6h16ZM10 11v6M14 11v6"/></svg>
+                                        </button>
+                                    @endif
+                                </div>
                             </div>
                         </div>
                     @empty
@@ -195,6 +206,28 @@
                 </div>
             @endif
         </main>
+    </div>
+
+    <!-- Delete Group Message Modal -->
+    <div id="deleteGroupMessageModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4">
+        <div class="rounded-2xl border border-[#1b3047] bg-[#0d1423] shadow-2xl">
+            <div class="border-b border-[#1b3047] px-6 py-4">
+                <h3 class="text-lg font-bold text-slate-100">Xóa tin nhắn</h3>
+            </div>
+            <div class="p-6 space-y-3">
+                <button type="button" id="deleteGroupForMeBtn" class="w-full rounded-lg border border-[#1b3047] bg-[#101827] px-4 py-3 text-left font-semibold text-slate-100 hover:bg-[#1a2332] transition">
+                    <div class="font-bold text-slate-100">Xóa cho tôi</div>
+                    <div class="text-xs text-slate-400">Chỉ bạn mới nhìn thấy tin nhắn bị xóa</div>
+                </button>
+                <button type="button" id="deleteGroupForAllBtn" class="w-full rounded-lg border border-[#1b3047] bg-[#101827] px-4 py-3 text-left font-semibold text-slate-100 hover:bg-[#1a2332] transition">
+                    <div class="font-bold text-slate-100">Thu hồi cho cả nhóm</div>
+                    <div class="text-xs text-slate-400">Tất cả sẽ thấy tin nhắn bị thu hồi</div>
+                </button>
+                <button type="button" id="cancelGroupDeleteBtn" class="w-full rounded-lg border border-[#1b3047] bg-[#101827] px-4 py-3 text-center font-semibold text-slate-300 hover:bg-[#1a2332] transition">
+                    Hủy
+                </button>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -264,12 +297,23 @@
             groupMessages.innerHTML = messages.length
                 ? messages.map((message) => {
                     const mine = message.is_mine;
-                    const content = message.content
-                        ? `<div class="whitespace-pre-wrap break-words">${escapeHtml(message.content)}</div>`
-                        : '';
-                    const attachments = attachmentHtml(message.attachments);
+                    let content = '';
+                    if (message.is_recalled) {
+                        content = '<div class="italic text-slate-400">Tin nhắn đã bị thu hồi</div>';
+                    } else if (message.is_deleted) {
+                        content = '<div class="italic text-slate-400">Tin nhắn đã bị xóa</div>';
+                    } else if (message.content) {
+                        content = `<div class="whitespace-pre-wrap break-words">${escapeHtml(message.content)}</div>`;
+                    }
+                    
+                    const attachments = (message.is_recalled || message.is_deleted) ? '' : attachmentHtml(message.attachments);
                     const attachmentWrap = attachments
                         ? `<div class="${message.content ? 'mt-3' : ''} space-y-3">${attachments}</div>`
+                        : '';
+                    const deleteButton = mine && !message.is_recalled && !message.is_deleted
+                        ? `<button type="button" class="delete-group-message text-red-400 hover:text-red-300" data-message-id="${message.id}" title="Xóa tin nhắn">
+                            <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6h16ZM10 11v6M14 11v6"/></svg>
+                        </button>`
                         : '';
                     return `
                         <div class="flex ${mine ? 'justify-end' : 'justify-start'}">
@@ -279,7 +323,10 @@
                                     ${content}
                                     ${attachmentWrap}
                                 </div>
-                                <div class="mt-1 text-xs font-semibold text-slate-500 ${mine ? 'text-right' : ''}">${escapeHtml(message.time)}</div>
+                                <div class="mt-1 flex items-center gap-2 text-xs font-semibold text-slate-500 ${mine ? 'justify-end' : ''}">
+                                    <span>${escapeHtml(message.time)}</span>
+                                    ${deleteButton}
+                                </div>
                             </div>
                         </div>
                     `;
@@ -407,6 +454,76 @@
                     groupForm.requestSubmit();
                 }
             });
+
+            // Handle group message deletion
+            const deleteGroupModal = document.getElementById('deleteGroupMessageModal');
+            const deleteGroupForMeBtn = document.getElementById('deleteGroupForMeBtn');
+            const deleteGroupForAllBtn = document.getElementById('deleteGroupForAllBtn');
+            const cancelGroupDeleteBtn = document.getElementById('cancelGroupDeleteBtn');
+            let pendingGroupDeleteMessageId = null;
+
+            document.addEventListener('click', async (event) => {
+                const deleteButton = event.target.closest('.delete-group-message');
+                if (!deleteButton) return;
+
+                pendingGroupDeleteMessageId = deleteButton.dataset.messageId;
+                deleteGroupModal?.classList.remove('hidden');
+                deleteGroupModal?.classList.add('flex');
+            });
+
+            deleteGroupForMeBtn?.addEventListener('click', async () => {
+                if (confirm('Bạn chắc chắn muốn xóa tin nhắn này cho bạn?')) {
+                    await performGroupDelete('ca_nhan');
+                } else {
+                    deleteGroupModal?.classList.add('hidden');
+                    deleteGroupModal?.classList.remove('flex');
+                    pendingGroupDeleteMessageId = null;
+                }
+            });
+
+            deleteGroupForAllBtn?.addEventListener('click', async () => {
+                if (confirm('Bạn chắc chắn muốn thu hồi tin nhắn này cho cả nhóm? Người khác sẽ nhận thấy tin nhắn đã bị thu hồi.')) {
+                    await performGroupDelete('ca_hai');
+                } else {
+                    deleteGroupModal?.classList.add('hidden');
+                    deleteGroupModal?.classList.remove('flex');
+                    pendingGroupDeleteMessageId = null;
+                }
+            });
+
+            cancelGroupDeleteBtn?.addEventListener('click', () => {
+                deleteGroupModal?.classList.add('hidden');
+                deleteGroupModal?.classList.remove('flex');
+                pendingGroupDeleteMessageId = null;
+            });
+
+            async function performGroupDelete(type) {
+                const messageId = pendingGroupDeleteMessageId;
+                const token = groupForm.querySelector('input[name="_token"]')?.value;
+                if (!token || !messageId) return;
+
+                deleteGroupModal?.classList.add('hidden');
+                deleteGroupModal?.classList.remove('flex');
+
+                const response = await fetch(`/chat-groups/messages/${messageId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        Accept: 'application/json',
+                        'X-CSRF-TOKEN': token,
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({ type }),
+                });
+
+                if (response.ok) {
+                    await loadGroupMessages();
+                } else {
+                    alert('Không thể xóa tin nhắn. Vui lòng thử lại.');
+                }
+                pendingGroupDeleteMessageId = null;
+            }
 
             loadGroupMessages();
             setInterval(loadGroupMessages, 2500);

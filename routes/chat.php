@@ -11,9 +11,12 @@ Route::middleware('auth')->group(function () {
     Route::post('/chat1-1/users/{user}/messages', [ChatController::class, 'storeUserMessage'])->name('chat.user.messages.store');
     Route::post('/chat1-1/conversations', [ChatController::class, 'storeConversation'])->name('chat.conversations.store');
     Route::post('/chat1-1/conversations/{conversation}/messages', [ChatController::class, 'storeMessage'])->name('chat.messages.store');
+    Route::delete('/chat1-1/messages/{message}', [ChatController::class, 'deleteMessage'])->name('chat.messages.destroy');
 
     Route::get('/chat-groups', [GroupChatController::class, 'index'])->name('chat.groups.index');
     Route::post('/chat-groups', [GroupChatController::class, 'store'])->name('chat.groups.store');
     Route::get('/chat-groups/{conversation}/messages', [GroupChatController::class, 'messages'])->name('chat.groups.messages.index');
     Route::post('/chat-groups/{conversation}/messages', [GroupChatController::class, 'storeMessage'])->name('chat.groups.messages.store');
+    Route::delete('/chat-groups/messages/{message}', [GroupChatController::class, 'deleteMessage'])->name('chat.groups.messages.destroy');
 });
+
