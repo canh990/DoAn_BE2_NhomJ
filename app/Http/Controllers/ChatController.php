@@ -8,6 +8,8 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
 
 class ChatController extends Controller
 {
@@ -33,7 +35,7 @@ class ChatController extends Controller
 
                 if ($conversation) {
                     $messages = $conversation->messages()
-                        ->with('sender')
+                        ->with(['sender', 'media'])
                         ->orderBy('ngay_tao')
                         ->get();
                 }
@@ -45,9 +47,8 @@ class ChatController extends Controller
 
     public function storeConversation(Request $request)
     {
-        $data = $request->validate([
+        $data = $this->validateMessageInput($request, [
             'user_id' => ['required', 'integer', 'exists:nguoi_dung,id'],
-            'noi_dung' => ['required', 'string', 'max:5000'],
         ]);
 
         $currentUser = Auth::user();
@@ -56,7 +57,7 @@ class ChatController extends Controller
         $conversation = $this->findPrivateConversation($currentUser->id, (int) $data['user_id'])
             ?? $this->createPrivateConversation($currentUser->id, (int) $data['user_id']);
 
-        $message = $this->createMessage($conversation, $currentUser->id, $data['noi_dung']);
+        $message = $this->createMessage($conversation, $currentUser->id, $data['noi_dung'] ?? null, $request);
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -70,14 +71,12 @@ class ChatController extends Controller
 
     public function storeMessage(Request $request, Conversation $conversation)
     {
-        $data = $request->validate([
-            'noi_dung' => ['required', 'string', 'max:5000'],
-        ]);
+        $data = $this->validateMessageInput($request);
 
         $currentUser = Auth::user();
         abort_unless($conversation->loai === 'ca_nhan' && $conversation->members()->whereKey($currentUser->id)->exists(), 403);
 
-        $message = $this->createMessage($conversation, $currentUser->id, $data['noi_dung']);
+        $message = $this->createMessage($conversation, $currentUser->id, $data['noi_dung'] ?? null, $request);
 
         $otherUserId = $conversation->members()
             ->whereKeyNot($currentUser->id)
@@ -100,7 +99,7 @@ class ChatController extends Controller
 
         $conversation = $this->findPrivateConversation($currentUser->id, $user->id);
         $messages = $conversation
-            ? $conversation->messages()->orderBy('ngay_tao')->get()
+            ? $conversation->messages()->with('media')->orderBy('ngay_tao')->get()
             : collect();
 
         return response()->json([
@@ -111,9 +110,7 @@ class ChatController extends Controller
 
     public function storeUserMessage(Request $request, User $user)
     {
-        $data = $request->validate([
-            'noi_dung' => ['required', 'string', 'max:5000'],
-        ]);
+        $data = $this->validateMessageInput($request);
 
         $currentUser = Auth::user();
         abort_if($user->id === $currentUser->id, 422);
@@ -121,7 +118,7 @@ class ChatController extends Controller
         $conversation = $this->findPrivateConversation($currentUser->id, $user->id)
             ?? $this->createPrivateConversation($currentUser->id, $user->id);
 
-        $message = $this->createMessage($conversation, $currentUser->id, $data['noi_dung']);
+        $message = $this->createMessage($conversation, $currentUser->id, $data['noi_dung'] ?? null, $request);
 
         return response()->json([
             'conversation_id' => $conversation->id,
@@ -207,17 +204,75 @@ class ChatController extends Controller
         return $conversation;
     }
 
-    private function createMessage(Conversation $conversation, int $senderId, string $content): Message
+    private function createMessage(Conversation $conversation, int $senderId, ?string $content, Request $request): Message
     {
         $message = Message::create([
             'cuoc_tro_chuyen_id' => $conversation->id,
             'nguoi_gui_id' => $senderId,
-            'noi_dung' => trim($content),
+            'noi_dung' => filled($content) ? trim($content) : null,
         ]);
+
+        $this->storeAttachments($message, $request);
 
         $conversation->touch();
 
-        return $message;
+        return $message->load('media');
+    }
+
+    private function validateMessageInput(Request $request, array $extraRules = []): array
+    {
+        return $request->validate($extraRules + [
+            'noi_dung' => ['nullable', 'string', 'max:5000', 'required_without:attachments'],
+            'attachments' => ['nullable', 'array', 'max:6'],
+            'attachments.*' => ['file', 'max:20480', 'mimes:jpg,jpeg,png,gif,webp,mp4,mov,avi,webm,mp3,wav,ogg,m4a,weba,pdf,doc,docx,xls,xlsx,ppt,pptx,txt,zip,rar'],
+        ], [
+            'noi_dung.required_without' => 'Nhap tin nhan hoac chon tep de gui.',
+            'attachments.*.max' => 'Moi tep toi da 20MB.',
+            'attachments.*.mimes' => 'Chi ho tro anh, video, am thanh va cac tep pho bien.',
+        ]);
+    }
+
+    private function storeAttachments(Message $message, Request $request): void
+    {
+        if (! $request->hasFile('attachments')) {
+            return;
+        }
+
+        $directory = public_path('uploads/message-media');
+        File::ensureDirectoryExists($directory);
+
+        foreach ($request->file('attachments') as $file) {
+            if (! $file->isValid()) {
+                continue;
+            }
+
+            $mediaType = $this->mediaType($file->getMimeType());
+            $extension = $file->getClientOriginalExtension();
+            $filename = Str::uuid().($extension ? '.'.$extension : '');
+            $file->move($directory, $filename);
+
+            $message->media()->create([
+                'loai' => $mediaType,
+                'duong_dan' => 'uploads/message-media/'.$filename,
+            ]);
+        }
+    }
+
+    private function mediaType(?string $mimeType): string
+    {
+        if (Str::startsWith((string) $mimeType, 'image/')) {
+            return 'hinh_anh';
+        }
+
+        if (Str::startsWith((string) $mimeType, 'video/')) {
+            return 'video';
+        }
+
+        if (Str::startsWith((string) $mimeType, 'audio/')) {
+            return 'am_thanh';
+        }
+
+        return 'tap_tin';
     }
 
     private function formatMessage(Message $message, int $currentUserId): array
@@ -226,6 +281,11 @@ class ChatController extends Controller
             'id' => $message->id,
             'sender_id' => $message->nguoi_gui_id,
             'content' => $message->noi_dung,
+            'attachments' => $message->media->map(fn ($media) => [
+                'type' => $media->loai,
+                'url' => asset($media->duong_dan),
+                'name' => basename($media->duong_dan),
+            ])->values(),
             'time' => optional($message->ngay_tao)->format('H:i'),
             'is_mine' => $message->nguoi_gui_id === $currentUserId,
         ];
