@@ -1,16 +1,18 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Group Chat</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+@extends('layouts.app')
+
+@section('title', 'Nhom')
+
+@section('content')
     <style>
-        body { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-        * { scrollbar-width: thin; scrollbar-color: #256d8f #0b1220; }
+        .chat-surface { scrollbar-width: thin; scrollbar-color: #21455f #0b1220; }
+        .avatar-ring { box-shadow: 0 0 0 1px rgba(125, 211, 252, .4), 0 12px 28px rgba(0, 0, 0, .28); }
+        .chat-bg {
+            background:
+                radial-gradient(circle at 72% 18%, rgba(36, 88, 119, .18), transparent 26%),
+                radial-gradient(circle at 40% 82%, rgba(27, 51, 80, .18), transparent 28%),
+                #080d18;
+        }
     </style>
-</head>
-<body class="h-screen overflow-hidden bg-[#080d18] text-slate-100">
     @php
         $displayName = fn ($user) => $user->ten_dang_nhap ?: ($user->email ?: 'Nguoi dung');
         $avatarText = fn ($text) => mb_strtoupper(mb_substr($text ?: 'N', 0, 1));
@@ -18,70 +20,13 @@
         $attachmentName = fn ($media) => basename($media->duong_dan);
     @endphp
 
-    <div class="grid h-screen grid-cols-[318px_400px_minmax(0,1fr)] bg-[#080d18]">
-        <aside class="flex min-h-0 flex-col border-r border-[#1b3047] bg-[#0d1423]">
-            <div class="flex items-center gap-4 px-7 py-6">
-                <div class="grid h-12 w-12 place-items-center rounded-full border border-sky-400/50 bg-sky-400/15 text-3xl font-bold text-sky-300">*</div>
-                <div>
-                    <div class="text-xl font-bold text-sky-300">Glacier Chat</div>
-                    <div class="text-xs font-bold uppercase tracking-[.28em] text-sky-400">Truc tuyen</div>
-                </div>
-            </div>
-
-            <nav class="mt-5 space-y-4 px-3 text-lg font-semibold text-slate-400">
-                <a href="{{ route('chat.demo') }}" class="flex items-center gap-5 px-5 py-3 hover:bg-white/[.04] hover:text-sky-300">
-                    <span class="grid h-8 w-8 place-items-center rounded bg-slate-700 text-slate-300">≡</span>
-                    <span>Tin nhan</span>
-                </a>
-                <div class="flex items-center gap-5 px-5 py-3">
-                    <span class="text-3xl text-slate-500">☏</span>
-                    <span>Cuoc goi</span>
-                </div>
-                <div class="flex items-center gap-5 px-5 py-3">
-                    <span class="text-3xl text-slate-500">□</span>
-                    <span>Danh ba</span>
-                </div>
-                <a href="{{ route('chat.groups.index') }}" class="flex items-center gap-5 border-r-2 border-sky-400 bg-sky-500/14 px-5 py-4 text-sky-300">
-                    <span class="text-3xl">☷</span>
-                    <span>Nhom</span>
-                </a>
-                <div class="flex items-center gap-5 px-5 py-3">
-                    <span class="text-3xl text-slate-500">▤</span>
-                    <span>Luu tru</span>
-                </div>
-            </nav>
-
-            <div class="mt-auto border-t border-[#1b3047] p-3">
-                <div class="mb-6 flex items-center gap-5 px-5 py-4 text-lg font-semibold text-slate-400">
-                    <span class="text-3xl">⚙</span>
-                    <span>Cai dat</span>
-                </div>
-
-                <div class="flex items-center justify-between rounded-[28px] border border-[#1b3047] bg-[#101a2b] px-5 py-4">
-                    <div class="flex min-w-0 items-center gap-3">
-                        <div class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-gradient-to-br from-sky-300 to-teal-500 font-bold text-[#07111f]">
-                            {{ $avatarText($displayName($currentUser)) }}
-                        </div>
-                        <div class="min-w-0">
-                            <div class="truncate font-bold">{{ $displayName($currentUser) }}</div>
-                            <div class="truncate text-sm text-slate-400">Dang hoat dong</div>
-                        </div>
-                    </div>
-
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <button class="text-sm font-semibold text-sky-300 hover:text-sky-200" type="submit">Thoat</button>
-                    </form>
-                </div>
-            </div>
-        </aside>
-
+    <div class="chat-surface grid h-[calc(100vh-64px)] grid-cols-[380px_minmax(0,1fr)] overflow-hidden bg-[#080d18] text-slate-100">
         <section class="flex min-h-0 flex-col border-r border-[#1b3047] bg-[#0b1220]">
-            <div class="border-b border-[#1b3047] p-6">
-                <div class="flex items-center justify-between">
+            <div class="border-b border-[#1b3047] px-8 py-7">
+                <div class="flex items-center justify-between gap-4">
                     <div>
                         <h1 class="text-3xl font-extrabold text-slate-100">Nhom</h1>
-                        <p class="text-sm font-semibold text-slate-400">{{ $displayName($currentUser) }}</p>
+                        <p class="mt-1 text-sm font-semibold text-slate-500">Tin nhan nhom</p>
                     </div>
                     <a href="{{ route('chat.demo') }}" class="rounded-2xl border border-sky-400/30 px-4 py-2 text-sm font-bold text-sky-300 hover:bg-sky-400/10">1-1</a>
                 </div>
@@ -155,7 +100,7 @@
             </div>
         </section>
 
-        <main class="flex min-h-0 flex-col bg-[#080d18]">
+        <main class="chat-bg flex min-h-0 flex-col">
             @if ($activeGroup)
                 <header class="flex h-[76px] items-center justify-between border-b border-[#1b3047] bg-[#0d1423] px-8">
                     <div class="flex min-w-0 items-center gap-4">
@@ -467,5 +412,4 @@
             setInterval(loadGroupMessages, 2500);
         }
     </script>
-</body>
-</html>
+@endsection
