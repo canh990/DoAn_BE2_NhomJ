@@ -106,10 +106,10 @@ $profileUrl = route('profile.public', ['username' => $user->ten_dang_nhap]);
 
     <div class="sticky top-16 z-30 mt-8 border-b border-sky-400/10 bg-[#0a0e1a]/80 backdrop-blur-md">
         <div class="no-scrollbar flex overflow-x-auto px-2">
-            <button class="whitespace-nowrap border-b-2 border-sky-400 px-6 py-4 font-bold text-sky-300 transition-all">Bài đăng</button>
-            <button class="whitespace-nowrap px-6 py-4 font-medium text-slate-400 transition-all hover:bg-white/5 hover:text-sky-200">Phản hồi</button>
-            <button class="whitespace-nowrap px-6 py-4 font-medium text-slate-400 transition-all hover:bg-white/5 hover:text-sky-200">Hình ảnh</button>
-            <button class="whitespace-nowrap px-6 py-4 font-medium text-slate-400 transition-all hover:bg-white/5 hover:text-sky-200">Thích</button>
+            <button id="btn-tab-bai-dang" data-tab="bai-dang" class="tab-btn whitespace-nowrap border-b-2 border-sky-400 px-6 py-4 font-bold text-sky-300 transition-all">Bài đăng</button>
+            <button id="btn-tab-phan-hoi" data-tab="phan-hoi" class="tab-btn whitespace-nowrap px-6 py-4 font-medium text-slate-400 transition-all hover:bg-white/5 hover:text-sky-200">Phản hồi</button>
+            <button id="btn-tab-phuong-tien" data-tab="phuong-tien" class="tab-btn whitespace-nowrap px-6 py-4 font-medium text-slate-400 transition-all hover:bg-white/5 hover:text-sky-200">Phương tiện</button>
+            <button id="btn-tab-thich" data-tab="thich" class="tab-btn whitespace-nowrap px-6 py-4 font-medium text-slate-400 transition-all hover:bg-white/5 hover:text-sky-200">Thích</button>
         </div>
     </div>
 
@@ -152,46 +152,128 @@ $profileUrl = route('profile.public', ['username' => $user->ten_dang_nhap]);
                 <div class="glass-panel space-y-4 rounded-2xl p-5">
                     <div class="flex items-center justify-between">
                         <h3 class="text-lg font-bold text-sky-300">Phương tiện</h3>
-                        <button class="text-xs text-sky-300 hover:underline">Xem tất cả</button>
+                        <button id="btn-view-all-media" class="text-xs text-sky-300 hover:underline">Xem tất cả</button>
                     </div>
                     <div class="grid grid-cols-3 gap-2">
-                        <div class="aspect-square overflow-hidden rounded-lg bg-slate-800"><img class="h-full w-full object-cover transition-transform duration-500 hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAcJ-QooLwGSegkbQYTxdBq5P5q5gaQT4yoYAwnrdJ3lBsIFFXLjdGUEVrUw1JiEQsL-Px0AqQGCSndymq7KsfrKTrLN0nZKUYGnkVvYwaPlgja8OMe5cq_88kvnV7sc_0e7kX1gWZth-L7hJWrd7amohSFhp7r-e6Q5bUDaTV7Ocg9pFRRoVXztX_mDAlQDcb5YH_pfqHKTwk1TOtDo8g2sv8vjim10WuBLKp3tH-k9HFEDxRlMhpVUffRR40gicaB9f5phb0iFkI" /></div>
-                        <div class="aspect-square overflow-hidden rounded-lg bg-slate-800"><img class="h-full w-full object-cover transition-transform duration-500 hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDJ1pV1EdqRMUvrmPQV1YmlQN1SQbVVZKK_AjI8Fq5GGKlVqkeZ3pkGcAlZgM9oBcOKLFRRb79FW2GPHH5LruN4B1KEZewuwSXuwM6HtQ85TpTGO9kzT12mPiIKXWGjHx0geVnHouKJO5p6r3cwlA3_FP8py_xR5CsYtGphnkotu_MeA-9gZ4d8mY7iq63EI0sad2twkWs_IBa44lh_pcCI8AUk0d7MSJ-VbVJKh_2Orn29kLLp2xbVLpQ0u2Ct5bnfiVQGAPCo170" /></div>
-                        <div class="aspect-square overflow-hidden rounded-lg bg-slate-800"><img class="h-full w-full object-cover transition-transform duration-500 hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDVLN5mzLMVOyuWiXAutttI_EloRRs0k2frSwqkUe03DyV9DcDIGDh-Tt9JYVE3DhIwojrKvMiWhOvBagxt0-lEXoICAeW_PXYL-wBYggxCqY-NFNs7Go34j_kvXEO6GEw0ZZOAftN8Ez3sYrH1qNohrrg19sYc51sFuiZto54EYo-VZPbNeV4Fep00902OvhVAp0xROh3uUhHgFyUQcFXfE-BK48aTCvjrV-o8JblcWa4OLCkLYzb9GFFcStm3l3SnlusKETi_T_M" /></div>
-                        <div class="aspect-square overflow-hidden rounded-lg bg-slate-800"><img class="h-full w-full object-cover transition-transform duration-500 hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCLD7ngkFLziGv9MzlIa5dyTTUUxIfiCAlKMY1sSxAWvU9q1JgVxxszn6Z3lzKKAuNya2eQSqXkQn2ibNUNQ6RsxxDzuegPYwmkEL5xgbtkSGuPF80cLWBRyrDys3YtRaWojkKy2mO8rF4ugg8v8RMpm8NMoycOA5KHGbL-gw5_mNjJ2190O1Gql2KT3bBWPV2SbdtM4KKY9S8FcYEGPYfq1Do25twrzgUU1cJy60q2jBvHAWAUALcW6T1Vk-lGeP7iW_LUdYgSzhM" /></div>
-                        <div class="aspect-square overflow-hidden rounded-lg bg-slate-800"><img class="h-full w-full object-cover transition-transform duration-500 hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBAgiicC-g8lvn-X0_aktsjCh_w-lEMB0tLQtzkGbzb3kHkEUSYA206VV_FuNupxt0gQuvO7zr3BDIVqS3mN13A5SRsMdBIql84sDnRYxhcbB8a0QgK1aiHMxaun4LlTxV92DfatsEKXQB_wejyCJMWB3UYusrsUIsXGurTZUYYQq_3RYgCq0SHAdlZEd08FC389FjOE6gKyIjM2oy8OVx4NIBgjPWoxXz71rE4xUIHDt76nRtBy1FdotYtbvK99jT4RJ8kTr7tUjQ" /></div>
-                        <div class="aspect-square overflow-hidden rounded-lg bg-slate-800"><img class="h-full w-full object-cover transition-transform duration-500 hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDsTkjQnhVrNwndcrogjc0i8VzJpIGp2G-6X9ahqHzbJmvrE_sXtHWZMql1A9GuQeAW90tgZuf_IZiPt_XqCFeC7xOFb1HcHjtPG2NnJ5e99P-QKr46bnN88MGK3N5vbk2-jMvECmuVSxY7WCW9UCvY2tVtIdNFXpbxqtQxvXgGxn9_o6dT-18aaKk9hDQSJbepRA8YMWcmw4ppPIHzFruvDT1HiirQoZGI66810-em0UneqhxOE24PHi_amXdzgXdCwDCHA2yoh3k" /></div>
+                        @forelse($userMedia->take(6) as $media)
+                            @php
+                                $mediaSrc = \Illuminate\Support\Str::startsWith($media->duong_dan, ['http://', 'https://'])
+                                    ? $media->duong_dan
+                                    : asset('storage/' . ltrim($media->duong_dan, '/'));
+                                $isVideo = $media->loai === 'video' || \Illuminate\Support\Str::endsWith($media->duong_dan, ['.mp4', '.webm', '.mov']);
+                            @endphp
+                            <a href="{{ route('posts.show', $media->bai_viet_id) }}" class="aspect-square overflow-hidden rounded-lg bg-slate-800 relative group block">
+                                @if($isVideo)
+                                    <video src="{{ $mediaSrc }}" class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" muted playsinline></video>
+                                    <div class="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-colors">
+                                        <span class="material-symbols-outlined text-white text-xl drop-shadow-md">play_circle</span>
+                                    </div>
+                                @else
+                                    <img class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" 
+                                         src="{{ $mediaSrc }}" 
+                                         alt="Media" />
+                                @endif
+                            </a>
+                        @empty
+                            <div class="col-span-3 py-8 text-center text-sm text-slate-500 bg-slate-900/50 rounded-xl border border-dashed border-white/10">
+                                Chưa có ảnh hoặc video nào.
+                            </div>
+                        @endforelse
                     </div>
                 </div>
             </div>
 
             <div class="space-y-6 md:col-span-2">
                 @if(!$isOwnProfile && $user->quyen_rieng_tu === 'rieng_tu')
-                <div class="glass-panel flex flex-col items-center justify-center rounded-3xl p-12 text-center h-full min-h-[300px]">
-                    <div class="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-slate-800/50 text-slate-500 border border-slate-700/50">
-                        <span class="material-symbols-outlined text-4xl" data-icon="lock">lock</span>
-                    </div>
-                    <h3 class="text-xl font-bold text-on-surface">Đây là tài khoản riêng tư</h3>
-                    <p class="mt-2 text-slate-400">Chỉ những người được cấp quyền mới có thể xem nội dung của người dùng này.</p>
-                </div>
-                @else
-                    {{-- ===== STORIES BAR ===== --}}
-                    @include('components.stories-bar', ['stories' => $stories ?? collect()])
-
-                    @if(isset($posts) && $posts->count() > 0)
-                    @foreach($posts as $post)
-                    <x-post-card :post="$post" />
-                    @endforeach
-                    @else
-                    {{-- Phần thay đổi ở đây --}}
-                    <div class="glass-panel flex flex-col items-center justify-center rounded-3xl p-12 text-center">
-                        <div class="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-slate-800/50 text-slate-500">
-                            <span class="material-symbols-outlined text-4xl" data-icon="post_add">post_add</span>
+                    <div class="glass-panel flex flex-col items-center justify-center rounded-3xl p-12 text-center h-full min-h-[300px]">
+                        <div class="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-slate-800/50 text-slate-500 border border-slate-700/50">
+                            <span class="material-symbols-outlined text-4xl" data-icon="lock">lock</span>
                         </div>
-                        <h3 class="text-xl font-bold text-on-surface">Chưa có bài đăng nào</h3>
-                        <p class="mt-2 text-slate-400">Người dùng này vẫn chưa chia sẻ bài viết nào với cộng đồng.</p>
+                        <h3 class="text-xl font-bold text-on-surface">Đây là tài khoản riêng tư</h3>
+                        <p class="mt-2 text-slate-400">Chỉ những người được cấp quyền mới có thể xem nội dung của người dùng này.</p>
                     </div>
-                    @endif
+                @else
+                    {{-- Tab Bài đăng --}}
+                    <div id="tab-content-bai-dang" class="tab-content space-y-6">
+                        @include('components.stories-bar', ['stories' => $stories ?? collect()])
+
+                        @if(isset($posts) && $posts->count() > 0)
+                            @foreach($posts as $post)
+                                <x-post-card :post="$post" />
+                            @endforeach
+                        @else
+                            <div class="glass-panel flex flex-col items-center justify-center rounded-3xl p-12 text-center">
+                                <div class="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-slate-800/50 text-slate-500">
+                                    <span class="material-symbols-outlined text-4xl" data-icon="post_add">post_add</span>
+                                </div>
+                                <h3 class="text-xl font-bold text-on-surface">Chưa có bài đăng nào</h3>
+                                <p class="mt-2 text-slate-400">Người dùng này vẫn chưa chia sẻ bài viết nào với cộng đồng.</p>
+                            </div>
+                        @endif
+                    </div>
+
+                    {{-- Tab Phương tiện --}}
+                    <div id="tab-content-phuong-tien" class="tab-content hidden">
+                        <div class="glass-panel rounded-3xl p-4 sm:p-6">
+                            <h3 class="text-xl font-bold text-sky-300 mb-6 flex items-center gap-2">
+                                <span class="material-symbols-outlined">perm_media</span>
+                                Tất cả phương tiện
+                            </h3>
+                            
+                            @if($userMedia->count() > 0)
+                                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                                    @foreach($userMedia as $media)
+                                        @php
+                                            $mediaSrc = \Illuminate\Support\Str::startsWith($media->duong_dan, ['http://', 'https://'])
+                                                ? $media->duong_dan
+                                                : asset('storage/' . ltrim($media->duong_dan, '/'));
+                                            $isVideo = $media->loai === 'video' || \Illuminate\Support\Str::endsWith($media->duong_dan, ['.mp4', '.webm', '.mov']);
+                                        @endphp
+                                        <a href="{{ route('posts.show', $media->bai_viet_id) }}" class="aspect-square overflow-hidden rounded-2xl bg-slate-900 border border-white/5 relative group block">
+                                            @if($isVideo)
+                                                <video src="{{ $mediaSrc }}" class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" muted playsinline></video>
+                                                <div class="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-colors">
+                                                    <span class="material-symbols-outlined text-white text-3xl drop-shadow-md">play_circle</span>
+                                                </div>
+                                            @else
+                                                <img class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" 
+                                                     src="{{ $mediaSrc }}" 
+                                                     alt="Media" />
+                                            @endif
+                                            
+                                            <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
+                                                <span class="text-[10px] text-white/80 font-medium">
+                                                    {{ $media->ngay_tao ? \Carbon\Carbon::parse($media->ngay_tao)->format('d/m/Y') : '' }}
+                                                </span>
+                                            </div>
+                                        </a>
+                                    @endforeach
+                                </div>
+                            @else
+                                <div class="flex flex-col items-center justify-center py-20 text-center">
+                                    <div class="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-slate-800/50 text-slate-500 border border-dashed border-slate-700">
+                                        <span class="material-symbols-outlined text-4xl">no_photography</span>
+                                    </div>
+                                    <h3 class="text-lg font-bold text-on-surface">Không tìm thấy phương tiện</h3>
+                                    <p class="mt-2 text-slate-400">Người dùng này chưa đăng tải hình ảnh hoặc video nào.</p>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+
+                    {{-- Các tab khác (Placeholder) --}}
+                    <div id="tab-content-phan-hoi" class="tab-content hidden">
+                        <div class="glass-panel rounded-3xl p-12 text-center">
+                            <span class="material-symbols-outlined text-5xl text-slate-600 mb-4">forum</span>
+                            <p class="text-slate-400 text-lg font-medium">Chức năng xem phản hồi đang được phát triển.</p>
+                        </div>
+                    </div>
+                    <div id="tab-content-thich" class="tab-content hidden">
+                        <div class="glass-panel rounded-3xl p-12 text-center">
+                            <span class="material-symbols-outlined text-5xl text-slate-600 mb-4">favorite</span>
+                            <p class="text-slate-400 text-lg font-medium">Chức năng xem bài viết đã thích đang được phát triển.</p>
+                        </div>
+                    </div>
                 @endif
             </div>
         </div>
@@ -200,6 +282,44 @@ $profileUrl = route('profile.public', ['username' => $user->ten_dang_nhap]);
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Tab switching logic
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const tabId = this.getAttribute('data-tab');
+
+                // Update buttons
+                tabBtns.forEach(b => {
+                    b.classList.remove('border-b-2', 'border-sky-400', 'font-bold', 'text-sky-300');
+                    b.classList.add('font-medium', 'text-slate-400');
+                });
+                this.classList.remove('font-medium', 'text-slate-400');
+                this.classList.add('border-b-2', 'border-sky-400', 'font-bold', 'text-sky-300');
+
+                // Update contents
+                tabContents.forEach(content => {
+                    content.classList.add('hidden');
+                });
+        const targetContent = document.getElementById(`tab-content-${tabId}`);
+                if (targetContent) {
+                    targetContent.classList.remove('hidden');
+                }
+            });
+        });
+
+        // "Xem tất cả" media button logic
+        const btnViewAllMedia = document.getElementById('btn-view-all-media');
+        const btnTabPhuongTien = document.getElementById('btn-tab-phuong-tien');
+        if (btnViewAllMedia && btnTabPhuongTien) {
+            btnViewAllMedia.addEventListener('click', function() {
+                btnTabPhuongTien.click();
+                // Tùy chọn: Cuộn lên đến phần tab
+                btnTabPhuongTien.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            });
+        }
+
         const followBtn = document.getElementById('follow-btn');
         const followersCount = document.getElementById('followers-count');
 
