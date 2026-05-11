@@ -7,6 +7,7 @@ use App\Models\Message;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 
 class GroupChatController extends Controller
@@ -37,7 +38,7 @@ class GroupChatController extends Controller
 
         if ($activeGroup) {
             $messages = $activeGroup->messages()
-                ->with('sender')
+                ->with(['sender', 'media'])
                 ->orderBy('ngay_tao')
                 ->get();
         }
@@ -100,7 +101,7 @@ class GroupChatController extends Controller
 
         $currentUser = Auth::user();
         $messages = $conversation->messages()
-            ->with('sender')
+            ->with(['sender', 'media'])
             ->orderBy('ngay_tao')
             ->get();
 
@@ -114,20 +115,28 @@ class GroupChatController extends Controller
         $this->authorizeGroupMember($conversation);
 
         $data = $request->validate([
-            'noi_dung' => ['required', 'string', 'max:5000'],
+            'noi_dung' => ['nullable', 'string', 'max:5000', 'required_without:attachments'],
+            'attachments' => ['nullable', 'array', 'max:6'],
+            'attachments.*' => ['file', 'max:20480', 'mimes:jpg,jpeg,png,gif,webp,mp4,mov,avi,webm,mp3,wav,ogg,m4a,weba,pdf,doc,docx,xls,xlsx,ppt,pptx,txt,zip,rar'],
+        ], [
+            'noi_dung.required_without' => 'Nhap tin nhan hoac chon tep de gui.',
+            'attachments.*.max' => 'Moi tep toi da 20MB.',
+            'attachments.*.mimes' => 'Chi ho tro anh, video, am thanh va cac tep pho bien.',
         ]);
 
         $message = Message::create([
             'cuoc_tro_chuyen_id' => $conversation->id,
             'nguoi_gui_id' => Auth::id(),
-            'noi_dung' => trim($data['noi_dung']),
+            'noi_dung' => filled($data['noi_dung'] ?? null) ? trim($data['noi_dung']) : null,
         ]);
+
+        $this->storeAttachments($message, $request);
 
         $conversation->touch();
 
         if ($request->expectsJson()) {
             return response()->json([
-                'message' => $this->formatMessage($message->load('sender'), Auth::id()),
+                'message' => $this->formatMessage($message->load(['sender', 'media']), Auth::id()),
             ]);
         }
 
@@ -142,6 +151,49 @@ class GroupChatController extends Controller
         );
     }
 
+    private function storeAttachments(Message $message, Request $request): void
+    {
+        if (! $request->hasFile('attachments')) {
+            return;
+        }
+
+        $directory = public_path('uploads/message-media');
+        File::ensureDirectoryExists($directory);
+
+        foreach ($request->file('attachments') as $file) {
+            if (! $file->isValid()) {
+                continue;
+            }
+
+            $mediaType = $this->mediaType($file->getMimeType());
+            $extension = $file->getClientOriginalExtension();
+            $filename = Str::uuid().($extension ? '.'.$extension : '');
+            $file->move($directory, $filename);
+
+            $message->media()->create([
+                'loai' => $mediaType,
+                'duong_dan' => 'uploads/message-media/'.$filename,
+            ]);
+        }
+    }
+
+    private function mediaType(?string $mimeType): string
+    {
+        if (Str::startsWith((string) $mimeType, 'image/')) {
+            return 'hinh_anh';
+        }
+
+        if (Str::startsWith((string) $mimeType, 'video/')) {
+            return 'video';
+        }
+
+        if (Str::startsWith((string) $mimeType, 'audio/')) {
+            return 'am_thanh';
+        }
+
+        return 'tap_tin';
+    }
+
     private function formatMessage(Message $message, int $currentUserId): array
     {
         return [
@@ -149,6 +201,11 @@ class GroupChatController extends Controller
             'sender_id' => $message->nguoi_gui_id,
             'sender_name' => $message->sender?->ten_dang_nhap ?: ($message->sender?->email ?: 'Thanh vien'),
             'content' => $message->noi_dung,
+            'attachments' => $message->media->map(fn ($media) => [
+                'type' => $media->loai,
+                'url' => asset($media->duong_dan),
+                'name' => basename($media->duong_dan),
+            ])->values(),
             'time' => optional($message->ngay_tao)->format('H:i'),
             'is_mine' => $message->nguoi_gui_id === $currentUserId,
         ];
