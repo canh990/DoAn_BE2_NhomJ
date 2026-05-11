@@ -111,19 +111,21 @@
 
 <article {{ $attributes->merge(['class' => 'glass-panel group rounded-2xl p-6 transition-all hover:border-sky-400/30']) }}>
     <div class="flex gap-4">
-        <img
-            class="h-12 w-12 shrink-0 rounded-full border border-sky-400/20 object-cover"
-            src="{{ $avatar }}"
-            alt="{{ $authorName }}"
-        >
+        <a href="{{ $authorUsername ? route('profile.public', $authorUsername) : '#' }}" class="shrink-0 hover:opacity-80 transition-opacity" title="Xem trang cá nhân của {{ $authorName }}">
+            <img
+                class="h-12 w-12 rounded-full border border-sky-400/20 object-cover"
+                src="{{ $avatar }}"
+                alt="{{ $authorName }}"
+            >
+        </a>
 
         <div class="min-w-0 flex-1 space-y-3">
             <div class="flex items-start justify-between gap-4">
                 <div class="min-w-0">
                     <div class="flex flex-wrap items-center gap-2">
-                        <span class="truncate font-bold text-on-surface hover:text-sky-300">
+                        <a href="{{ $authorUsername ? route('profile.public', $authorUsername) : '#' }}" class="truncate font-bold text-on-surface hover:text-sky-300 transition-colors">
                             {{ $authorName }}
-                        </span>
+                        </a>
 
                         @if (data_get($post, 'cam_xuc') || data_get($post, 'hoat_dong'))
                             @php

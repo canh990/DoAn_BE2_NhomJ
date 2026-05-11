@@ -110,22 +110,22 @@
 
     <header class="fixed top-0 w-full z-50 bg-[#0a0e1a]/60 backdrop-blur-xl border-b border-sky-400/10 shadow-[0_0_30px_rgba(125,211,252,0.05)] font-inter tracking-tight flex justify-between items-center px-6 h-16">
         <div class="flex items-center gap-8">
-            <span class="text-2xl font-bold bg-gradient-to-r from-sky-400 to-purple-400 bg-clip-text text-transparent">NHOMJ</span>
+            <a href="{{ route('home') }}" class="text-2xl font-bold bg-gradient-to-r from-sky-400 to-purple-400 bg-clip-text text-transparent">NHOMJ</a>
             <div class="hidden md:flex items-center bg-white/5 border border-sky-400/10 rounded-full px-4 py-1.5 focus-within:border-sky-400/30 transition-all">
                 <span class="material-symbols-outlined text-slate-400 text-sm mr-2" data-icon="search">search</span>
                 <input class="bg-transparent border-none focus:ring-0 text-sm text-on-surface placeholder:text-slate-500 w-64" placeholder="Tìm kiếm trên NHOMJ" type="text"/>
             </div>
         </div>
         <div class="flex items-center gap-2">
-            <button class="p-2 text-slate-400 hover:bg-sky-400/10 rounded-xl transition-all active:scale-95 duration-200">
+            <a href="{{ route('notifications') }}" class="p-2 text-slate-400 hover:bg-sky-400/10 rounded-xl transition-all active:scale-95 duration-200" title="Thông báo">
                 <span class="material-symbols-outlined" data-icon="notifications">notifications</span>
-            </button>
-            <button class="p-2 text-slate-400 hover:bg-sky-400/10 rounded-xl transition-all active:scale-95 duration-200">
+            </a>
+            <a href="{{ route('chat.demo') }}" class="p-2 text-slate-400 hover:bg-sky-400/10 rounded-xl transition-all active:scale-95 duration-200" title="Tin nhắn">
                 <span class="material-symbols-outlined" data-icon="mail">mail</span>
-            </button>
-            <button class="p-2 text-sky-300 hover:bg-sky-400/10 rounded-xl transition-all active:scale-95 duration-200">
+            </a>
+            <a href="{{ route('profile') }}" class="p-2 text-sky-300 hover:bg-sky-400/10 rounded-xl transition-all active:scale-95 duration-200" title="Hồ sơ cá nhân">
                 <span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
-            </button>
+            </a>
             <form method="POST" action="{{ route('logout') }}" class="inline">
                 @csrf
                 <button type="submit" class="p-2 text-slate-400 hover:text-red-400 hover:bg-red-400/10 rounded-xl transition-all active:scale-95 duration-200" title="Đăng xuất">
@@ -139,11 +139,10 @@
      @auth
     @php $user = Auth::user(); @endphp
 
-  <div class="mb-4 px-4 py-2">
+  <a href="{{ route('profile') }}" class="mb-4 px-4 py-2 block hover:bg-white/5 rounded-2xl transition-all group">
     <div class="flex items-center gap-3 mb-1">
-        <div class="w-10 h-10 overflow-hidden rounded-full border border-sky-400/30">
+        <div class="w-10 h-10 overflow-hidden rounded-full border border-sky-400/30 group-hover:border-sky-400/60 transition-colors">
             <img 
-             
                 class="w-full h-full object-cover" 
                 alt="{{ $user->name }}" 
                 src="{{ $user->anh_dai_dien ? asset('storage/' . $user->anh_dai_dien) : 'https://ui-avatars.com/api/?name='.urlencode($user->name).'&background=random' }}" 
@@ -151,16 +150,21 @@
         </div>
         
         <div>
-            <p class="text-sm font-bold text-sky-300 font-inter leading-tight">
+            <p class="text-sm font-bold text-sky-300 font-inter leading-tight group-hover:text-sky-200 transition-colors flex items-center gap-1">
                 {{ $user->name }}
+                @if($user->da_xac_thuc)
+                <span class="material-symbols-outlined text-[14px] text-sky-400" data-icon="verified" style="font-variation-settings: 'FILL' 1;">
+                    verified
+                </span>
+                @endif
             </p>
             {{-- Bạn có thể thêm @username ở đây nếu muốn --}}
-            <p class="text-[10px] text-slate-500 font-medium">
+            <p class="text-[10px] text-slate-500 font-medium group-hover:text-slate-400 transition-colors">
                 {{ '@' . ($user->ten_dang_nhap ?? 'nguoidung') }}
             </p>
         </div>
     </div>
-</div>
+</a>
 @endauth
         <nav class="flex flex-col gap-1 flex-1">
             <a class="flex items-center gap-3 {{ request()->routeIs('home') ? 'bg-sky-400/20 text-sky-300 border border-sky-400/20' : 'text-slate-400 hover:bg-white/5 hover:text-sky-200' }} px-4 py-3 rounded-xl transition-colors cursor-pointer transition-transform active:translate-x-1 font-inter text-sm font-medium" href="{{ route('home') }}">
@@ -201,21 +205,21 @@
     </main>
 
     <nav class="md:hidden fixed bottom-0 w-full glass-panel-elevated flex justify-around items-center h-16 z-50 border-t border-sky-400/10">
-        <button class="p-2 text-slate-400">
+        <a href="{{ route('home') }}" class="p-2 {{ request()->routeIs('home') ? 'text-sky-300 bg-sky-400/20 rounded-xl' : 'text-slate-400' }}">
             <span class="material-symbols-outlined" data-icon="home">home</span>
-        </button>
-        <button class="p-2 text-slate-400">
+        </a>
+        <a href="{{ route('explore') }}" class="p-2 {{ request()->routeIs('explore') ? 'text-sky-300 bg-sky-400/20 rounded-xl' : 'text-slate-400' }}">
             <span class="material-symbols-outlined" data-icon="explore">explore</span>
-        </button>
-        <button class="p-2 text-sky-300 bg-sky-400/20 rounded-xl">
+        </a>
+        <a href="{{ route('profile') }}" class="p-2 {{ request()->routeIs('profile') ? 'text-sky-300 bg-sky-400/20 rounded-xl' : 'text-slate-400' }}">
             <span class="material-symbols-outlined" data-icon="person">person</span>
-        </button>
-        <button class="p-2 text-slate-400">
+        </a>
+        <a href="{{ route('notifications') }}" class="p-2 {{ request()->routeIs('notifications') ? 'text-sky-300 bg-sky-400/20 rounded-xl' : 'text-slate-400' }}">
             <span class="material-symbols-outlined" data-icon="notifications">notifications</span>
-        </button>
-        <button class="p-2 text-slate-400">
+        </a>
+        <a href="{{ route('chat.demo') }}" class="p-2 {{ request()->routeIs('chat.demo') ? 'text-sky-300 bg-sky-400/20 rounded-xl' : 'text-slate-400' }}">
             <span class="material-symbols-outlined" data-icon="mail">mail</span>
-        </button>
+        </a>
     </nav>
 
     <script>

@@ -1,10 +1,14 @@
 <div class="comment-thread w-full" data-comment-id="{{ $comment->id }}">
     <div class="rounded-2xl border border-white/10 bg-slate-950 p-3">
         <div class="flex gap-3 items-start">
-            <img class="w-8 h-8 rounded-full object-cover border border-slate-700" src="{{ $comment->user && $comment->user->anh_dai_dien ? asset('storage/' . $comment->user->anh_dai_dien) : asset('storage/avatars/avtmacdinh.png') }}" alt="{{ $comment->user?->name ?? 'Người dùng' }}">
+            <a href="{{ ($comment->user && $comment->user->ten_dang_nhap) ? route('profile.public', $comment->user->ten_dang_nhap) : '#' }}" class="shrink-0 hover:opacity-80 transition-opacity" title="Xem trang cá nhân của {{ $comment->user?->name ?? 'Người dùng' }}">
+                <img class="w-8 h-8 rounded-full object-cover border border-slate-700" src="{{ $comment->user && $comment->user->anh_dai_dien ? asset('storage/' . $comment->user->anh_dai_dien) : asset('storage/avatars/avtmacdinh.png') }}" alt="{{ $comment->user?->name ?? 'Người dùng' }}">
+            </a>
             <div class="flex-1">
                 <div class="flex items-center justify-between gap-2 text-sm text-slate-200">
-                    <span class="font-semibold">{{ $comment->user?->name ?? 'Người dùng' }}</span>
+                    <a href="{{ ($comment->user && $comment->user->ten_dang_nhap) ? route('profile.public', $comment->user->ten_dang_nhap) : '#' }}" class="font-semibold hover:text-sky-300 transition-colors">
+                        {{ $comment->user?->name ?? 'Người dùng' }}
+                    </a>
                     <span class="text-xs text-slate-500">{{ $comment->ngay_tao?->diffForHumans() ?? '' }}</span>
                 </div>
                 <p class="mt-1 text-sm leading-relaxed text-slate-300">{{ $comment->noi_dung }}</p>

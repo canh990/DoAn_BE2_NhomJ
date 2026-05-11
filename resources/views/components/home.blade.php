@@ -15,7 +15,9 @@
     <!-- ===== FORM ĐĂNG BÀI ===== -->
     <section class="glass-panel rounded-2xl p-4 shadow-sm relative z-40">
         <div class="flex gap-4">
-            <img class="w-12 h-12 rounded-full border border-sky-400/20 shrink-0 object-cover" alt="Avatar" src="{{ Auth::user()->anh_dai_dien ? asset('storage/' . Auth::user()->anh_dai_dien) : asset('storage/avatars/avtmacdinh.png') }}">
+            <a href="{{ route('profile') }}" class="shrink-0 hover:opacity-80 transition-opacity" title="Xem trang cá nhân">
+                <img class="w-12 h-12 rounded-full border border-sky-400/20 object-cover" alt="Avatar" src="{{ Auth::user()->anh_dai_dien ? asset('storage/' . Auth::user()->anh_dai_dien) : asset('storage/avatars/avtmacdinh.png') }}">
+            </a>
             <div class="w-full">
                 <form action="{{ route('posts.store') }}" method="POST" enctype="multipart/form-data">
                     @csrf
