@@ -19,7 +19,7 @@
                     @csrf
                     
                     <!-- Textarea không viền, tối ưu không gian -->
-                    <textarea id="post-content" name="noi_dung" maxlength="280" class="w-full bg-transparent border-none focus:ring-0 text-slate-100 placeholder-slate-500 resize-none text-lg leading-relaxed p-0 min-h-[120px]" placeholder="Bạn đang nghĩ gì?" rows="4">{{ old('noi_dung') }}</textarea>
+                    <textarea id="post-content" name="noi_dung" maxlength="280" class="w-full bg-transparent border-none focus:ring-0 text-slate-100 placeholder-slate-500 resize-none text-lg leading-relaxed p-0 min-h-[120px]" placeholder="{{ __('messages.home_type_status') }}" rows="4">{{ old('noi_dung') }}</textarea>
                     
                     @error('noi_dung')
                     <p class="mt-2 text-sm text-red-400">{{ $message }}</p>
@@ -67,7 +67,7 @@
                         <div class="flex items-center justify-end gap-4 border-t border-white/5 pt-3 sm:border-t-0 sm:pt-0">
                             <span id="post-char-count" class="text-xs font-mono text-slate-500">0/280</span>
                             <button id="post-submit-button" type="submit" class="bg-sky-500 text-white px-8 py-2 rounded-full font-bold hover:bg-sky-600 transition-all shadow-lg shadow-sky-500/20 disabled:opacity-50 disabled:cursor-not-allowed">
-                                Đăng
+                            {{ __('messages.home_post') }}
                             </button>
                         </div>
                     </div>

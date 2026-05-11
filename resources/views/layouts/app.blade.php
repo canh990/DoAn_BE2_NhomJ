@@ -165,29 +165,27 @@
         <nav class="flex flex-col gap-1 flex-1">
             <a class="flex items-center gap-3 {{ request()->routeIs('home') ? 'bg-sky-400/20 text-sky-300 border border-sky-400/20' : 'text-slate-400 hover:bg-white/5 hover:text-sky-200' }} px-4 py-3 rounded-xl transition-colors cursor-pointer transition-transform active:translate-x-1 font-inter text-sm font-medium" href="{{ route('home') }}">
                 <span class="material-symbols-outlined" data-icon="home">home</span>
-                Bảng tin
+                <span class="text-lg font-medium">{{ __('messages.home_title') }}</span>
             </a>
             <a class="flex items-center gap-3 {{ request()->routeIs('explore') ? 'bg-sky-400/20 text-sky-300 border border-sky-400/20' : 'text-slate-400 hover:bg-white/5 hover:text-sky-200' }} px-4 py-3 rounded-xl transition-colors cursor-pointer transition-transform active:translate-x-1 font-inter text-sm font-medium" href="{{ route('explore') }}">
                 <span class="material-symbols-outlined" data-icon="explore">explore</span>
-                Khám phá
+                <span class="text-lg font-medium">{{ __('messages.explore_title') }}</span>
             </a>
             <a class="flex items-center gap-3 {{ request()->routeIs('notifications') ? 'bg-sky-400/20 text-sky-300 border border-sky-400/20' : 'text-slate-400 hover:bg-white/5 hover:text-sky-200' }} px-4 py-3 rounded-xl transition-colors cursor-pointer transition-transform active:translate-x-1 font-inter text-sm font-medium" href="{{ route('notifications') }}">
                 <span class="material-symbols-outlined" data-icon="notifications">notifications</span>
-                Thông báo
+                <span class="text-lg font-medium">{{ __('messages.notifications_title') }}</span>
             </a>
 
             <a class="flex items-center gap-3 {{ request()->routeIs('chat.demo') || request()->routeIs('chat.user.*') || request()->routeIs('chat.messages.*') || request()->routeIs('chat.conversations.*') ? 'bg-sky-400/20 text-sky-300 border border-sky-400/20' : 'text-slate-400 hover:bg-white/5 hover:text-sky-200' }} px-4 py-3 rounded-xl transition-colors cursor-pointer transition-transform active:translate-x-1 font-inter text-sm font-medium" href="{{ route('chat.demo') }}">
                 <span class="material-symbols-outlined" data-icon="chat">chat</span>
-                Tin nhắn
+                <span class="text-lg font-medium">{{ __('messages.chat_title') }}</span>
             </a>
             <a class="flex items-center gap-3 {{ request()->routeIs('profile') ? 'bg-sky-400/20 text-sky-300 border border-sky-400/20' : 'text-slate-400 hover:bg-white/5 hover:text-sky-200' }} px-4 py-3 rounded-xl transition-colors cursor-pointer transition-transform active:translate-x-1 font-inter text-sm font-medium" href="{{ route('profile') }}">
                 <span class="material-symbols-outlined" data-icon="person">person</span>
-                Hồ sơ
+                <span class="text-lg font-medium">{{ __('messages.person_title') }}</span>
             </a>
             <a href="{{ route('settings.index') }}" class="flex items-center gap-4 px-4 py-3 rounded-full transition-all hover:bg-white/10 group">
-    <span class="material-symbols-outlined text-2xl group-hover:scale-110 transition-transform" data-icon="settings">
-        settings
-    </span>
+    <span class="material-symbols-outlined" data-icon="settings">settings</span>
     <span class="text-lg font-medium">{{ __('messages.settings_title') }}</span>
 </a>
         </nav>

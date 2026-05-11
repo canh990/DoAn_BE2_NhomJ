@@ -42,16 +42,16 @@ Route::get('/forgot-password', function () {
 // Trang sau khi đăng nhập
 // -----------------------------------------------
 Route::view('/explore', 'components.placeholder', [
-    'title' => 'Khám phá',
-    'message' => 'Trang Khám phá sẽ sớm có nội dung đầy đủ.',
+    'title' =>  __('messages.explore_title'),
+    'message' => __('messages.explore_subtitle'),
 ])->name('explore')->middleware('auth');
 
 Route::view('/notifications', 'components.placeholder', [
-    'title' => 'Thông báo',
-    'message' => 'Bạn chưa có thông báo mới.',
+    'title' =>  __('messages.notifications_title'),
+    'message' => __('messages.notifications_subtitle'),
 ])->name('notifications')->middleware('auth');
 
 Route::view('/messages', 'components.placeholder', [
-    'title' => 'Tin nhắn',
-    'message' => 'Hộp thư của bạn đang trống.',
+    'title' => __('messages.chat_title'),
+    'message' => __('messages.chat_subtitle'),
 ])->name('messages')->middleware('auth');

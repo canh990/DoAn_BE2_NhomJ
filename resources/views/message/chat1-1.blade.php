@@ -35,7 +35,7 @@
             <div class="px-8">
                 <label class="flex h-12 items-center gap-3 rounded-3xl border border-[#1b3047] bg-[#101827] px-4 text-slate-500">
                     <span class="material-symbols-outlined text-xl">search</span>
-                    <input class="w-full border-0 bg-transparent text-base outline-none placeholder:text-slate-500 focus:ring-0" placeholder="Tim kiem cuoc tro chuyen..." type="search">
+                    <input class="w-full border-0 bg-transparent text-base outline-none placeholder:text-slate-500 focus:ring-0" placeholder="{{ __('messages.chat_search') }}" type="search">
                 </label>
             </div>
 
@@ -44,7 +44,7 @@
                 <div class="flex gap-2">
                     <input name="account"
                            class="h-11 min-w-0 flex-1 rounded-2xl border border-[#1b3047] bg-[#101827] px-4 text-sm font-semibold text-slate-100 outline-none placeholder:text-slate-500 focus:border-sky-400"
-                           placeholder="Email / SDT / ten dang nhap"
+                           placeholder="{{ __('messages.chat_find_user') }}"
                            value="{{ old('account') }}">
                     <button class="shrink-0 rounded-2xl bg-sky-300 px-4 text-sm font-black text-[#07111f] hover:bg-sky-200" type="submit">
                         Ket ban
@@ -125,7 +125,7 @@
 
                 <div id="chatMessages" class="min-h-0 flex-1 space-y-8 overflow-y-auto px-8 py-7">
                     <div class="flex justify-center">
-                        <span class="rounded-full bg-white/[.06] px-5 py-2 text-xs font-black uppercase tracking-[.22em] text-slate-400">Hom nay</span>
+                        <span class="rounded-full bg-white/[.06] px-5 py-2 text-xs font-black uppercase tracking-[.22em] text-slate-400">{{ __('messages.today') }}</span>
                     </div>
 
                     @forelse ($messages as $chatMessage)
@@ -173,7 +173,7 @@
                         <input id="messageInput"
                                name="noi_dung"
                                class="h-14 min-w-0 flex-1 rounded-full border border-[#1b3047] bg-[#111a2a] px-6 text-lg font-semibold text-slate-100 outline-none placeholder:text-slate-500 focus:border-sky-400"
-                               placeholder="Nhap tin nhan cua ban..."
+                               placeholder="{{ __('messages.chat_type_message') }}"
                                autocomplete="off"
                                required
                                value="{{ old('noi_dung') }}">
