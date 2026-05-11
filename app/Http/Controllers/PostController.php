@@ -121,13 +121,20 @@ class PostController extends Controller
 
     public function share(Request $request, BaiViet $post)
     {
+        // Xác định bài viết gốc thực sự (nếu bài hiện tại là bài chia sẻ)
+        $originalPost = $post->loai === 'chia_se' && $post->bai_goc_id ? BaiViet::find($post->bai_goc_id) : $post;
+
+        if (!$originalPost) {
+            return response()->json(['success' => false, 'message' => 'Bài viết gốc không còn tồn tại.'], 404);
+        }
+
         // Kiểm tra xem bài gốc có phải là bài đã xóa không
-        if ($post->da_xoa) {
+        if ($originalPost->da_xoa) {
             return response()->json(['success' => false, 'message' => 'Bài viết gốc không còn tồn tại.'], 404);
         }
 
         // Kiểm tra xem người dùng đã chia sẻ bài viết này chưa
-        $alreadyShared = BaiViet::where('bai_goc_id', $post->id)
+        $alreadyShared = BaiViet::where('bai_goc_id', $originalPost->id)
             ->where('nguoi_dung_id', auth()->id())
             ->exists();
 
@@ -139,12 +146,12 @@ class PostController extends Controller
         $sharedPost = BaiViet::create([
             'nguoi_dung_id' => auth()->id(),
             'loai' => 'chia_se',
-            'bai_goc_id' => $post->id,
+            'bai_goc_id' => $originalPost->id,
             'noi_dung' => $request->input('noi_dung', null),
             'quyen_rieng_tu' => 'ban_be',
         ]);
 
-        $sharesCount = BaiViet::where('bai_goc_id', $post->id)->count();
+        $sharesCount = BaiViet::where('bai_goc_id', $originalPost->id)->count();
 
         return response()->json([
             'success' => true,
