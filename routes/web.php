@@ -16,6 +16,7 @@ Route::get('/', function () {
 
 // Load separated settings routes (your personal team file)
 require __DIR__ . '/Settings.php';
+require __DIR__ . '/notifications.php';
 Route::get('/post-card', function () {
     $user = (object) [
         'name' => 'NHOMJ Designer',

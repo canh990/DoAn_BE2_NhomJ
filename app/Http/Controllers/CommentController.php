@@ -49,6 +49,41 @@ class CommentController extends Controller
             }
         }
 
+        // --- TẠO THÔNG BÁO ---
+        $currentUser = $request->user();
+        
+        // 1. Thông báo cho chủ bài viết
+        if ($post->nguoi_dung_id !== $currentUser->id) {
+            \App\Models\ThongBao::create([
+                'nguoi_dung_id' => $post->nguoi_dung_id,
+                'nguoi_thuc_hien_id' => $currentUser->id,
+                'loai' => 'binh_luan',
+                'bai_viet_id' => $post->id,
+                'binh_luan_id' => $comment->id,
+                'ngay_tao' => now(),
+            ]);
+        }
+
+        // 2. Thông báo cho chủ bình luận cha (nếu là trả lời)
+        if (!empty($validated['binh_luan_cha_id'])) {
+            $parentComment = BinhLuan::find($validated['binh_luan_cha_id']);
+            // Tránh gửi trùng nếu chủ bình luận cha cũng là chủ bài viết (đã gửi ở trên)
+            if ($parentComment && 
+                $parentComment->nguoi_dung_id !== $currentUser->id && 
+                $parentComment->nguoi_dung_id !== $post->nguoi_dung_id) {
+                
+                \App\Models\ThongBao::create([
+                    'nguoi_dung_id' => $parentComment->nguoi_dung_id,
+                    'nguoi_thuc_hien_id' => $currentUser->id,
+                    'loai' => 'binh_luan',
+                    'bai_viet_id' => $post->id,
+                    'binh_luan_id' => $comment->id,
+                    'ngay_tao' => now(),
+                ]);
+            }
+        }
+        // ----------------------
+
         $comment->load(['user', 'media']);
         $commentCount = $post->comments()->count();
 

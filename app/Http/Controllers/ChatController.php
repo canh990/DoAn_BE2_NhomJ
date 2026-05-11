@@ -217,6 +217,17 @@ class ChatController extends Controller
 
         $conversation->touch();
 
+        // Tạo thông báo cho các thành viên khác trong cuộc trò chuyện
+        $otherMembers = $conversation->members()->where('nguoi_dung.id', '!=', $senderId)->get();
+        foreach ($otherMembers as $member) {
+            \App\Models\ThongBao::create([
+                'nguoi_dung_id' => $member->id,
+                'nguoi_thuc_hien_id' => $senderId,
+                'loai' => 'tin_nhan',
+                'ngay_tao' => now(),
+            ]);
+        }
+
         return $message;
     }
 

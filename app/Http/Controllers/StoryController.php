@@ -27,7 +27,7 @@ class StoryController extends Controller
         $mimeType  = $file->getMimeType();
         $loaiMedia = str_starts_with($mimeType, 'video/') ? 'video' : 'hinh_anh';
 
-        Tin24h::create([
+        $story = Tin24h::create([
             'nguoi_dung_id'  => auth()->id(),
             'duong_dan_media' => $path,
             'loai_media'     => $loaiMedia,
@@ -35,6 +35,19 @@ class StoryController extends Controller
             'het_han'        => now()->addHours(24),
             'ngay_tao'       => now(),
         ]);
+
+        // --- TẠO THÔNG BÁO CHO NGƯỜI THEO DÕI ---
+        $user = auth()->user();
+        $followers = $user->followers()->where('trang_thai', 'da_chap_nhan')->get();
+        foreach ($followers as $follower) {
+            \App\Models\ThongBao::create([
+                'nguoi_dung_id' => $follower->id,
+                'nguoi_thuc_hien_id' => $user->id,
+                'loai' => 'dang_tin',
+                'ngay_tao' => now(),
+            ]);
+        }
+        // ---------------------------------------
 
         return redirect()->route('home')->with('success', 'Tin đã được chia sẻ!');
     }
