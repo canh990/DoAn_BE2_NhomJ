@@ -3,6 +3,19 @@
 return [
     'settings_title' => 'Cài đặt',
     'settings_subtitle' => 'Quản lý cài đặt và tùy chọn tài khoản.',
+    'person_title' => 'Hồ sơ',
+    'chat_title' => 'Tin nhắn',
+    'chat_subtitle' => 'Hộp thư của bạn đang trống.', 
+    'chat_search' => 'Tìm kiếm cuộc trò chuyện...',
+    'chat_find_user' => 'Email / Di động / Tên đăng nhập',
+    'chat_type_message' => 'Nhập tin nhắn của bạn...',
+    'notifications_title' => 'Thông báo',
+    'notifications_subtitle' => 'Bạn chưa có thông báo mới.',
+    'explore_title' => 'Khám phá',
+    'explore_subtitle' => 'Trang Khám phá sẽ sớm có nội dung đầy đủ.',
+    'home_title' => 'Bảng tin',
+    'home_type_status' => 'Bạn đang nghĩ gì?',
+    'home_post' => 'Đăng',
     'display_and_language' => 'Hiển thị & Ngôn ngữ',
     'dark_mode' => 'Chế độ tối',
     'dark_mode_desc' => 'Giảm mỏi mắt trong môi trường ánh sáng yếu.',
@@ -30,5 +43,6 @@ return [
     'danger_zone_title' => 'Khu vực Nguy hiểm',
     'danger_zone_desc' => 'Một khi bạn tắt tài khoản của mình, sẽ không còn cách nào quay lại. Vui lòng chắc chắn.',
     'disable_account' => 'Tắt Tài khoản',
-    'explore_title' => 'Khám phá',
+
+    'today' => 'Hôm nay',
 ];

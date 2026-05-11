@@ -3,6 +3,19 @@
 return [
     'settings_title' => 'Settings',
     'settings_subtitle' => 'Manage settings and account options.',
+    'person_title' => 'Personal',
+    'chat_title' => 'Chat',
+    'chat_subtitle' => 'Your inbox is empty.', 
+    'chat_search' => 'Search conversations...',
+    'chat_find_user' => 'Email / Phone / Username',
+    'chat_type_message' => 'Type your message...',
+    'notifications_title' => 'Notifications',
+    'notifications_subtitle' => 'You have no new notifications.',
+    'explore_title' => 'Explore',
+    'explore_subtitle' => 'The Explore page will soon have full content.',
+    'home_title' => 'Home',
+    'home_type_status' => 'What are you thinking?',
+    'home_post' => 'Post',
     'display_and_language' => 'Display & Language',
     'dark_mode' => 'Dark Mode',
     'dark_mode_desc' => 'Reduce eye strain in low light environments.',
@@ -30,4 +43,6 @@ return [
     'danger_zone_title' => 'Danger Zone',
     'danger_zone_desc' => 'Permanently delete or disable your account.',
     'disable_account' => 'Disable Account',
+
+    'today' => 'Today',
 ];

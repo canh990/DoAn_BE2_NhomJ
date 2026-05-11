@@ -57,13 +57,13 @@ Route::get('/explore', [\App\Http\Controllers\PostController::class, 'explore'])
     ->middleware('auth');
 
 Route::view('/notifications', 'components.placeholder', [
-    'title' => 'Thông báo',
-    'message' => 'Bạn chưa có thông báo mới.',
+    'title' =>  __('messages.notifications_title'),
+    'message' => __('messages.notifications_subtitle'),
 ])->name('notifications')->middleware('auth');
 
 Route::view('/messages', 'components.placeholder', [
-    'title' => 'Tin nhắn',
-    'message' => 'Hộp thư của bạn đang trống.',
+    'title' => __('messages.chat_title'),
+    'message' => __('messages.chat_subtitle'),
 ])->name('messages')->middleware('auth');
 
 Route::get('/search/users', [SearchController::class, 'searchUsers'])

@@ -37,9 +37,12 @@ class PostController extends Controller
             ->latest('ngay_tao')
             ->paginate(24);
 
-        return view('explore', compact('media'));
+        return view('explore', [
+            'media' => $media,
+            'title' => __('messages.explore_title'),
+            'message' => __('messages.explore_subtitle'),
+        ]);
     }
-
 
     public function show(BaiViet $post)
     {

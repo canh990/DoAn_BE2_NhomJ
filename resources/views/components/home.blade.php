@@ -88,11 +88,11 @@
                                 </button>
                             </div>
 
-                            <!-- Bộ đếm ký tự và nút Submit -->
+                        <!-- Bộ đếm ký tự và nút Submit -->
                             <div class="flex items-center justify-end gap-4 border-t border-white/5 pt-3 sm:border-t-0 sm:pt-0">
                                 <span id="post-char-count" class="text-xs font-mono text-slate-500">0/280</span>
                                 <button id="post-submit-button" type="submit" class="bg-sky-500 text-white px-8 py-2 rounded-full font-bold hover:bg-sky-600 transition-all shadow-lg shadow-sky-500/20 disabled:opacity-50 disabled:cursor-not-allowed">
-                                    Đăng bài
+                                    {{ __('messages.home_post') }}
                                 </button>
                             </div>
                         </div>
