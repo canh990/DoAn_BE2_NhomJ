@@ -167,53 +167,90 @@
                 </div>
 
                 <span class="text-xs text-on-surface-variant">
-                    3 {{ __('messages.devices_active') }}
+                    {{ $sessions->count() }} {{ __('messages.devices_active') }}
                 </span>
 
             </div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    @foreach ($sessions as $session)
 
-                <div class="p-4 bg-white/5 rounded-lg border border-white/5 flex items-start gap-4">
+    <div class="p-4 bg-white/5 rounded-lg border border-white/5 flex items-start gap-4">
 
-                    <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary">
+        <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary">
 
-                        <span class="material-symbols-outlined">
-                            laptop_mac
-                        </span>
+            <span class="material-symbols-outlined">
 
-                    </div>
+                @if (
+                    str_contains($session->he_dieu_hanh, 'Android') ||
+                    str_contains($session->he_dieu_hanh, 'iPhone')
+                )
 
-                    <div class="flex-1">
+                    smartphone
 
-                        <div class="flex justify-between">
+                @elseif (
+                    str_contains($session->he_dieu_hanh, 'MacOS')
+                )
 
-                            <p class="font-semibold text-sm">
-                                MacBook Pro M2
-                            </p>
+                    laptop_mac
 
-                            <span class="text-[10px] bg-primary/20 text-primary px-1.5 py-0.5 rounded uppercase font-bold">
-                                {{ __('messages.current') }}
-                            </span>
+                @elseif (
+                    str_contains($session->he_dieu_hanh, 'Windows')
+                )
 
-                        </div>
+                    laptop_windows
 
-                        <p class="text-xs text-on-surface-variant">
-                            Hồ Chí Minh, Việt Nam
-                        </p>
+                @elseif (
+                    str_contains($session->he_dieu_hanh, 'Linux')
+                )
 
-                        <p class="text-[10px] text-on-surface-variant mt-2">
-                            {{ __('messages.browser_chrome') }}
-                            •
-                            2 {{ __('messages.minutes_ago') }}
-                        </p>
+                    computer
 
-                    </div>
+                @else
 
-                </div>
+                    devices
+
+                @endif
+
+            </span>
+
+        </div>
+
+        <div class="flex-1">
+
+            <div class="flex justify-between">
+
+                <p class="font-semibold text-sm">
+                    {{ $session->ten_thiet_bi }}
+                </p>
+
+                @if ($session->la_phien_hien_tai)
+
+                    <span class="text-[10px] bg-primary/20 text-primary px-1.5 py-0.5 rounded uppercase font-bold">
+                        {{ __('messages.current') }}
+                    </span>
+
+                @endif
 
             </div>
+
+            <p class="text-xs text-on-surface-variant">
+                {{ $session->dia_chi_ip }}
+            </p>
+
+            <p class="text-[10px] text-on-surface-variant mt-2">
+                {{ $session->trinh_duyet }}
+                •
+                {{ $session->lan_hoat_dong_cuoi->diffForHumans() }}
+            </p>
+
         </div>
+
+    </div>
+
+    @endforeach
+
+</div>
 
         {{-- Help --}}
         <div class="md:col-span-3 glass-panel p-6 rounded-xl">
