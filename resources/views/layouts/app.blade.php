@@ -1260,54 +1260,37 @@
                     }
 
                     searchResults.innerHTML = users.map(user => `
-
                         <a
-                            href="/profile/${user.id}"
-                            class="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition"
+                            href="/profile/${user.ten_dang_nhap}"
+                            class="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition cursor-pointer"
                         >
-
                             <img
                                 src="${user.anh_dai_dien ?? '/default-avatar.png'}"
-                                class="w-11 h-11 rounded-full object-cover border border-white/10"
+                                class="w-10 h-10 rounded-full object-cover"
                             >
-
-                            <div class="flex-1 min-w-0">
-
-                                <p class="text-sm font-semibold text-white truncate">
+                            <div>
+                                <p class="text-sm font-semibold text-white">
                                     ${user.ten_dang_nhap}
                                 </p>
-
-                                <p class="text-xs text-slate-400 truncate">
+                                <p class="text-xs text-slate-400">
                                     ${user.tieu_su ?? ''}
                                 </p>
-
                             </div>
-
                         </a>
-
                     `).join('');
-
                     searchResults.classList.remove('hidden');
-
                 } catch (error) {
-
                     console.error(error);
                 }
-
             }, 300);
-
         });
-
         // click ngoài -> đóng dropdown
         document.addEventListener('click', function (e) {
-
             if (!searchInput.contains(e.target) &&
                 !searchResults.contains(e.target)) {
-
                 searchResults.classList.add('hidden');
             }
         });
-
     </script>
 </body>
 

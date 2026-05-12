@@ -16,25 +16,28 @@ class SearchController extends Controller
             return response()->json([]);
         }
 
-        $users = User::query()
+        // $users = User::query()
 
-            ->where(function ($query) use ($keyword) {
+        //     ->where(function ($query) use ($keyword) {
 
-                $query->where('ten_dang_nhap', 'LIKE', "%{$keyword}%")
+        //         $query->where('ten_dang_nhap', 'LIKE', "%{$keyword}%")
 
-                    ->orWhere('email', 'LIKE', "%{$keyword}%")
+        //             ->orWhere('email', 'LIKE', "%{$keyword}%")
 
-                    ->orWhere('so_dien_thoai', 'LIKE', "%{$keyword}%");
-            })
+        //             ->orWhere('so_dien_thoai', 'LIKE', "%{$keyword}%");
+        //     })
 
-            ->limit(10)
+        //     ->limit(10)
 
-            ->get([
-                'id',
-                'ten_dang_nhap',
-                'anh_dai_dien',
-                'tieu_su',
-            ]);
+        //     ->get([
+        //         'id',
+        //         'ten_dang_nhap',
+        //         'anh_dai_dien',
+        //         'tieu_su',
+        //     ]);
+        $users = User::limit(10)->get();
+
+return response()->json($users);
         return response()->json($users);
     }
 }
