@@ -41,4 +41,22 @@ class NotificationController extends Controller
             'count' => auth()->user()->unreadThongBaos()->count()
         ]);
     }
+
+    public function destroy(ThongBao $notification)
+    {
+        if ($notification->nguoi_dung_id !== auth()->id()) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
+
+        $notification->delete();
+
+        return response()->json(['success' => true]);
+    }
+
+    public function deleteAll()
+    {
+        auth()->user()->thongBaos()->delete();
+
+        return response()->json(['success' => true]);
+    }
 }

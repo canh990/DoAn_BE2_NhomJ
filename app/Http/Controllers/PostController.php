@@ -29,6 +29,23 @@ class PostController extends Controller
     return view('components.home', compact('posts'));
 } 
 
+    public function show(BaiViet $post)
+    {
+        $post->load(['user', 'media', 'originalPost.user', 'originalPost.media'])
+            ->loadCount(['reactions', 'comments', 'shares'])
+            ->load(['reactions' => function ($query) {
+                $query->where('nguoi_dung_id', auth()->id());
+            }, 'comments' => function ($query) {
+                $query->whereNull('binh_luan_cha_id')->with(['user', 'nestedChildren'])->latest('ngay_tao');
+            }]);
+
+        if ($post->da_xoa) {
+            abort(404);
+        }
+
+        return view('posts.show', compact('post'));
+    }
+
 
     public function store(Request $request)
     {

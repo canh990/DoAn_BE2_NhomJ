@@ -105,6 +105,20 @@
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
         }
+
+        /* Notification Animations */
+        @keyframes notificationIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .notification-item {
+            animation: notificationIn 0.3s ease-out forwards;
+        }
+        .notification-item.removing {
+            opacity: 0;
+            transform: translateX(20px);
+            transition: all 0.3s ease-in;
+        }
     </style>
 </head>
 <body class="antialiased selection:bg-primary/30 selection:text-primary">
@@ -208,21 +222,24 @@
     </main>
 
     <nav class="md:hidden fixed bottom-0 w-full glass-panel-elevated flex justify-around items-center h-16 z-50 border-t border-sky-400/10">
-        <button class="p-2 text-slate-400">
+        <a href="{{ route('home') }}" class="p-2 {{ request()->routeIs('home') ? 'text-sky-300 bg-sky-400/20 rounded-xl' : 'text-slate-400' }}">
             <span class="material-symbols-outlined" data-icon="home">home</span>
-        </button>
-        <button class="p-2 text-slate-400">
+        </a>
+        <a href="{{ route('explore') }}" class="p-2 {{ request()->routeIs('explore') ? 'text-sky-300 bg-sky-400/20 rounded-xl' : 'text-slate-400' }}">
             <span class="material-symbols-outlined" data-icon="explore">explore</span>
-        </button>
-        <button class="p-2 text-sky-300 bg-sky-400/20 rounded-xl">
+        </a>
+        <a href="{{ route('profile') }}" class="p-2 {{ request()->routeIs('profile') ? 'text-sky-300 bg-sky-400/20 rounded-xl' : 'text-slate-400' }}">
             <span class="material-symbols-outlined" data-icon="person">person</span>
-        </button>
-        <button class="p-2 text-slate-400">
+        </a>
+        <a href="{{ route('notifications') }}" class="p-2 {{ request()->routeIs('notifications') ? 'text-sky-300 bg-sky-400/20 rounded-xl' : 'text-slate-400' }} relative">
             <span class="material-symbols-outlined" data-icon="notifications">notifications</span>
-        </button>
-        <button class="p-2 text-slate-400">
+            <span class="notification-badge {{ $unreadNotificationsCount > 0 ? '' : 'hidden' }} absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-[#0a0e1a]">
+                {{ $unreadNotificationsCount > 99 ? '99+' : $unreadNotificationsCount }}
+            </span>
+        </a>
+        <a href="{{ route('chat.demo') }}" class="p-2 {{ request()->routeIs('chat.demo') ? 'text-sky-300 bg-sky-400/20 rounded-xl' : 'text-slate-400' }}">
             <span class="material-symbols-outlined" data-icon="mail">mail</span>
-        </button>
+        </a>
     </nav>
 
     <script>
