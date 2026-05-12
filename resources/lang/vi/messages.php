@@ -27,6 +27,7 @@ return [
     'storage' => 'Lưu trữ',
     'storage_usage' => 'Mức sử dụng bộ nhớ đệm hiện tại',
     'clear_cache' => 'Xóa bộ nhớ đệm',
+    'session_storage_usage' => 'Mức sử dụng bộ nhớ phiên hiện tại',
 
     'device_management' => 'Quản lý thiết bị',
     'devices_active' => 'Thiết bị đang hoạt động',

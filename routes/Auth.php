@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\LoginController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SocialLoginController;
 use App\Http\Controllers\Auth\RegisterController;
+use Illuminate\Support\Facades\App;
 // -----------------------------------------------
 // Auth routes
 // -----------------------------------------------
@@ -41,17 +42,41 @@ Route::get('/forgot-password', function () {
 // -----------------------------------------------
 // Trang sau khi đăng nhập
 // -----------------------------------------------
-Route::view('/explore', 'components.placeholder', [
-    'title' =>  __('messages.explore_title'),
-    'message' => __('messages.explore_subtitle'),
-])->name('explore')->middleware('auth');
+Route::get('/explore', function () {
 
-Route::view('/notifications', 'components.placeholder', [
-    'title' =>  __('messages.notifications_title'),
-    'message' => __('messages.notifications_subtitle'),
-])->name('notifications')->middleware('auth');
+    App::setLocale(
+        session('personal_locale', config('app.locale'))
+    );
 
-Route::view('/messages', 'components.placeholder', [
-    'title' => __('messages.chat_title'),
-    'message' => __('messages.chat_subtitle'),
-])->name('messages')->middleware('auth');
+    return view('components.placeholder', [
+        'title' => __('messages.explore_title'),
+        'message' => __('messages.explore_subtitle'),
+    ]);
+
+})->name('explore')->middleware('auth');
+
+Route::get('/notifications', function () {
+
+    App::setLocale(
+        session('personal_locale', config('app.locale'))
+    );
+
+    return view('components.placeholder', [
+        'title' => __('messages.notifications_title'),
+        'message' => __('messages.notifications_subtitle'),
+    ]);
+
+})->name('notifications')->middleware('auth');
+
+Route::get('/messages', function () {
+
+    App::setLocale(
+        session('personal_locale', config('app.locale'))
+    );
+
+    return view('components.placeholder', [
+        'title' => __('messages.messages_title'),
+        'message' => __('messages.messages_subtitle'),
+    ]);
+
+})->name('messages')->middleware('auth');
