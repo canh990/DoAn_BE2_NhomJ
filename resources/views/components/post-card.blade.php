@@ -199,7 +199,7 @@
                 @endif
             </div>
 
-            @if (filled($body))
+            @if (filled($body) && data_get($post, 'loai') !== 'chia_se')
                 <p class="whitespace-pre-line leading-relaxed text-on-surface-variant">
                     {{ $body }}
                 </p>
@@ -253,13 +253,20 @@
                 </div>
             @endif
 
-            @if(data_get($post, 'loai') === 'chia_se' && data_get($post, 'originalPost'))
+            @php
+                $actualOriginal = data_get($post, 'originalPost');
+                // Nếu bài gốc vẫn là một bài chia sẻ, ta tìm đến bài gốc cuối cùng (bài viết thực sự)
+                while($actualOriginal && $actualOriginal->loai === 'chia_se' && $actualOriginal->bai_goc_id) {
+                    $actualOriginal = \App\Models\BaiViet::find($actualOriginal->bai_goc_id);
+                }
+            @endphp
+
+            @if(data_get($post, 'loai') === 'chia_se' && $actualOriginal)
                 <div class="mt-4 border border-white/10 rounded-2xl overflow-hidden relative">
                     <div class="absolute inset-0 bg-slate-900/50 pointer-events-none"></div>
                     <div class="relative z-10 p-1 pointer-events-none">
-                        <!-- Make the inner post non-interactive (or we can just render the UI simply) -->
                         <div class="pointer-events-auto">
-                            @include('components.post-card', ['post' => data_get($post, 'originalPost'), 'isShared' => true])
+                            @include('components.post-card', ['post' => $actualOriginal, 'isShared' => true])
                         </div>
                     </div>
                 </div>

@@ -198,9 +198,11 @@ $profileUrl = route('profile.public', ['username' => $user->ten_dang_nhap]);
                         @include('components.stories-bar', ['stories' => $stories ?? collect()])
 
                         @if(isset($posts) && $posts->count() > 0)
-                            @foreach($posts as $post)
-                                <x-post-card :post="$post" />
-                            @endforeach
+                            <div id="post-list-container" class="space-y-6">
+                                @foreach($posts as $post)
+                                    <x-post-card :post="$post" />
+                                @endforeach
+                            </div>
                         @else
                             <div class="glass-panel flex flex-col items-center justify-center rounded-3xl p-12 text-center">
                                 <div class="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-slate-800/50 text-slate-500">

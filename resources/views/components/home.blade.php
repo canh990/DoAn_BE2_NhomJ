@@ -109,14 +109,17 @@
 
     {{-- ===== STORIES BAR ===== --}}
     @include('components.stories-bar', ['stories' => $stories ?? collect()])
-   <!-- ===== DANH SÁCH BÀI VIẾT ===== -->
-    @forelse($posts as $post)
+    <!-- ===== DANH SÁCH BÀI VIẾT ===== -->
+    <div id="post-list-container" class="space-y-6">
+        @forelse($posts as $post)
     <x-post-card :post="$post" class="mb-6" />
     @empty
     <div class="glass-panel rounded-2xl p-6 text-center text-slate-300">
         <p class="text-sm">Chưa có bài viết nào. Hãy là người đầu tiên đăng trạng thái!</p>
     </div>
     @endforelse
+</div>
+
 </div>
 
 </div>

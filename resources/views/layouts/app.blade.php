@@ -1047,7 +1047,21 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    window.showToast('Đã chia sẻ bài viết thành công!', 'success');
+                    window.showToast('Chia sẻ thành công', 'success');
+                    
+                    // Thêm bài viết mới vào đầu danh sách nếu đang ở trang có danh sách bài viết
+                    const container = document.getElementById('post-list-container');
+                    if (container && data.html) {
+                        const temp = document.createElement('div');
+                        temp.innerHTML = data.html;
+                        const newPost = temp.firstElementChild;
+                        if (newPost) {
+                            container.prepend(newPost);
+                            // Scroll to top
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }
+                    }
+
                     if (currentShareButton) {
                         const shareCountSpan = currentShareButton.querySelector('[data-share-count]');
                         if (shareCountSpan && data.shares_count > 0) {
