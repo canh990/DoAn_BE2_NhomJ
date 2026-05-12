@@ -178,12 +178,11 @@ $profileUrl = route('profile.public', ['username' => $user->ten_dang_nhap]);
                     {{-- ===== STORIES BAR ===== --}}
                     @include('components.stories-bar', ['stories' => $stories ?? collect()])
 
-                    @if(isset($posts) && $posts->count() > 0)
-                    @foreach($posts as $post)
+                    <!-- ===== DANH SÁCH BÀI VIẾT ===== -->
+                    <div id="post-list-container" class="space-y-6">
+                    @forelse($posts as $post)
                     <x-post-card :post="$post" />
-                    @endforeach
-                    @else
-                    {{-- Phần thay đổi ở đây --}}
+                    @empty
                     <div class="glass-panel flex flex-col items-center justify-center rounded-3xl p-12 text-center">
                         <div class="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-slate-800/50 text-slate-500">
                             <span class="material-symbols-outlined text-4xl" data-icon="post_add">post_add</span>
@@ -192,6 +191,7 @@ $profileUrl = route('profile.public', ['username' => $user->ten_dang_nhap]);
                         <p class="mt-2 text-slate-400">Người dùng này vẫn chưa chia sẻ bài viết nào với cộng đồng.</p>
                     </div>
                     @endif
+                    </div>
                 @endif
             </div>
         </div>

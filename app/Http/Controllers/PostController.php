@@ -10,24 +10,40 @@ use Illuminate\Support\Facades\Storage;
 class PostController extends Controller
 {
 
-  public function index()
-{
-    $posts = BaiViet::with(['user', 'media', 'originalPost.user', 'originalPost.media']) // THÊM 'media' ở đây
-        ->withCount(['reactions', 'comments', 'shares'])
-        ->with(['reactions' => function ($query) {
-            $query->where('nguoi_dung_id', auth()->id());
-        }, 'comments' => function ($query) {
-            $query->whereNull('binh_luan_cha_id')->with(['user', 'nestedChildren'])->latest('ngay_tao');
-        }])
-        // XÓA HOẶC SỬA dòng ->where('loai', 'van_ban')
-        ->whereIn('loai', ['van_ban', 'hinh_anh', 'chia_se']) // Lấy cả bài chữ và bài ảnh
-        ->where('da_xoa', false)
-        ->latest()
-        ->take(20)
-        ->get();
+    public function index()
+    {
+        $posts = BaiViet::with(['user', 'media', 'originalPost.user', 'originalPost.media'])
+            ->withCount(['reactions', 'comments', 'shares'])
+            ->with(['reactions' => function ($query) {
+                $query->where('nguoi_dung_id', auth()->id());
+            }, 'comments' => function ($query) {
+                $query->whereNull('binh_luan_cha_id')->with(['user', 'nestedChildren'])->latest('ngay_tao');
+            }])
+            ->whereIn('loai', ['van_ban', 'hinh_anh', 'chia_se'])
+            ->where('da_xoa', false)
+            ->latest()
+            ->take(20)
+            ->get();
 
-    return view('components.home', compact('posts'));
-} 
+        return view('components.home', compact('posts'));
+    }
+
+    public function show(BaiViet $post)
+    {
+        $post->load(['user', 'media', 'originalPost.user', 'originalPost.media'])
+            ->loadCount(['reactions', 'comments', 'shares'])
+            ->load(['reactions' => function ($query) {
+                $query->where('nguoi_dung_id', auth()->id());
+            }, 'comments' => function ($query) {
+                $query->whereNull('binh_luan_cha_id')->with(['user', 'nestedChildren'])->latest('ngay_tao');
+            }]);
+
+        if ($post->da_xoa) {
+            abort(404);
+        }
+
+        return view('posts.show', compact('post'));
+    }
 
 
     public function store(Request $request)
@@ -70,6 +86,20 @@ class PostController extends Controller
                 ]);
             }
         }
+
+        // --- TẠO THÔNG BÁO CHO NGƯỜI THEO DÕI ---
+        $user = auth()->user();
+        $followers = $user->followers()->where('trang_thai', 'da_chap_nhan')->get();
+        foreach ($followers as $follower) {
+            \App\Models\ThongBao::create([
+                'nguoi_dung_id' => $follower->id,
+                'nguoi_thuc_hien_id' => $user->id,
+                'loai' => 'dang_bai',
+                'bai_viet_id' => $post->id,
+                'ngay_tao' => now(),
+            ]);
+        }
+        // ---------------------------------------
 
         return redirect()
             ->route('home')
@@ -153,10 +183,38 @@ class PostController extends Controller
 
         $sharesCount = BaiViet::where('bai_goc_id', $originalPost->id)->count();
 
+        // Tạo thông báo cho chủ bài viết gốc
+        if ($originalPost->nguoi_dung_id !== auth()->id()) {
+            \App\Models\ThongBao::create([
+                'nguoi_dung_id' => $originalPost->nguoi_dung_id,
+                'nguoi_thuc_hien_id' => auth()->id(),
+                'loai' => 'chia_se',
+                'bai_viet_id' => $originalPost->id,
+                'ngay_tao' => now(),
+            ]);
+        }
+        
+        // Tạo thông báo cho người mà mình chia sẻ bài của họ (nếu bài hiện tại là bài chia sẻ)
+        if ($post->id !== $originalPost->id && $post->nguoi_dung_id !== auth()->id() && $post->nguoi_dung_id !== $originalPost->nguoi_dung_id) {
+            \App\Models\ThongBao::create([
+                'nguoi_dung_id' => $post->nguoi_dung_id,
+                'nguoi_thuc_hien_id' => auth()->id(),
+                'loai' => 'chia_se',
+                'bai_viet_id' => $originalPost->id,
+                'ngay_tao' => now(),
+            ]);
+        }
+
+        $sharesCount = BaiViet::where('bai_goc_id', $originalPost->id)->count();
+
+        // Render the new post HTML
+        $html = view('components.post-card', ['post' => $sharedPost->load(['user', 'media', 'originalPost.user', 'originalPost.media'])])->render();
+
         return response()->json([
             'success' => true,
-            'message' => 'Chia sẻ bài viết thành công!',
+            'message' => 'Chia sẻ thành công',
             'shares_count' => $sharesCount,
+            'html' => $html,
         ]);
     }
 }
