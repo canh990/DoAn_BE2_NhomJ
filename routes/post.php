@@ -22,6 +22,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/posts', [PostController::class, 'store'])
         ->name('posts.store');
 
+    Route::get('/posts/{post}', [PostController::class, 'show'])
+        ->name('posts.show');
+
     Route::post('/posts/{post}/reaction', [\App\Http\Controllers\ReactionController::class, 'store'])
         ->name('posts.react');
 

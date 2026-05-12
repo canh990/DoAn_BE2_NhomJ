@@ -3,6 +3,7 @@
     // apply the user's preferred locale from session for each render
     app()->setLocale(session('personal_locale', config('app.locale', 'vi')));
     $theme = session('personal_theme', null);
+    $unreadNotificationsCount = Auth::check() ? Auth::user()->unreadThongBaos()->count() : 0;
 @endphp
 <html class="{{ $theme === 'light' ? 'light' : 'dark' }}" lang="{{ app()->getLocale() }}">
 <head>
@@ -104,6 +105,20 @@
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
         }
+
+        /* Notification Animations */
+        @keyframes notificationIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .notification-item {
+            animation: notificationIn 0.3s ease-out forwards;
+        }
+        .notification-item.removing {
+            opacity: 0;
+            transform: translateX(20px);
+            transition: all 0.3s ease-in;
+        }
     </style>
 </head>
 <body class="antialiased selection:bg-primary/30 selection:text-primary">
@@ -117,10 +132,13 @@
             </div>
         </div>
         <div class="flex items-center gap-2">
-            <a href="{{ route('notifications') }}" class="p-2 text-slate-400 hover:bg-sky-400/10 rounded-xl transition-all active:scale-95 duration-200" title="Thông báo">
+            <a href="{{ route('notifications') }}" class="p-2 text-slate-400 hover:bg-sky-400/10 rounded-xl transition-all active:scale-95 duration-200 relative">
                 <span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+                <span class="notification-badge {{ $unreadNotificationsCount > 0 ? '' : 'hidden' }} absolute top-1.5 right-1.5 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-[#0a0e1a]">
+                    {{ $unreadNotificationsCount > 99 ? '99+' : $unreadNotificationsCount }}
+                </span>
             </a>
-            <a href="{{ route('chat.demo') }}" class="p-2 text-slate-400 hover:bg-sky-400/10 rounded-xl transition-all active:scale-95 duration-200" title="Tin nhắn">
+            <button class="p-2 text-slate-400 hover:bg-sky-400/10 rounded-xl transition-all active:scale-95 duration-200">
                 <span class="material-symbols-outlined" data-icon="mail">mail</span>
             </a>
             <a href="{{ route('profile') }}" class="p-2 text-sky-300 hover:bg-sky-400/10 rounded-xl transition-all active:scale-95 duration-200" title="Hồ sơ cá nhân">
@@ -175,9 +193,12 @@
                 <span class="material-symbols-outlined" data-icon="explore">explore</span>
                 Khám phá
             </a>
-            <a class="flex items-center gap-3 {{ request()->routeIs('notifications') ? 'bg-sky-400/20 text-sky-300 border border-sky-400/20' : 'text-slate-400 hover:bg-white/5 hover:text-sky-200' }} px-4 py-3 rounded-xl transition-colors cursor-pointer transition-transform active:translate-x-1 font-inter text-sm font-medium" href="{{ route('notifications') }}">
+            <a class="flex items-center gap-3 {{ request()->routeIs('notifications') ? 'bg-sky-400/20 text-sky-300 border border-sky-400/20' : 'text-slate-400 hover:bg-white/5 hover:text-sky-200' }} px-4 py-3 rounded-xl transition-colors cursor-pointer transition-transform active:translate-x-1 font-inter text-sm font-medium relative group" href="{{ route('notifications') }}">
                 <span class="material-symbols-outlined" data-icon="notifications">notifications</span>
-                Thông báo
+                <span>Thông báo</span>
+                <span class="notification-badge {{ $unreadNotificationsCount > 0 ? '' : 'hidden' }} absolute top-3 right-4 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-[#0a0e1a] group-hover:scale-110 transition-transform">
+                    {{ $unreadNotificationsCount > 99 ? '99+' : $unreadNotificationsCount }}
+                </span>
             </a>
 
             <a class="flex items-center gap-3 {{ request()->routeIs('chat.demo') || request()->routeIs('chat.user.*') || request()->routeIs('chat.messages.*') || request()->routeIs('chat.conversations.*') ? 'bg-sky-400/20 text-sky-300 border border-sky-400/20' : 'text-slate-400 hover:bg-white/5 hover:text-sky-200' }} px-4 py-3 rounded-xl transition-colors cursor-pointer transition-transform active:translate-x-1 font-inter text-sm font-medium" href="{{ route('chat.demo') }}">
@@ -214,8 +235,11 @@
         <a href="{{ route('profile') }}" class="p-2 {{ request()->routeIs('profile') ? 'text-sky-300 bg-sky-400/20 rounded-xl' : 'text-slate-400' }}">
             <span class="material-symbols-outlined" data-icon="person">person</span>
         </a>
-        <a href="{{ route('notifications') }}" class="p-2 {{ request()->routeIs('notifications') ? 'text-sky-300 bg-sky-400/20 rounded-xl' : 'text-slate-400' }}">
+        <a href="{{ route('notifications') }}" class="p-2 {{ request()->routeIs('notifications') ? 'text-sky-300 bg-sky-400/20 rounded-xl' : 'text-slate-400' }} relative">
             <span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+            <span class="notification-badge {{ $unreadNotificationsCount > 0 ? '' : 'hidden' }} absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-[#0a0e1a]">
+                {{ $unreadNotificationsCount > 99 ? '99+' : $unreadNotificationsCount }}
+            </span>
         </a>
         <a href="{{ route('chat.demo') }}" class="p-2 {{ request()->routeIs('chat.demo') ? 'text-sky-300 bg-sky-400/20 rounded-xl' : 'text-slate-400' }}">
             <span class="material-symbols-outlined" data-icon="mail">mail</span>
@@ -1142,6 +1166,29 @@
     <!-- ===== TOAST NOTIFICATION CONTAINER ===== -->
     <div id="toast-container" class="fixed bottom-20 left-1/2 -translate-x-1/2 sm:bottom-6 sm:left-auto sm:right-6 sm:translate-x-0 z-[110] flex flex-col gap-2 pointer-events-none"></div>
 
+    <script>
+        function updateGlobalNotificationCount() {
+            fetch('/notifications/unread-count')
+            .then(res => res.json())
+            .then(data => {
+                const badges = document.querySelectorAll('.notification-badge');
+                badges.forEach(badge => {
+                    if(data.count > 0) {
+                        badge.textContent = data.count > 99 ? '99+' : data.count;
+                        badge.classList.remove('hidden');
+                    } else {
+                        badge.classList.add('hidden');
+                    }
+                });
+            })
+            .catch(err => console.error('Error fetching notification count:', err));
+        }
+
+        @auth
+            // Poll every 30 seconds for new notifications
+            setInterval(updateGlobalNotificationCount, 30000);
+        @endauth
+    </script>
 </body>
 
 </html>

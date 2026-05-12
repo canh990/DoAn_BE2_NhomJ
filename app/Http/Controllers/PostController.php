@@ -28,6 +28,7 @@ class PostController extends Controller
         return view('components.home', compact('posts'));
     }
 
+
     public function show(BaiViet $post)
     {
         if ($post->da_xoa) {
@@ -85,6 +86,20 @@ class PostController extends Controller
                 ]);
             }
         }
+
+        // --- TẠO THÔNG BÁO CHO NGƯỜI THEO DÕI ---
+        $user = auth()->user();
+        $followers = $user->followers()->where('trang_thai', 'da_chap_nhan')->get();
+        foreach ($followers as $follower) {
+            \App\Models\ThongBao::create([
+                'nguoi_dung_id' => $follower->id,
+                'nguoi_thuc_hien_id' => $user->id,
+                'loai' => 'dang_bai',
+                'bai_viet_id' => $post->id,
+                'ngay_tao' => now(),
+            ]);
+        }
+        // ---------------------------------------
 
         return redirect()
             ->route('home')
@@ -158,6 +173,17 @@ class PostController extends Controller
             'noi_dung' => $request->input('noi_dung', null),
             'quyen_rieng_tu' => 'ban_be',
         ]);
+
+        // Tạo thông báo cho chủ bài viết gốc
+        if ($post->nguoi_dung_id !== auth()->id()) {
+            \App\Models\ThongBao::create([
+                'nguoi_dung_id' => $post->nguoi_dung_id,
+                'nguoi_thuc_hien_id' => auth()->id(),
+                'loai' => 'chia_se',
+                'bai_viet_id' => $post->id,
+                'ngay_tao' => now(),
+            ]);
+        }
 
         $sharesCount = BaiViet::where('bai_goc_id', $post->id)->count();
 

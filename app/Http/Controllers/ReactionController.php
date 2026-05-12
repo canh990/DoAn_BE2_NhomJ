@@ -33,6 +33,15 @@ class ReactionController extends Controller
 
         if ($currentReaction && $currentReaction->loai_cam_xuc === $validated['loai_cam_xuc']) {
             $currentReaction->delete();
+            
+            // Xóa thông báo khi gỡ cảm xúc
+            \App\Models\ThongBao::where([
+                'nguoi_dung_id' => $post->nguoi_dung_id,
+                'nguoi_thuc_hien_id' => $user->id,
+                'loai' => 'thich',
+                'bai_viet_id' => $post->id,
+            ])->delete();
+
             $removed = true;
             $message = 'Bạn đã gỡ cảm xúc.';
         } else {
@@ -45,6 +54,22 @@ class ReactionController extends Controller
                     'loai_cam_xuc' => $validated['loai_cam_xuc'],
                 ]
             );
+
+            // Tạo thông báo nếu không phải bài viết của chính mình
+            if ($post->nguoi_dung_id !== $user->id) {
+                \App\Models\ThongBao::updateOrCreate(
+                    [
+                        'nguoi_dung_id' => $post->nguoi_dung_id,
+                        'nguoi_thuc_hien_id' => $user->id,
+                        'loai' => 'thich',
+                        'bai_viet_id' => $post->id,
+                    ],
+                    [
+                        'da_doc' => false,
+                        'ngay_tao' => now(),
+                    ]
+                );
+            }
         }
 
         $reactionsCount = $post->reactions()->count();
