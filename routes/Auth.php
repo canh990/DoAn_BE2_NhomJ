@@ -4,8 +4,12 @@ use App\Http\Controllers\Auth\LoginController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SocialLoginController;
 use App\Http\Controllers\Auth\RegisterController;
+<<<<<<< HEAD
 use App\Http\Controllers\SearchController;
 
+=======
+use Illuminate\Support\Facades\App;
+>>>>>>> bc9c934 (update: change language)
 // -----------------------------------------------
 // Auth routes
 // -----------------------------------------------
@@ -52,15 +56,19 @@ Route::get('/forgot-password', function () {
 // -----------------------------------------------
 // Trang sau khi đăng nhập
 // -----------------------------------------------
+<<<<<<< HEAD
 Route::get('/explore', [\App\Http\Controllers\PostController::class, 'explore'])
     ->name('explore')
     ->middleware('auth');
+=======
+Route::get('/explore', function () {
+>>>>>>> bc9c934 (update: change language)
 
-Route::view('/notifications', 'components.placeholder', [
-    'title' =>  __('messages.notifications_title'),
-    'message' => __('messages.notifications_subtitle'),
-])->name('notifications')->middleware('auth');
+    App::setLocale(
+        session('personal_locale', config('app.locale'))
+    );
 
+<<<<<<< HEAD
 Route::view('/messages', 'components.placeholder', [
     'title' => __('messages.chat_title'),
     'message' => __('messages.chat_subtitle'),
@@ -69,3 +77,37 @@ Route::view('/messages', 'components.placeholder', [
 Route::get('/search/users', [SearchController::class, 'searchUsers'])
     ->middleware('auth')
     ->name('search.users');
+=======
+    return view('components.placeholder', [
+        'title' => __('messages.explore_title'),
+        'message' => __('messages.explore_subtitle'),
+    ]);
+
+})->name('explore')->middleware('auth');
+
+Route::get('/notifications', function () {
+
+    App::setLocale(
+        session('personal_locale', config('app.locale'))
+    );
+
+    return view('components.placeholder', [
+        'title' => __('messages.notifications_title'),
+        'message' => __('messages.notifications_subtitle'),
+    ]);
+
+})->name('notifications')->middleware('auth');
+
+Route::get('/messages', function () {
+
+    App::setLocale(
+        session('personal_locale', config('app.locale'))
+    );
+
+    return view('components.placeholder', [
+        'title' => __('messages.messages_title'),
+        'message' => __('messages.messages_subtitle'),
+    ]);
+
+})->name('messages')->middleware('auth');
+>>>>>>> bc9c934 (update: change language)

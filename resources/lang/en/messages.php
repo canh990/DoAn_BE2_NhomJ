@@ -27,6 +27,7 @@ return [
     'storage' => 'Storage',
     'storage_usage' => 'Current cache storage usage',
     'clear_cache' => 'Clear Cache',
+    'session_storage_usage' => 'Current session storage usage',
 
     'device_management' => 'Device Management',
     'devices_active' => 'Active Devices',
