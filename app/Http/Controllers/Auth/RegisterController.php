@@ -190,7 +190,7 @@ class RegisterController extends Controller
                 'unique:nguoi_dung,ten_dang_nhap'
             ],
             'email'         => ['required', 'string', 'email', 'max:255', 'unique:nguoi_dung,email'],
-            'so_dien_thoai' => ['required', 'string', 'max:20', 'unique:nguoi_dung,so_dien_thoai'],
+            'so_dien_thoai' => ['required', 'string', 'max:11', 'unique:nguoi_dung,so_dien_thoai'],
             'mat_khau'      => [
                 'required', 
                 'string', 

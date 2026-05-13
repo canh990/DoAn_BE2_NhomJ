@@ -6,6 +6,8 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use App\Models\BaiViet;
+use App\Models\MediaBaiViet;
 
 class ProfileController extends Controller
 {
@@ -133,6 +135,16 @@ class ProfileController extends Controller
                 Storage::disk('public')->delete($user->anh_dai_dien);
             }
             $validated['anh_dai_dien'] = $request->file('anh_dai_dien')->store('avatars', 'public');
+        } elseif ($request->input('remove_avatar') == '1') {
+            if ($user->anh_dai_dien) {
+                Storage::disk('public')->delete($user->anh_dai_dien);
+            }
+            $validated['anh_dai_dien'] = null;
+
+            // Xóa các bài đăng thông báo cập nhật ảnh đại diện trước đó
+            BaiViet::where('nguoi_dung_id', $user->id)
+                ->where('noi_dung', 'vừa cập nhật ảnh đại diện mới.')
+                ->delete();
         }
 
         // Xử lý ảnh bìa
@@ -141,13 +153,102 @@ class ProfileController extends Controller
                 Storage::disk('public')->delete($user->anh_bia);
             }
             $validated['anh_bia'] = $request->file('anh_bia')->store('covers', 'public');
+        } elseif ($request->input('remove_cover') == '1') {
+            if ($user->anh_bia) {
+                Storage::disk('public')->delete($user->anh_bia);
+            }
+            $validated['anh_bia'] = null;
+
+            // Xóa các bài đăng thông báo cập nhật ảnh bìa trước đó
+            BaiViet::where('nguoi_dung_id', $user->id)
+                ->where('noi_dung', 'vừa cập nhật ảnh bìa mới.')
+                ->delete();
         }
 
         $user->update($validated);
 
+        // Tạo bài viết thông báo cập nhật ảnh đại diện
+        if ($request->hasFile('anh_dai_dien')) {
+            $post = BaiViet::create([
+                'nguoi_dung_id' => $user->id,
+                'loai' => 'hinh_anh',
+                'noi_dung' => 'vừa cập nhật ảnh đại diện mới.',
+                'quyen_rieng_tu' => 'cong_khai',
+            ]);
+
+            MediaBaiViet::create([
+                'bai_viet_id' => $post->id,
+                'loai' => 'hinh_anh',
+                'duong_dan' => $user->anh_dai_dien,
+                'ngay_tao' => now(),
+            ]);
+
+            // Thông báo cho người theo dõi
+            $this->notifyFollowers($user, $post);
+        }
+
+        // Tạo bài viết thông báo cập nhật ảnh bìa
+        if ($request->hasFile('anh_bia')) {
+            $post = BaiViet::create([
+                'nguoi_dung_id' => $user->id,
+                'loai' => 'hinh_anh',
+                'noi_dung' => 'vừa cập nhật ảnh bìa mới.',
+                'quyen_rieng_tu' => 'cong_khai',
+            ]);
+
+            MediaBaiViet::create([
+                'bai_viet_id' => $post->id,
+                'loai' => 'hinh_anh',
+                'duong_dan' => $user->anh_bia,
+                'ngay_tao' => now(),
+            ]);
+
+            // Thông báo cho người theo dõi
+            $this->notifyFollowers($user, $post);
+        }
+
         return redirect()
             ->route('profile')
             ->with('success', 'Đã cập nhật hồ sơ thành công.');
+    }
+
+    /**
+     * Thông báo cho tất cả người theo dõi về bài viết mới
+     */
+    private function notifyFollowers($user, $post)
+    {
+        $followers = $user->followers()->where('trang_thai', 'da_chap_nhan')->get();
+        foreach ($followers as $follower) {
+            \App\Models\ThongBao::create([
+                'nguoi_dung_id' => $follower->id,
+                'nguoi_thuc_hien_id' => $user->id,
+                'loai' => 'dang_bai',
+                'bai_viet_id' => $post->id,
+                'ngay_tao' => now(),
+            ]);
+        }
+    }
+
+    public function removeAvatar()
+    {
+        $user = auth()->user();
+        if ($user->anh_dai_dien) {
+            Storage::disk('public')->delete($user->anh_dai_dien);
+            $user->update(['anh_dai_dien' => null]);
+            return response()->json(['success' => true, 'message' => 'Đã xóa ảnh đại diện.']);
+        }
+        return response()->json(['success' => false, 'message' => 'Không tìm thấy ảnh đại diện để xóa.']);
+    }
+
+    public function removeCover()
+    {
+        $user = auth()->user();
+        if ($user->anh_bia) {
+            Storage::disk('public')->delete($user->anh_bia);
+            $user->update(['anh_bia' => null]);
+            return response()->json(['success' => true, 'message' => 'Đã xóa ảnh bìa.']);
+        }
+        return response()->json(['success' => false, 'message' => 'Không tìm thấy ảnh bìa để xóa.']);
     }
 
     public function toggleFollow(User $user)

@@ -28,6 +28,18 @@ class PostController extends Controller
         return view('components.home', compact('posts'));
     }
 
+    public function explore()
+    {
+        $media = MediaBaiViet::with('baiViet.user')
+            ->whereHas('baiViet', function($query) {
+                $query->where('da_xoa', false);
+            })
+            ->latest('ngay_tao')
+            ->paginate(24);
+
+        return view('explore', compact('media'));
+    }
+
 
     public function show(BaiViet $post)
     {

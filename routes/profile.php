@@ -19,6 +19,10 @@ Route::middleware('auth')->group(function () {
         ->name('profile.send-action-otp');
     Route::delete('/profile', [ProfileController::class, 'destroy'])
         ->name('profile.destroy');
+    Route::post('/profile/remove-avatar', [ProfileController::class, 'removeAvatar'])
+        ->name('profile.remove-avatar');
+    Route::post('/profile/remove-cover', [ProfileController::class, 'removeCover'])
+        ->name('profile.remove-cover');
     Route::post('/user/{user}/toggle-follow', [ProfileController::class, 'toggleFollow'])
         ->name('user.toggle-follow');
 });
