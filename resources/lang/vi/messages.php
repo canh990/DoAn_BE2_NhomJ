@@ -30,4 +30,5 @@ return [
     'danger_zone_title' => 'Khu vực Nguy hiểm',
     'danger_zone_desc' => 'Một khi bạn tắt tài khoản của mình, sẽ không còn cách nào quay lại. Vui lòng chắc chắn.',
     'disable_account' => 'Tắt Tài khoản',
+    'explore_title' => 'Khám phá',
 ];

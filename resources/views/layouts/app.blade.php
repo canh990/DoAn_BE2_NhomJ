@@ -119,6 +119,21 @@
             transform: translateX(20px);
             transition: all 0.3s ease-in;
         }
+
+        /* Custom Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(125, 211, 252, 0.2);
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(125, 211, 252, 0.4);
+        }
     </style>
 </head>
 <body class="antialiased selection:bg-primary/30 selection:text-primary">
@@ -1145,68 +1160,12 @@
     </script>
     <script src="/js/theme-toggle.js"></script>
     <script src="/js/language-toggle.js"></script>
-    <!-- ===== MODAL CHỈNH SỬA BÀI VIẾT ===== -->
-    <div id="edit-post-modal" class="hidden fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
-        <div class="glass-panel rounded-2xl w-full max-w-lg shadow-2xl scale-95 transition-transform duration-300">
-            <div class="flex items-center justify-between p-4 border-b border-sky-400/10">
-                <h3 class="text-lg font-bold text-on-surface">Chỉnh sửa bài viết</h3>
-                <button type="button" id="close-edit-modal" class="p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-full transition-colors">
-                    <span class="material-symbols-outlined">close</span>
-                </button>
-            </div>
-            <form id="edit-post-form" method="POST" class="p-4 flex flex-col gap-4">
-                @csrf
-                @method('PUT')
-                <textarea id="edit-post-content" name="noi_dung" rows="5" class="w-full bg-slate-900/50 border border-sky-400/20 rounded-xl focus:ring-1 focus:ring-sky-400 text-slate-100 placeholder-slate-500 resize-none p-3" required></textarea>
-                <div class="flex justify-end gap-3 pt-2">
-                    <button type="button" id="cancel-edit-btn" class="px-5 py-2 text-sm font-semibold text-slate-300 hover:text-white hover:bg-white/5 rounded-xl transition-colors">Hủy</button>
-                    <button type="submit" class="px-5 py-2 text-sm font-semibold bg-sky-500 hover:bg-sky-400 text-white rounded-xl shadow-lg shadow-sky-500/20 transition-all active:scale-95">Lưu thay đổi</button>
-                </div>
-            </form>
-        </div>
-    </div>
+    <x-edit-modal />
+    <x-share-modal />
+    <x-confirm-modal />
 
-    <!-- ===== MODAL CHIA SẺ BÀI VIẾT ===== -->
-    <div id="share-post-modal" class="hidden fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
-        <div class="glass-panel rounded-2xl w-full max-w-lg shadow-2xl scale-95 transition-transform duration-300">
-            <div class="flex items-center justify-between p-4 border-b border-sky-400/10">
-                <h3 class="text-lg font-bold text-on-surface">Chia sẻ bài viết</h3>
-                <button type="button" id="close-share-modal" class="p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-full transition-colors">
-                    <span class="material-symbols-outlined">close</span>
-                </button>
-            </div>
-            <div class="p-4 flex flex-col gap-4">
-                <textarea id="share-post-content" rows="4" placeholder="Viết cảm nghĩ của bạn về bài viết này..." class="w-full bg-slate-900/50 border border-sky-400/20 rounded-xl focus:ring-1 focus:ring-sky-400 text-slate-100 placeholder-slate-500 resize-none p-3"></textarea>
-                <div class="flex justify-end gap-3 pt-2">
-                    <button type="button" id="cancel-share-btn" class="px-5 py-2 text-sm font-semibold text-slate-300 hover:text-white hover:bg-white/5 rounded-xl transition-colors">Hủy</button>
-                    <button type="button" id="confirm-share-btn" class="px-5 py-2 text-sm font-semibold bg-sky-500 hover:bg-sky-400 text-white rounded-xl shadow-lg shadow-sky-500/20 transition-all active:scale-95 flex items-center gap-2">
-                        <span class="material-symbols-outlined text-[18px]">share</span> Chia sẻ ngay
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ===== GLOBAL CONFIRM MODAL ===== -->
-    <div id="global-confirm-modal" class="hidden fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
-        <div id="confirm-modal-content" class="glass-panel rounded-2xl w-full max-w-sm shadow-2xl scale-95 transition-transform duration-300 relative overflow-hidden">
-            <div class="p-6 text-center">
-                <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-rose-500/10 mb-4 border border-rose-500/20">
-                    <span class="material-symbols-outlined text-rose-500 text-3xl">warning</span>
-                </div>
-                <h3 class="text-xl font-bold text-white mb-2" id="confirm-modal-title">Xác nhận xóa</h3>
-                <p class="text-sm text-slate-400 mb-6" id="confirm-modal-message">Bạn có chắc chắn muốn thực hiện hành động này không?</p>
-                
-                <div class="flex gap-3">
-                    <button type="button" onclick="window.closeConfirmModal()" class="flex-1 px-5 py-2.5 text-sm font-semibold text-slate-300 bg-slate-800 hover:bg-slate-700 rounded-xl transition-colors">Hủy</button>
-                    <button type="button" id="confirm-modal-submit" class="flex-1 px-5 py-2.5 text-sm font-semibold bg-rose-500 hover:bg-rose-600 text-white rounded-xl shadow-lg shadow-rose-500/20 transition-all active:scale-95">Xóa ngay</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ===== TOAST NOTIFICATION CONTAINER ===== -->
-    <div id="toast-container" class="fixed bottom-20 left-1/2 -translate-x-1/2 sm:bottom-6 sm:left-auto sm:right-6 sm:translate-x-0 z-[110] flex flex-col gap-2 pointer-events-none"></div>
+    <x-post-modal />
+    <x-toast />
 
     <script>
         function updateGlobalNotificationCount() {

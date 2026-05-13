@@ -44,6 +44,9 @@ class PostController extends Controller
     public function show(BaiViet $post)
     {
         if ($post->da_xoa) {
+            if (request()->ajax()) {
+                return response()->json(['error' => 'Bài viết đã bị xóa.'], 404);
+            }
             return redirect()->route('home')->with('error', 'Bài viết đã bị xóa.');
         }
 
@@ -54,6 +57,10 @@ class PostController extends Controller
             }, 'comments' => function ($query) {
                 $query->whereNull('binh_luan_cha_id')->with(['user', 'nestedChildren'])->latest('ngay_tao');
             }]);
+
+        if (request()->ajax()) {
+            return view('components.post-card', compact('post'))->render();
+        }
 
         return view('posts.show', compact('post'));
     }
