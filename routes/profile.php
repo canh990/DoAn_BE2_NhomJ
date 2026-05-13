@@ -36,3 +36,7 @@ Route::get('/profile/{username}/following', [ProfileController::class, 'followin
 Route::get('/profile/{username}', [ProfileController::class, 'showByUsername'])
     ->where('username', '^(?!edit$).+')
     ->name('profile.public');
+Route::get('/profile/{username}', [ProfileController::class, 'showByUsername'])
+    ->where('username', '^(?!edit$).+')
+    ->middleware('profile.privacy')
+    ->name('profile.public');

@@ -442,3 +442,69 @@
     }
 </style>
 @endsection
+    document.getElementById('btn-save-crop').onclick = function() {
+        if (!cropper) return;
+
+        const loader = document.getElementById('crop-loader');
+        const btn = this;
+        
+        loader.classList.remove('hidden');
+        btn.disabled = true;
+
+        const canvasOptions = currentType === 'avatar' 
+            ? { width: 500, height: 500 } 
+            : { width: 1920, height: 1080 };
+
+        const canvas = cropper.getCroppedCanvas(canvasOptions);
+        if (!canvas) {
+            if (window.showToast) window.showToast('Lỗi xử lý ảnh', 'error');
+            loader.classList.add('hidden');
+            btn.disabled = false;
+            return;
+        }
+
+        canvas.toBlob((blob) => {
+            const formData = new FormData();
+            formData.append('image', blob, 'profile.jpg');
+            formData.append('description', document.getElementById('cropper-description').value);
+            formData.append('_token', '{{ csrf_token() }}');
+
+            const url = currentType === 'avatar' 
+                ? '{{ route("profile.upload-avatar") }}' 
+                : '{{ route("profile.upload-cover") }}';
+
+            fetch(url, {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById(currentType + '-preview').src = data.url;
+                    
+                    // Show delete button if it was hidden
+                    const btnRemove = document.getElementById('btn-remove-' + currentType);
+                    if (btnRemove) btnRemove.classList.remove('hidden');
+                    
+                    // Reset removal flag
+                    document.getElementById('remove_' + currentType).value = '0';
+
+                    if (window.showToast) window.showToast(data.message, 'success');
+                    closeCropper();
+                } else {
+                    if (window.showToast) window.showToast(data.message, 'error');
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                if (window.showToast) window.showToast('Lỗi kết nối máy chủ', 'error');
+            })
+            .finally(() => {
+                loader.classList.add('hidden');
+                btn.disabled = false;
+            });
+        }, 'image/jpeg', 0.95);
+    };
+</script>
+@endsection

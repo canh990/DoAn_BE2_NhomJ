@@ -92,3 +92,21 @@ class User extends Authenticatable
         return $this->hasMany(ThongBao::class, 'nguoi_dung_id')->where('da_doc', false);
     }
 }
+    public function isFriendsWith($otherUserId)
+    {
+        if (!$otherUserId) return false;
+
+        // Check if I follow them and they follow me (both accepted)
+        $following = $this->following()
+            ->where('nguoi_duoc_theo_doi_id', $otherUserId)
+            ->where('trang_thai', 'da_chap_nhan')
+            ->exists();
+
+        $follower = $this->followers()
+            ->where('nguoi_theo_doi_id', $otherUserId)
+            ->where('trang_thai', 'da_chap_nhan')
+            ->exists();
+
+        return $following && $follower;
+    }
+}
