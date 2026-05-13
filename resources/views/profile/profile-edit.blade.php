@@ -23,6 +23,10 @@
     <form action="{{ route('profile.update') }}" method="POST" enctype="multipart/form-data" class="space-y-8">
         @csrf
         @method('PUT')
+        
+        <!-- Hidden inputs for removal flags -->
+        <input type="hidden" name="remove_avatar" id="remove_avatar" value="0">
+        <input type="hidden" name="remove_cover" id="remove_cover" value="0">
 
         <section class="relative mb-24">
             <div class="h-48 md:h-64 rounded-3xl overflow-hidden relative group bg-slate-800">
@@ -39,6 +43,12 @@
                     </div>
                 </label>
                 <input id="anh_bia" name="anh_bia" type="file" accept="image/*" class="hidden" onchange="previewImage(this, 'cover-preview')">
+                
+                @if($user->anh_bia)
+                <button type="button" id="btn-remove-cover" onclick="removeCoverAction()" class="absolute top-4 right-4 bg-rose-500 hover:bg-rose-600 text-white p-2 rounded-full shadow-lg transition-all active:scale-90 border-2 border-white/10 z-10" title="Xóa ảnh bìa">
+                    <span class="material-symbols-outlined text-sm font-bold">close</span>
+                </button>
+                @endif
             </div>
 
             <div class="absolute -bottom-16 left-8 group">
@@ -55,6 +65,11 @@
                     </label>
                     <input id="anh_dai_dien" name="anh_dai_dien" type="file" accept="image/*" class="hidden" onchange="previewImage(this, 'avatar-preview')">
                 </div>
+                @if($user->anh_dai_dien)
+                <button type="button" id="btn-remove-avatar" onclick="removeAvatarAction()" class="absolute -top-2 -right-2 bg-rose-500 hover:bg-rose-600 text-white p-1.5 rounded-full shadow-lg transition-all active:scale-90 border-2 border-background z-10" title="Xóa ảnh đại diện">
+                    <span class="material-symbols-outlined text-sm font-bold">close</span>
+                </button>
+                @endif
             </div>
         </section>
 
@@ -119,9 +134,7 @@
                     <input
                         type="date"
                         name="ngay_sinh"
-                        {{-- Dùng old() để giữ lại giá trị vừa nhập nếu có lỗi --}}
                         value="{{ old('ngay_sinh', $user->ngay_sinh ? \Carbon\Carbon::parse($user->ngay_sinh)->format('Y-m-d') : '') }}"
-                        {{-- Đổi màu viền sang đỏ nếu có lỗi --}}
                         class="w-full bg-slate-900/50 border {{ $errors->has('ngay_sinh') ? 'border-red-500/50' : 'border-white/10' }} rounded-2xl py-3.5 px-4 text-on-surface outline-none transition-all focus:border-sky-400/50">
 
                     @error('ngay_sinh')
@@ -171,7 +184,6 @@
         </div>
     </form>
 
-    <!-- Phần vô hiệu hóa tài khoản -->
     <div class="glass-panel border-red-500/20 rounded-3xl p-6 flex flex-col md:flex-row items-center justify-between gap-4 mt-8 mb-4 border" style="border-color: rgba(239, 68, 68, 0.2);">
         <div>
             <h3 class="font-bold text-red-500">Vô hiệu hóa tài khoản</h3>
@@ -180,7 +192,6 @@
         <button type="button" onclick="document.getElementById('deactivate-modal').classList.remove('hidden')" class="text-red-500 font-semibold hover:bg-red-500/10 px-4 py-2 rounded-xl transition-colors">Vô hiệu hóa</button>
     </div>
 
-    <!-- Phần xóa vĩnh viễn tài khoản -->
     <div class="glass-panel border-red-600/30 rounded-3xl p-6 flex flex-col md:flex-row items-center justify-between gap-4 mb-8 border" style="border-color: rgba(220, 38, 38, 0.3);">
         <div>
             <h3 class="font-bold text-red-600">Xóa vĩnh viễn tài khoản</h3>
@@ -189,7 +200,6 @@
         <button type="button" onclick="document.getElementById('delete-modal').classList.remove('hidden')" class="bg-red-600/10 text-red-600 font-bold hover:bg-red-600 hover:text-white px-5 py-2.5 rounded-xl transition-all border border-red-600/20 hover:border-red-600 shadow-sm">Xóa tài khoản</button>
     </div>
 
-    <!-- Modal vô hiệu hóa tài khoản -->
     <div id="deactivate-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
         <div class="glass-panel rounded-3xl p-6 w-full max-w-md animate-fade-in relative bg-[#0a0e1a] border border-red-500/20">
             <button type="button" onclick="document.getElementById('deactivate-modal').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-white">
@@ -246,7 +256,6 @@
         </div>
     </div>
 
-    <!-- Modal xóa tài khoản -->
     <div id="delete-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
         <div class="glass-panel rounded-3xl p-6 w-full max-w-md animate-fade-in relative bg-red-950/20 border border-red-600/30">
             <button type="button" onclick="document.getElementById('delete-modal').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-white">
@@ -324,52 +333,34 @@
 @endif
 
 <script>
-    async function sendOtp(btn) {
-        if (btn.disabled) return;
-        
-        btn.disabled = true;
-        let originalText = btn.innerText;
-        btn.innerText = 'Đang gửi...';
-        
-        try {
-            const response = await fetch('{{ route("profile.send-action-otp") }}', {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    'Accept': 'application/json'
-                }
-            });
+    function removeAvatarAction() {
+        window.openConfirmModal('Xóa ảnh đại diện?', 'Bạn có chắc chắn muốn xóa ảnh đại diện hiện tại không?', () => {
+            const preview = document.getElementById('avatar-preview');
+            preview.src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent('{{ $user->name }}') + '&background=random';
             
-            const data = await response.json();
+            // Đánh dấu để xóa khi nhấn Lưu thay đổi
+            document.getElementById('remove_avatar').value = '1';
             
-            if (data.success) {
-                alert(data.message);
-                
-                // Đếm ngược 60s
-                let timeLeft = 60;
-                btn.innerText = `Chờ ${timeLeft}s`;
-                
-                const timer = setInterval(() => {
-                    timeLeft--;
-                    btn.innerText = `Chờ ${timeLeft}s`;
-                    
-                    if (timeLeft <= 0) {
-                        clearInterval(timer);
-                        btn.disabled = false;
-                        btn.innerText = originalText;
-                    }
-                }, 1000);
-            } else {
-                alert(data.message || 'Có lỗi xảy ra khi gửi OTP.');
-                btn.disabled = false;
-                btn.innerText = originalText;
-            }
-        } catch (error) {
-            console.error('Lỗi khi gửi OTP:', error);
-            alert('Có lỗi xảy ra, vui lòng thử lại.');
-            btn.disabled = false;
-            btn.innerText = originalText;
-        }
+            const btnRemove = document.getElementById('btn-remove-avatar');
+            if (btnRemove) btnRemove.classList.add('hidden');
+            
+            if (window.showToast) window.showToast('Đã đánh dấu xóa ảnh đại diện. Nhấn Lưu thay đổi để hoàn tất.', 'info');
+        }, 'Xóa ảnh');
+    }
+
+    function removeCoverAction() {
+        window.openConfirmModal('Xóa ảnh bìa?', 'Bạn có chắc chắn muốn xóa ảnh bìa hiện tại không?', () => {
+            const preview = document.getElementById('cover-preview');
+            preview.src = 'https://images.unsplash.com/photo-1557683316-973673baf926?q=80&w=2029&auto=format&fit=crop';
+            
+            // Đánh dấu để xóa khi nhấn Lưu thay đổi
+            document.getElementById('remove_cover').value = '1';
+            
+            const btnRemove = document.getElementById('btn-remove-cover');
+            if (btnRemove) btnRemove.classList.add('hidden');
+            
+            if (window.showToast) window.showToast('Đã đánh dấu xóa ảnh bìa. Nhấn Lưu thay đổi để hoàn tất.', 'info');
+        }, 'Xóa ảnh bìa');
     }
 </script>
 <script>
@@ -394,6 +385,19 @@
 
             reader.onload = function(e) {
                 preview.src = e.target.result;
+
+                // Reset flag xóa và hiện nút xóa nếu có ảnh mới
+                if (previewId === 'avatar-preview') {
+                    const removeAvatarInput = document.getElementById('remove_avatar');
+                    if (removeAvatarInput) removeAvatarInput.value = '0';
+                    const btn = document.getElementById('btn-remove-avatar');
+                    if (btn) btn.classList.remove('hidden');
+                } else if (previewId === 'cover-preview') {
+                    const removeCoverInput = document.getElementById('remove_cover');
+                    if (removeCoverInput) removeCoverInput.value = '0';
+                    const btn = document.getElementById('btn-remove-cover');
+                    if (btn) btn.classList.remove('hidden');
+                }
 
                 // Khi ảnh mới đã load xong
                 preview.onload = function() {

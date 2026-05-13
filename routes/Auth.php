@@ -50,10 +50,9 @@ Route::get('/forgot-password', function () {
 // -----------------------------------------------
 // Trang sau khi đăng nhập
 // -----------------------------------------------
-Route::view('/explore', 'components.placeholder', [
-    'title' => 'Khám phá',
-    'message' => 'Trang Khám phá sẽ sớm có nội dung đầy đủ.',
-])->name('explore')->middleware('auth');
+Route::get('/explore', [\App\Http\Controllers\PostController::class, 'explore'])
+    ->name('explore')
+    ->middleware('auth');
 
 Route::view('/notifications', 'components.placeholder', [
     'title' => 'Thông báo',

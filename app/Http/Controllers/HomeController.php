@@ -30,9 +30,16 @@ class HomeController extends Controller
             ->take(30)
             ->get();
 
+        // Lấy 9 ảnh/video mới nhất từ bảng tin
+        $recentMedia = \App\Models\MediaBaiViet::whereIn('bai_viet_id', BaiViet::where('da_xoa', false)->pluck('id'))
+            ->latest('ngay_tao')
+            ->take(9)
+            ->get();
+
         return view('components.home', [
-            'posts'   => $posts,
-            'stories' => $stories,
+            'posts'       => $posts,
+            'stories'     => $stories,
+            'recentMedia' => $recentMedia,
         ]);
     }
 }

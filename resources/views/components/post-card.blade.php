@@ -107,6 +107,8 @@
     $selectedIcon = $selected['icon'] ?? 'thumb_up';
     $selectedLabel = $selected['label'] ?? 'Thích';
     $selectedColor = $selected['color'] ?? 'text-sky-400';
+
+    $isProfileUpdate = \Illuminate\Support\Str::startsWith($body, 'vừa cập nhật ảnh');
 @endphp
 
 <article {{ $attributes->merge(['class' => 'glass-panel group rounded-2xl p-6 transition-all hover:border-sky-400/30']) }}>
@@ -126,6 +128,10 @@
                         <a href="{{ $authorUsername ? route('profile.public', $authorUsername) : '#' }}" class="truncate font-bold text-on-surface hover:text-sky-300 transition-colors">
                             {{ $authorName }}
                         </a>
+
+                        @if($isProfileUpdate)
+                            <span class="text-sm text-slate-400">{{ $body }}</span>
+                        @endif
 
                         @if (data_get($post, 'cam_xuc') || data_get($post, 'hoat_dong'))
                             @php
@@ -199,7 +205,7 @@
                 @endif
             </div>
 
-            @if (filled($body) && data_get($post, 'loai') !== 'chia_se')
+            @if (filled($body) && data_get($post, 'loai') !== 'chia_se' && !$isProfileUpdate)
                 <p class="whitespace-pre-line leading-relaxed text-on-surface-variant">
                     {{ $body }}
                 </p>
