@@ -138,15 +138,27 @@
                     {{ $unreadNotificationsCount > 99 ? '99+' : $unreadNotificationsCount }}
                 </span>
             </a>
-            <button class="p-2 text-slate-400 hover:bg-sky-400/10 rounded-xl transition-all active:scale-95 duration-200">
+            <a href="{{ route('chat.demo') }}" class="p-2 text-slate-400 hover:bg-sky-400/10 rounded-xl transition-all active:scale-95 duration-200" title="Tin nhắn">
                 <span class="material-symbols-outlined" data-icon="mail">mail</span>
             </a>
+            @auth
+            <a href="{{ route('profile') }}" class="p-1 hover:bg-sky-400/10 rounded-xl transition-all active:scale-95 duration-200 flex items-center gap-2 group" title="Hồ sơ cá nhân">
+                <div class="w-8 h-8 overflow-hidden rounded-full border border-sky-400/20 group-hover:border-sky-400/50 transition-colors">
+                    <img 
+                        class="w-full h-full object-cover" 
+                        alt="{{ Auth::user()->name }}" 
+                        src="{{ Auth::user()->anh_dai_dien ? asset('storage/' . Auth::user()->anh_dai_dien) : 'https://ui-avatars.com/api/?name='.urlencode(Auth::user()->name).'&background=random' }}" 
+                    />
+                </div>
+            </a>
+            @else
             <a href="{{ route('profile') }}" class="p-2 text-sky-300 hover:bg-sky-400/10 rounded-xl transition-all active:scale-95 duration-200" title="Hồ sơ cá nhân">
                 <span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
             </a>
-            <form method="POST" action="{{ route('logout') }}" class="inline">
+            @endauth
+            <form id="logout-form" method="POST" action="{{ route('logout') }}" class="inline">
                 @csrf
-                <button type="submit" class="p-2 text-slate-400 hover:text-red-400 hover:bg-red-400/10 rounded-xl transition-all active:scale-95 duration-200" title="Đăng xuất">
+                <button type="button" onclick="window.openConfirmModal('Đăng xuất?', 'Bạn có chắc chắn muốn đăng xuất khỏi tài khoản không?', () => document.getElementById('logout-form').submit(), 'Đăng xuất')" class="p-2 text-slate-400 hover:text-red-400 hover:bg-red-400/10 rounded-xl transition-all active:scale-95 duration-200" title="Đăng xuất">
                     <span class="material-symbols-outlined" data-icon="logout">logout</span>
                 </button>
             </form>
@@ -233,7 +245,17 @@
             <span class="material-symbols-outlined" data-icon="explore">explore</span>
         </a>
         <a href="{{ route('profile') }}" class="p-2 {{ request()->routeIs('profile') ? 'text-sky-300 bg-sky-400/20 rounded-xl' : 'text-slate-400' }}">
+            @auth
+            <div class="w-7 h-7 overflow-hidden rounded-full border {{ request()->routeIs('profile') ? 'border-sky-400' : 'border-slate-500' }}">
+                <img 
+                    class="w-full h-full object-cover" 
+                    alt="{{ Auth::user()->name }}" 
+                    src="{{ Auth::user()->anh_dai_dien ? asset('storage/' . Auth::user()->anh_dai_dien) : 'https://ui-avatars.com/api/?name='.urlencode(Auth::user()->name).'&background=random' }}" 
+                />
+            </div>
+            @else
             <span class="material-symbols-outlined" data-icon="person">person</span>
+            @endauth
         </a>
         <a href="{{ route('notifications') }}" class="p-2 {{ request()->routeIs('notifications') ? 'text-sky-300 bg-sky-400/20 rounded-xl' : 'text-slate-400' }} relative">
             <span class="material-symbols-outlined" data-icon="notifications">notifications</span>
@@ -851,12 +873,18 @@
     
         // --- Global Confirm Modal ---
         let confirmActionCallback = null;
-        window.openConfirmModal = function(title, message, callback) {
+        window.openConfirmModal = function(title, message, callback, btnText = 'Xác nhận') {
             const modal = document.getElementById('global-confirm-modal');
             if (!modal) return;
             
             document.getElementById('confirm-modal-title').textContent = title;
             document.getElementById('confirm-modal-message').textContent = message;
+            
+            const submitBtn = document.getElementById('confirm-modal-submit');
+            if (submitBtn) {
+                submitBtn.textContent = btnText;
+            }
+            
             confirmActionCallback = callback;
             
             const content = document.getElementById('confirm-modal-content');
@@ -1202,6 +1230,14 @@
             // Poll every 30 seconds for new notifications
             setInterval(updateGlobalNotificationCount, 30000);
         @endauth
+
+        // Global Session Messages
+        @if(session('success'))
+            window.showToast("{{ session('success') }}", 'success');
+        @endif
+        @if(session('error'))
+            window.showToast("{{ session('error') }}", 'error');
+        @endif
     </script>
 </body>
 
