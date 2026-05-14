@@ -230,6 +230,64 @@ class ChatController extends Controller
         return $message;
     }
 
+    private function validateMessageInput(Request $request, array $rules = []): array
+    {
+        $defaultRules = [
+            'noi_dung' => ['nullable', 'string', 'max:5000', 'required_without:attachments'],
+            'attachments' => ['nullable', 'array', 'max:6'],
+            'attachments.*' => ['file', 'max:20480', 'mimes:jpg,jpeg,png,gif,webp,mp4,mov,avi,webm,mp3,wav,ogg,m4a,weba,pdf,doc,docx,xls,xlsx,ppt,pptx,txt,zip,rar'],
+        ];
+
+        return $request->validate(array_merge($defaultRules, $rules), [
+            'noi_dung.required_without' => 'Nhap tin nhan hoac chon tep de gui.',
+            'attachments.*.max' => 'Moi tep toi da 20MB.',
+            'attachments.*.mimes' => 'Chi ho tro anh, video, am thanh va cac tep pho bien.',
+        ]);
+    }
+
+    private function storeAttachments(Message $message, Request $request): void
+    {
+        if (! $request->hasFile('attachments')) {
+            return;
+        }
+
+        $directory = public_path('uploads/message-media');
+        File::ensureDirectoryExists($directory);
+
+        foreach ($request->file('attachments') as $file) {
+            if (! $file->isValid()) {
+                continue;
+            }
+
+            $mediaType = $this->mediaType($file->getMimeType());
+            $extension = $file->getClientOriginalExtension();
+            $filename = Str::uuid().($extension ? '.'.$extension : '');
+            $file->move($directory, $filename);
+
+            $message->media()->create([
+                'loai' => $mediaType,
+                'duong_dan' => 'uploads/message-media/'.$filename,
+            ]);
+        }
+    }
+
+    private function mediaType(?string $mimeType): string
+    {
+        if (Str::startsWith((string) $mimeType, 'image/')) {
+            return 'hinh_anh';
+        }
+
+        if (Str::startsWith((string) $mimeType, 'video/')) {
+            return 'video';
+        }
+
+        if (Str::startsWith((string) $mimeType, 'audio/')) {
+            return 'am_thanh';
+        }
+
+        return 'tap_tin';
+    }
+
     private function formatMessage(Message $message, int $currentUserId): array
     {
         return [
