@@ -16,6 +16,8 @@ class Message extends Model
         'nguoi_gui_id',
         'noi_dung',
         'trang_thai',
+        'da_thu_hoi',
+        'kieu_xoa',
     ];
 
     public function conversation()

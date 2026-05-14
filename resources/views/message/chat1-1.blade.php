@@ -88,7 +88,26 @@
                                 </div>
                             </div>
                             <div class="mt-1 truncate font-medium {{ $isActive ? 'text-sky-300' : 'text-slate-400' }}">
-                                {{ $isActive && $messages->last() ? ($messages->last()->noi_dung ?: '[Tep dinh kem]') : ($user->email ?: 'Bat dau tro chuyen') }}
+                                @php
+                                    $lastVisibleMessage = null;
+                                    if ($isActive && $messages->count() > 0) {
+                                        foreach ($messages->reverse() as $msg) {
+                                            if ($msg->kieu_xoa !== 'ca_hai') {
+                                                $lastVisibleMessage = $msg;
+                                                break;
+                                            }
+                                        }
+                                    }
+                                @endphp
+                                @if ($isActive && $lastVisibleMessage)
+                                    @if ($lastVisibleMessage->kieu_xoa === 'ca_nhan')
+                                        [Tin nhắn đã bị xóa]
+                                    @else
+                                        {{ $lastVisibleMessage->noi_dung ?: '[Tep dinh kem]' }}
+                                    @endif
+                                @else
+                                    {{ $user->email ?: 'Bat dau tro chuyen' }}
+                                @endif
                             </div>
                         </div>
                     </a>
@@ -140,38 +159,47 @@
 
                             <div class="max-w-[58%]">
                                 <div class="rounded-[20px] border px-5 py-4 text-lg font-semibold leading-relaxed shadow-2xl {{ $isMine ? 'border-sky-300/35 bg-sky-400/20 text-slate-100' : 'border-[#1d344e] bg-[#101827] text-slate-100' }}">
-                                    @if ($chatMessage->noi_dung)
-                                        <div class="whitespace-pre-wrap break-words">{{ $chatMessage->noi_dung }}</div>
-                                    @endif
-                                    @if ($chatMessage->media->isNotEmpty())
-                                        <div class="{{ $chatMessage->noi_dung ? 'mt-3' : '' }} space-y-3">
-                                            @foreach ($chatMessage->media as $media)
-                                                @if ($media->loai === 'hinh_anh')
-                                                    <a href="{{ asset($media->duong_dan) }}" target="_blank" class="block overflow-hidden rounded-2xl border border-white/10">
-                                                        <img src="{{ asset($media->duong_dan) }}" alt="{{ $attachmentName($media) }}" class="max-h-80 w-full object-cover">
-                                                    </a>
-                                                @elseif ($media->loai === 'video')
-                                                    <video controls class="max-h-80 w-full rounded-2xl border border-white/10 bg-black">
-                                                        <source src="{{ asset($media->duong_dan) }}">
-                                                    </video>
-                                                @elseif ($media->loai === 'am_thanh')
-                                                    <audio controls class="w-72 max-w-full">
-                                                        <source src="{{ asset($media->duong_dan) }}">
-                                                    </audio>
-                                                @else
-                                                    <a href="{{ asset($media->duong_dan) }}" target="_blank" class="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[.05] px-4 py-3 text-sm font-bold hover:bg-white/[.08]">
-                                                        <span class="grid h-9 w-9 place-items-center rounded-xl bg-sky-300 text-[#07111f]">F</span>
-                                                        <span class="min-w-0 truncate">{{ $attachmentName($media) }}</span>
-                                                    </a>
-                                                @endif
-                                            @endforeach
-                                        </div>
+                                    @if ($chatMessage->da_thu_hoi)
+                                        <div class="italic text-slate-400">Tin nhắn đã bị thu hồi</div>
+                                    @else
+                                        @if ($chatMessage->noi_dung)
+                                            <div class="whitespace-pre-wrap break-words">{{ $chatMessage->noi_dung }}</div>
+                                        @endif
+                                        @if ($chatMessage->media->isNotEmpty())
+                                            <div class="{{ $chatMessage->noi_dung ? 'mt-3' : '' }} space-y-3">
+                                                @foreach ($chatMessage->media as $media)
+                                                    @if ($media->loai === 'hinh_anh')
+                                                        <a href="{{ asset($media->duong_dan) }}" target="_blank" class="block overflow-hidden rounded-2xl border border-white/10">
+                                                            <img src="{{ asset($media->duong_dan) }}" alt="{{ $attachmentName($media) }}" class="max-h-80 w-full object-cover">
+                                                        </a>
+                                                    @elseif ($media->loai === 'video')
+                                                        <video controls class="max-h-80 w-full rounded-2xl border border-white/10 bg-black">
+                                                            <source src="{{ asset($media->duong_dan) }}">
+                                                        </video>
+                                                    @elseif ($media->loai === 'am_thanh')
+                                                        <audio controls class="w-72 max-w-full">
+                                                            <source src="{{ asset($media->duong_dan) }}">
+                                                        </audio>
+                                                    @else
+                                                        <a href="{{ asset($media->duong_dan) }}" target="_blank" class="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[.05] px-4 py-3 text-sm font-bold hover:bg-white/[.08]">
+                                                            <span class="grid h-9 w-9 place-items-center rounded-xl bg-sky-300 text-[#07111f]">F</span>
+                                                            <span class="min-w-0 truncate">{{ $attachmentName($media) }}</span>
+                                                        </a>
+                                                    @endif
+                                                @endforeach
+                                            </div>
+                                        @endif
                                     @endif
                                 </div>
                                 <div class="mt-2 flex items-center gap-2 text-xs font-semibold text-slate-400 {{ $isMine ? 'justify-end' : 'justify-start' }}">
                                     <span>{{ optional($chatMessage->ngay_tao)->format('H:i') }}</span>
                                     @if ($isMine)
                                         <span class="grid h-3.5 w-3.5 place-items-center rounded-full bg-sky-300 text-[10px] text-[#07111f]">✓</span>
+                                    @endif
+                                    @if ($isMine && !$chatMessage->da_thu_hoi)
+                                        <button type="button" class="delete-message ml-2 text-red-400 hover:text-red-300" data-message-id="{{ $chatMessage->id }}" title="Thu hồi tin nhắn">
+                                            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6h16ZM10 11v6M14 11v6"/></svg>
+                                        </button>
                                     @endif
                                 </div>
                             </div>
@@ -230,7 +258,7 @@
                             @endforeach
                         </div>
                     </div>
-                    <div id="attachmentPreview" class="mt-2 px-3 text-sm font-semibold text-sky-300"></div>
+                    <div class="mt-2 px-3 text-sm font-semibold text-sky-300"></div>
                 </div>
             @else
                 <div class="flex h-full flex-col items-center justify-center gap-4 text-slate-400">
@@ -239,6 +267,28 @@
                 </div>
             @endif
         </main>
+    </div>
+
+    <!-- Delete Message Modal -->
+    <div id="deleteMessageModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4">
+        <div class="rounded-2xl border border-[#1b3047] bg-[#0d1423] shadow-2xl">
+            <div class="border-b border-[#1b3047] px-6 py-4">
+                <h3 class="text-lg font-bold text-slate-100">Xóa tin nhắn</h3>
+            </div>
+            <div class="p-6 space-y-3">
+                <button type="button" id="deleteForMeBtn" class="w-full rounded-lg border border-[#1b3047] bg-[#101827] px-4 py-3 text-left font-semibold text-slate-100 hover:bg-[#1a2332] transition">
+                    <div class="font-bold text-slate-100">Xóa cho tôi</div>
+                    <div class="text-xs text-slate-400">Chỉ bạn mới nhìn thấy tin nhắn bị xóa</div>
+                </button>
+                <button type="button" id="unsendForAllBtn" class="w-full rounded-lg border border-[#1b3047] bg-[#101827] px-4 py-3 text-left font-semibold text-slate-100 hover:bg-[#1a2332] transition">
+                    <div class="font-bold text-slate-100">Thu hồi cho cả hai</div>
+                    <div class="text-xs text-slate-400">Cả hai sẽ thấy tin nhắn bị thu hồi</div>
+                </button>
+                <button type="button" id="cancelDeleteBtn" class="w-full rounded-lg border border-[#1b3047] bg-[#101827] px-4 py-3 text-center font-semibold text-slate-300 hover:bg-[#1a2332] transition">
+                    Hủy
+                </button>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -250,7 +300,7 @@
         const recordButton = document.getElementById('recordButton');
         const emojiButton = document.getElementById('emojiButton');
         const emojiPicker = document.getElementById('emojiPicker');
-        const otherAvatar = @json($activeUser ? $avatarText($activeUser) : '');
+        const otherAvatar = `{{ $activeUser ? $avatarText($activeUser) : '' }}`;
         let mediaRecorder = null;
         let recordedChunks = [];
         let lastMessagesFingerprint = '';
@@ -308,12 +358,24 @@
             const checked = message.is_mine
                 ? '<span class="grid h-3.5 w-3.5 place-items-center rounded-full bg-sky-300 text-[10px] text-[#07111f]">✓</span>'
                 : '';
-            const content = message.content
-                ? `<div class="whitespace-pre-wrap break-words">${escapeHtml(message.content)}</div>`
-                : '';
-            const attachments = attachmentHtml(message.attachments);
+            
+            let content = '';
+            if (message.is_recalled) {
+                content = '<div class="italic text-slate-400">Tin nhắn đã bị thu hồi</div>';
+            } else if (message.is_deleted) {
+                content = '<div class="italic text-slate-400">Tin nhắn đã bị xóa</div>';
+            } else if (message.content) {
+                content = `<div class="whitespace-pre-wrap break-words">${escapeHtml(message.content)}</div>`;
+            }
+            
+            const attachments = (message.is_recalled || message.is_deleted) ? '' : attachmentHtml(message.attachments);
             const attachmentWrap = attachments
                 ? `<div class="${message.content ? 'mt-3' : ''} space-y-3">${attachments}</div>`
+                : '';
+            const deleteButton = message.is_mine && !message.is_recalled && !message.is_deleted
+                ? `<button type="button" class="delete-message text-red-400 hover:text-red-300" data-message-id="${message.id}" title="Xóa tin nhắn">
+                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6h16ZM10 11v6M14 11v6"/></svg>
+                </button>`
                 : '';
 
             return `
@@ -327,6 +389,7 @@
                         <div class="mt-2 flex items-center gap-2 text-xs font-semibold text-slate-400 ${metaJustify}">
                             <span>${escapeHtml(message.time)}</span>
                             ${checked}
+                            ${deleteButton}
                         </div>
                     </div>
                 </div>
@@ -508,6 +571,76 @@
                     messageForm.requestSubmit();
                 }
             });
+
+            // Handle message deletion
+            const deleteModal = document.getElementById('deleteMessageModal');
+            const deleteForMeBtn = document.getElementById('deleteForMeBtn');
+            const unsendForAllBtn = document.getElementById('unsendForAllBtn');
+            const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+            let pendingDeleteMessageId = null;
+
+            document.addEventListener('click', async (event) => {
+                const deleteButton = event.target.closest('.delete-message');
+                if (!deleteButton) return;
+
+                pendingDeleteMessageId = deleteButton.dataset.messageId;
+                deleteModal?.classList.remove('hidden');
+                deleteModal?.classList.add('flex');
+            });
+
+            deleteForMeBtn?.addEventListener('click', async () => {
+                if (confirm('Bạn chắc chắn muốn xóa tin nhắn này cho bạn?')) {
+                    await performDelete('ca_nhan');
+                } else {
+                    deleteModal?.classList.add('hidden');
+                    deleteModal?.classList.remove('flex');
+                    pendingDeleteMessageId = null;
+                }
+            });
+
+            unsendForAllBtn?.addEventListener('click', async () => {
+                if (confirm('Bạn chắc chắn muốn thu hồi tin nhắn này cho cả hai? Người kia sẽ nhìn thấy tin nhắn đã bị thu hồi.')) {
+                    await performDelete('ca_hai');
+                } else {
+                    deleteModal?.classList.add('hidden');
+                    deleteModal?.classList.remove('flex');
+                    pendingDeleteMessageId = null;
+                }
+            });
+
+            cancelDeleteBtn?.addEventListener('click', () => {
+                deleteModal?.classList.add('hidden');
+                deleteModal?.classList.remove('flex');
+                pendingDeleteMessageId = null;
+            });
+
+            async function performDelete(type) {
+                const messageId = pendingDeleteMessageId;
+                const token = messageForm.querySelector('input[name="_token"]')?.value;
+                if (!token || !messageId) return;
+
+                deleteModal?.classList.add('hidden');
+                deleteModal?.classList.remove('flex');
+
+                const response = await fetch(`/chat1-1/messages/${messageId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        Accept: 'application/json',
+                        'X-CSRF-TOKEN': token,
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({ type }),
+                });
+
+                if (response.ok) {
+                    await loadMessages();
+                } else {
+                    alert('Không thể xóa tin nhắn. Vui lòng thử lại.');
+                }
+                pendingDeleteMessageId = null;
+            }
 
             loadMessages();
             setInterval(loadMessages, 2500);
