@@ -35,5 +35,8 @@ class DatabaseSeeder extends Seeder
         $this->call(NguoiDungSeeder::class);
         $this->call(PostSeeders::class);
         $this->call(PostImgSeeders::class);
+        $this->call(SharesSeeders::class);
+        $this->call(MediaBinhLuanSeeders::class);
+        $this->call(ReplySeeders::class);
     }
 }
