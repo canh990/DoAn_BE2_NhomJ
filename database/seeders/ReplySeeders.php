@@ -15,26 +15,37 @@ class ReplySeeders extends Seeder
      */
     public function run(): void
     {
+        // Tắt kiểm tra khóa ngoại để tránh lỗi khi truncate hoặc chèn dữ liệu
+        \Illuminate\Support\Facades\DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+
         // 1. Đảm bảo có người dùng
         $user = User::first();
         if (!$user) {
-            $user = User::create([
+            $userId = \Illuminate\Support\Facades\DB::table('nguoi_dung')->insertGetId([
                 'ten_dang_nhap' => 'tester',
                 'email' => 'tester@example.com',
                 'mat_khau_hash' => Hash::make('password'),
                 'con_hoat_dong' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
             ]);
+        } else {
+            $userId = $user->id;
         }
 
         // 2. Đảm bảo có bài viết
         $post = BaiViet::first();
         if (!$post) {
-            $post = BaiViet::create([
-                'nguoi_dung_id' => $user->id,
+            $postId = \Illuminate\Support\Facades\DB::table('bai_viet')->insertGetId([
+                'nguoi_dung_id' => $userId,
                 'loai' => 'van_ban',
                 'noi_dung' => 'Bài viết mẫu để test reply',
                 'quyen_rieng_tu' => 'cong_khai',
+                'created_at' => now(),
+                'updated_at' => now(),
             ]);
+        } else {
+            $postId = $post->id;
         }
 
         // 3. Tạo các bình luận gốc (parent comments)
@@ -45,22 +56,30 @@ class ReplySeeders extends Seeder
         ];
 
         foreach ($parentComments as $content) {
-            $parent = BinhLuan::create([
-                'bai_viet_id' => $post->id,
-                'nguoi_dung_id' => $user->id,
+            $parentId = \Illuminate\Support\Facades\DB::table('binh_luan')->insertGetId([
+                'bai_viet_id' => $postId,
+                'nguoi_dung_id' => $userId,
                 'binh_luan_cha_id' => null,
                 'noi_dung' => $content,
+                'da_xoa' => false,
+                'ngay_tao' => now(),
+                'ngay_cap_nhat' => now(),
             ]);
 
             // 4. Tạo các reply cho mỗi bình luận gốc
             for ($i = 1; $i <= 2; $i++) {
-                BinhLuan::create([
-                    'bai_viet_id' => $post->id,
-                    'nguoi_dung_id' => $user->id,
-                    'binh_luan_cha_id' => $parent->id,
+                \Illuminate\Support\Facades\DB::table('binh_luan')->insert([
+                    'bai_viet_id' => $postId,
+                    'nguoi_dung_id' => $userId,
+                    'binh_luan_cha_id' => $parentId,
                     'noi_dung' => "Reply $i cho: " . $content,
+                    'da_xoa' => false,
+                    'ngay_tao' => now(),
+                    'ngay_cap_nhat' => now(),
                 ]);
             }
         }
+
+        \Illuminate\Support\Facades\DB::statement('SET FOREIGN_KEY_CHECKS=1;');
     }
 }
