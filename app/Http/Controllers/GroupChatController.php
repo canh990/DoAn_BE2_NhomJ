@@ -36,7 +36,7 @@ class GroupChatController extends Controller
             $activeGroup = $groups->first();
         }
 
-        if ($activeGroup) {
+        if ($activeGroup instanceof Conversation) {
             $messages = $activeGroup->messages()
                 ->with(['sender', 'media'])
                 ->orderBy('ngay_tao')
@@ -194,20 +194,50 @@ class GroupChatController extends Controller
         return 'tap_tin';
     }
 
+    public function deleteMessage(Request $request, Message $message)
+    {
+        $currentUser = Auth::user();
+        
+        // Check if current user is the sender
+        abort_if($message->nguoi_gui_id !== $currentUser->id, 403);
+        
+        // Check if user is part of the group
+        abort_unless(
+            $message->conversation->loai === 'nhom' && 
+            $message->conversation->members()->whereKey($currentUser->id)->exists(),
+            403
+        );
+
+        $data = $request->validate([
+            'type' => ['required', 'in:ca_nhan,ca_hai'],
+        ]);
+
+        $message->update(['kieu_xoa' => $data['type']]);
+
+        return response()->json([
+            'message' => $this->formatMessage($message, $currentUser->id),
+        ]);
+    }
+
     private function formatMessage(Message $message, int $currentUserId): array
     {
+        $isRecalledForBoth = $message->kieu_xoa === 'ca_hai';
+        $isDeletedForMe = $message->kieu_xoa === 'ca_nhan' && $message->nguoi_gui_id === $currentUserId;
+        
         return [
             'id' => $message->id,
             'sender_id' => $message->nguoi_gui_id,
             'sender_name' => $message->sender?->ten_dang_nhap ?: ($message->sender?->email ?: 'Thanh vien'),
-            'content' => $message->noi_dung,
-            'attachments' => $message->media->map(fn ($media) => [
+            'content' => ($isRecalledForBoth || $isDeletedForMe) ? null : $message->noi_dung,
+            'attachments' => ($isRecalledForBoth || $isDeletedForMe) ? [] : $message->media->map(fn ($media) => [
                 'type' => $media->loai,
                 'url' => asset($media->duong_dan),
                 'name' => basename($media->duong_dan),
             ])->values(),
             'time' => optional($message->ngay_tao)->format('H:i'),
             'is_mine' => $message->nguoi_gui_id === $currentUserId,
+            'is_recalled' => $isRecalledForBoth,
+            'is_deleted' => $isDeletedForMe,
         ];
     }
 }
