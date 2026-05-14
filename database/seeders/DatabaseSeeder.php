@@ -38,5 +38,6 @@ class DatabaseSeeder extends Seeder
         $this->call(SharesSeeders::class);
         $this->call(MediaBinhLuanSeeders::class);
         $this->call(ReplySeeders::class);
+        $this->call(ThongBaoSeeder::class);
     }
 }
