@@ -362,6 +362,67 @@
             if (window.showToast) window.showToast('Đã đánh dấu xóa ảnh bìa. Nhấn Lưu thay đổi để hoàn tất.', 'info');
         }, 'Xóa ảnh bìa');
     }
+
+    /**
+     * Gửi mã OTP xác nhận hành động tài khoản
+     */
+    function sendOtp(btn) {
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-sm">progress_activity</span>';
+
+        fetch('{{ route('profile.send-action-otp') }}', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                if (window.showToast) {
+                    window.showToast(data.message, 'success');
+                } else {
+                    alert(data.message);
+                }
+                
+                // Đếm ngược 60s để gửi lại
+                let timeLeft = 60;
+                btn.classList.add('opacity-50', 'cursor-not-allowed');
+                const timer = setInterval(() => {
+                    if (timeLeft <= 0) {
+                        clearInterval(timer);
+                        btn.disabled = false;
+                        btn.innerHTML = 'Gửi lại';
+                        btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    } else {
+                        btn.innerHTML = `Gửi lại (${timeLeft}s)`;
+                        timeLeft--;
+                    }
+                }, 1000);
+            } else {
+                if (window.showToast) {
+                    window.showToast(data.message, 'error');
+                } else {
+                    alert(data.message);
+                }
+                btn.disabled = false;
+                btn.innerHTML = 'Gửi OTP';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            if (window.showToast) {
+                window.showToast('Có lỗi xảy ra khi gửi OTP.', 'error');
+            } else {
+                alert('Có lỗi xảy ra khi gửi OTP.');
+            }
+            btn.disabled = false;
+            btn.innerHTML = 'Gửi OTP';
+        });
+    }
 </script>
 <script>
     /**
