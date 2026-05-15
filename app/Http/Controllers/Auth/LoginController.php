@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
+use App\Helpers\DeviceHelper;
+use App\Models\PhienDangNhap;
+use Illuminate\Support\Str;
 
 class LoginController extends Controller
 {
@@ -45,13 +48,144 @@ class LoginController extends Controller
             ]);
         }
 
+        // $request->session()->regenerate();
+
         $request->session()->regenerate();
+
+        $user = Auth::user();
+
+        // user agent
+        $userAgent = $request->userAgent();
+
+        // detect browser
+        $browser = 'Unknown Browser';
+
+        if (str_contains($userAgent, 'Edg')) {
+            $browser = 'Microsoft Edge';
+        } elseif (str_contains($userAgent, 'Chrome')) {
+            $browser = 'Chrome';
+        } elseif (str_contains($userAgent, 'Firefox')) {
+            $browser = 'Firefox';
+        } elseif (str_contains($userAgent, 'Safari')) {
+            $browser = 'Safari';
+        }
+
+        // detect hệ điều hành
+        $platform = 'Unknown OS';
+
+        if (str_contains($userAgent, 'Windows')) {
+            $platform = 'Windows';
+        } elseif (str_contains($userAgent, 'Macintosh')) {
+            $platform = 'MacOS';
+        } elseif (str_contains($userAgent, 'Android')) {
+            $platform = 'Android';
+        } elseif (str_contains($userAgent, 'iPhone')) {
+            $platform = 'iPhone';
+        } elseif (str_contains($userAgent, 'Linux')) {
+            $platform = 'Linux';
+        }
+
+        // tên thiết bị
+        $deviceName = $platform . ' - ' . $browser;
+
+        // reset phiên hiện tại cũ
+        PhienDangNhap::where('nguoi_dung_id', $user->id)
+            ->update([
+                'la_phien_hien_tai' => false
+            ]);
+
+        // tạo token phiên
+        $token = Str::random(64);
+        
+        // kiểm tra thiết bị đã tồn tại chưa
+        $existingSession = PhienDangNhap::where('nguoi_dung_id', $user->id)
+
+            ->where('trinh_duyet', $browser)
+
+            ->where('he_dieu_hanh', $platform)
+
+            ->where('dia_chi_ip', $request->ip())
+
+            ->latest('id')
+
+            ->first();
+
+
+        // nếu đã tồn tại -> update lại
+        if ($existingSession) {
+
+            $existingSession->update([
+
+                'token_hash' => hash('sha256', $token),
+
+                'user_agent' => $userAgent,
+
+                'lan_hoat_dong_cuoi' => now(),
+
+                'dang_xuat_luc' => null,
+
+                'la_phien_hien_tai' => true,
+
+                'het_han' => $remember
+                    ? now()->addDays(30)
+                    : now()->addDay(),
+            ]);
+
+        } else {
+
+            // chưa tồn tại -> tạo mới
+            PhienDangNhap::create([
+
+                'nguoi_dung_id' => $user->id,
+
+                'token_hash' => hash('sha256', $token),
+
+                'ten_thiet_bi' => $deviceName,
+
+                'trinh_duyet' => $browser,
+
+                'he_dieu_hanh' => $platform,
+
+                'user_agent' => $userAgent,
+
+                'dia_chi_ip' => $request->ip(),
+
+                'lan_hoat_dong_cuoi' => now(),
+
+                'la_phien_hien_tai' => true,
+
+                'het_han' => $remember
+                    ? now()->addDays(30)
+                    : now()->addDay(),
+
+                'ngay_tao' => now(),
+            ]);
+        }
+        // lưu token vào session
+        session([
+            'session_token' => $token
+        ]);
 
         return redirect()->intended(route('home'));
     }
 
     public function logout(Request $request)
     {
+        $token = session('session_token');
+
+        if ($token) {
+
+            PhienDangNhap::where(
+                'token_hash',
+                hash('sha256', $token)
+            )->update([
+
+                'dang_xuat_luc' => now(),
+
+                'la_phien_hien_tai' => false,
+            ]);
+        }
+
         Auth::logout();
 
         $request->session()->invalidate();

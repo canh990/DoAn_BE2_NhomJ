@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
+use App\Models\PhienDangNhap;
 
 class PersonalSettingsController extends Controller
 {
@@ -20,7 +21,14 @@ class PersonalSettingsController extends Controller
             App::setLocale(session('personal_locale'));
         }
 
-        return view('settings');
+        // return view('settings');
+        // lấy danh sách phiên đăng nhập
+        $sessions = PhienDangNhap::where('nguoi_dung_id', auth()->id())
+            ->whereNull('dang_xuat_luc')
+            ->latest('lan_hoat_dong_cuoi')
+            ->get();
+
+        return view('settings', compact('sessions'));
     }
 
     // Persist theme choice (light|dark) into session

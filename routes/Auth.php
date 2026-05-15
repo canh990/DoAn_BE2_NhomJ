@@ -4,6 +4,8 @@ use App\Http\Controllers\Auth\LoginController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SocialLoginController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\SearchController;
+
 // -----------------------------------------------
 // Auth routes
 // -----------------------------------------------
@@ -63,3 +65,7 @@ Route::view('/messages', 'components.placeholder', [
     'title' => 'Tin nhắn',
     'message' => 'Hộp thư của bạn đang trống.',
 ])->name('messages')->middleware('auth');
+
+Route::get('/search/users', [SearchController::class, 'searchUsers'])
+    ->middleware('auth')
+    ->name('search.users');

@@ -140,10 +140,20 @@
 
     <header class="fixed top-0 w-full z-50 bg-[#0a0e1a]/60 backdrop-blur-xl border-b border-sky-400/10 shadow-[0_0_30px_rgba(125,211,252,0.05)] font-inter tracking-tight flex justify-between items-center px-6 h-16">
         <div class="flex items-center gap-8">
-            <a href="{{ route('home') }}" class="text-2xl font-bold bg-gradient-to-r from-sky-400 to-purple-400 bg-clip-text text-transparent">NHOMJ</a>
-            <div class="hidden md:flex items-center bg-white/5 border border-sky-400/10 rounded-full px-4 py-1.5 focus-within:border-sky-400/30 transition-all">
-                <span class="material-symbols-outlined text-slate-400 text-sm mr-2" data-icon="search">search</span>
-                <input class="bg-transparent border-none focus:ring-0 text-sm text-on-surface placeholder:text-slate-500 w-64" placeholder="Tìm kiếm trên NHOMJ" type="text"/>
+            <!-- logo -->
+            <a href="{{ route('home') }}" class="flex items-center gap-2 shrink-0">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-400 to-purple-500 flex items-center justify-center"><span class="material-symbols-outlined text-white">hub</span></div>
+                <span class="text-2xl font-bold bg-gradient-to-r from-sky-400 to-purple-400 bg-clip-text text-transparent">NHOMJ</span>
+            </a>
+            <!-- search -->
+            <div class="relative hidden md:block">
+                <div class="flex items-center bg-white/5 border border-sky-400/10 rounded-full px-4 py-1.5 focus-within:border-sky-400/30 transition-all">
+                    <span class="material-symbols-outlined text-slate-400 text-sm mr-2">search</span>
+                    <input id="search-user" type="text" placeholder="Tìm kiếm trên NHOMJ" autocomplete="off" class="bg-transparent border-none focus:ring-0 text-sm text-on-surface placeholder:text-slate-500 w-64"/>
+                </div>
+
+                <!-- dropdown -->
+                <div id="search-results" class="hidden absolute top-14 left-0 w-80 bg-[#111827] border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-[9999]"></div>
             </div>
         </div>
         <div class="flex items-center gap-2">
@@ -1197,6 +1207,85 @@
         @if(session('error'))
             window.showToast("{{ session('error') }}", 'error');
         @endif
+    </script>
+    <script>
+
+        const searchInput = document.getElementById('search-user');
+
+        const searchResults = document.getElementById('search-results');
+
+        let timeout = null;
+
+        searchInput.addEventListener('input', function () {
+
+            clearTimeout(timeout);
+
+            timeout = setTimeout(async () => {
+
+                const keyword = this.value.trim();
+
+                if (!keyword) {
+
+                    searchResults.innerHTML = '';
+
+                    searchResults.classList.add('hidden');
+
+                    return;
+                }
+
+                try {
+
+                    const response = await fetch(
+                        `/search/users?q=${encodeURIComponent(keyword)}`
+                    );
+
+                    const users = await response.json();
+
+                    if (users.length === 0) {
+
+                        searchResults.innerHTML = `
+                            <div class="p-4 text-sm text-slate-400">
+                                Không tìm thấy người dùng
+                            </div>
+                        `;
+
+                        searchResults.classList.remove('hidden');
+
+                        return;
+                    }
+
+                    searchResults.innerHTML = users.map(user => `
+                        <a
+                            href="/profile/${user.ten_dang_nhap}"
+                            class="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition cursor-pointer"
+                        >
+                            <img
+                                src="${user.anh_dai_dien ?? '/default-avatar.png'}"
+                                class="w-10 h-10 rounded-full object-cover"
+                            >
+                            <div>
+                                <p class="text-sm font-semibold text-white">
+                                    ${user.ten_dang_nhap}
+                                </p>
+                                <p class="text-xs text-slate-400">
+                                    ${user.tieu_su ?? ''}
+                                </p>
+                            </div>
+                        </a>
+                    `).join('');
+                    searchResults.classList.remove('hidden');
+                } catch (error) {
+                    console.error(error);
+                }
+            }, 300);
+        });
+        // click ngoài -> đóng dropdown
+        document.addEventListener('click', function (e) {
+            if (!searchInput.contains(e.target) &&
+                !searchResults.contains(e.target)) {
+                searchResults.classList.add('hidden');
+            }
+        });
     </script>
 </body>
 
