@@ -116,12 +116,20 @@
                             </p>
                         </div>
                     </div>
+                    <div class="relative w-60">
+                        <label class="flex h-10 items-center gap-2 rounded-2xl border border-[#1b3047] bg-[#101827] px-3 text-slate-500">
+                            <span class="material-symbols-outlined text-lg">search</span>
+                            <input id="groupSearchInput" class="w-full border-0 bg-transparent text-sm outline-none placeholder:text-slate-500 focus:ring-0" placeholder="Tim kiem..." type="search">
+                        </label>
+                        <div id="groupSearchResults" class="absolute top-full left-0 right-0 mt-2 max-h-64 overflow-y-auto rounded-xl border border-[#1b3047] bg-[#0b1220] hidden shadow-2xl z-10">
+                        </div>
+                    </div>
                 </header>
 
                 <div id="groupMessages" class="min-h-0 flex-1 space-y-6 overflow-y-auto px-8 py-6">
                     @forelse ($messages as $chatMessage)
                         @php($isMine = $chatMessage->nguoi_gui_id === $currentUser->id)
-                        <div class="flex {{ $isMine ? 'justify-end' : 'justify-start' }}">
+                        <div class="flex {{ $isMine ? 'justify-end' : 'justify-start' }}" data-message-id="{{ $chatMessage->id }}">
                             <div class="max-w-[62%]">
                                 @unless ($isMine)
                                     <div class="mb-1 text-xs font-bold text-sky-300">{{ $displayName($chatMessage->sender) }}</div>
@@ -527,6 +535,85 @@
 
             loadGroupMessages();
             setInterval(loadGroupMessages, 2500);
+        }
+
+        // Search functionality for group chat
+        const groupSearchInput = document.getElementById('groupSearchInput');
+        const groupSearchResults = document.getElementById('groupSearchResults');
+        let groupSearchTimeout;
+
+        if (groupSearchInput && groupForm) {
+            groupSearchInput.addEventListener('input', async (e) => {
+                clearTimeout(groupSearchTimeout);
+                const keyword = e.target.value.trim();
+
+                if (!keyword) {
+                    groupSearchResults.classList.add('hidden');
+                    return;
+                }
+
+                groupSearchTimeout = setTimeout(async () => {
+                    const conversationId = groupForm.action.match(/chat-groups\/(\d+)/)?.[1];
+                    if (!conversationId) return;
+
+                    try {
+                        const response = await fetch(
+                            `/chat-groups/${conversationId}/search?keyword=${encodeURIComponent(keyword)}`,
+                            {
+                                headers: { Accept: 'application/json' },
+                                credentials: 'same-origin',
+                            }
+                        );
+
+                        if (response.ok) {
+                            const data = await response.json();
+                            displayGroupSearchResults(data);
+                        }
+                    } catch (error) {
+                        console.error('Group search error:', error);
+                    }
+                }, 300);
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('#groupSearchInput') && !e.target.closest('#groupSearchResults')) {
+                    groupSearchResults.classList.add('hidden');
+                }
+            });
+        }
+
+        function displayGroupSearchResults(data) {
+            if (!data.messages || data.messages.length === 0) {
+                groupSearchResults.innerHTML = '<div class="p-3 text-center text-slate-400 text-xs">Không tìm thấy tin nhắn nào</div>';
+                groupSearchResults.classList.remove('hidden');
+                return;
+            }
+
+            const resultsHtml = data.messages.map(msg => `
+                <div class="border-b border-[#1b3047] p-2 hover:bg-[#101827] cursor-pointer transition text-xs" onclick="scrollToGroupMessage(${msg.id})">
+                    <div class="font-bold text-sky-300">${escapeHtml(msg.sender_name)}</div>
+                    <div class="text-slate-400">${msg.time}</div>
+                    <div class="text-slate-100 line-clamp-1 mt-0.5">${escapeHtml(msg.content || '[Tệp đính kèm]')}</div>
+                </div>
+            `).join('');
+
+            groupSearchResults.innerHTML = `
+                <div class="p-2 border-b border-[#1b3047] text-xs text-slate-400 font-semibold">
+                    Tìm thấy ${data.total} kết quả
+                </div>
+                ${resultsHtml}
+            `;
+            groupSearchResults.classList.remove('hidden');
+        }
+
+        function scrollToGroupMessage(messageId) {
+            const messageElement = document.querySelector(`[data-message-id="${messageId}"]`);
+            if (messageElement) {
+                messageElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                messageElement.classList.add('animate-pulse');
+                setTimeout(() => messageElement.classList.remove('animate-pulse'), 2000);
+            }
+            groupSearchResults.classList.add('hidden');
         }
     </script>
 @endsection
