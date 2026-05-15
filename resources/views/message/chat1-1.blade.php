@@ -34,10 +34,14 @@
             </div>
 
             <div class="px-8">
-                <label class="flex h-12 items-center gap-3 rounded-3xl border border-[#1b3047] bg-[#101827] px-4 text-slate-500">
-                    <span class="material-symbols-outlined text-xl">search</span>
-                    <input class="w-full border-0 bg-transparent text-base outline-none placeholder:text-slate-500 focus:ring-0" placeholder="Tim kiem cuoc tro chuyen..." type="search">
-                </label>
+                <div class="relative">
+                    <label class="flex h-12 items-center gap-3 rounded-3xl border border-[#1b3047] bg-[#101827] px-4 text-slate-500">
+                        <span class="material-symbols-outlined text-xl">search</span>
+                        <input id="searchInput" class="w-full border-0 bg-transparent text-base outline-none placeholder:text-slate-500 focus:ring-0" placeholder="Tim kiem tin nhan..." type="search">
+                    </label>
+                    <div id="searchResults" class="absolute top-full left-0 right-0 mt-2 max-h-96 overflow-y-auto rounded-2xl border border-[#1b3047] bg-[#0b1220] hidden shadow-2xl z-10">
+                    </div>
+                </div>
             </div>
 
             <form method="POST" action="{{ route('chat.friends.store') }}" class="mt-4 px-8">
@@ -379,7 +383,7 @@
                 : '';
 
             return `
-                <div class="flex items-end gap-4 ${justify}">
+                <div class="flex items-end gap-4 ${justify}" data-message-id="${message.id}">
                     ${avatar}
                     <div class="max-w-[58%]">
                         <div class="rounded-[20px] border px-5 py-4 text-lg font-semibold leading-relaxed shadow-2xl ${bubble}">
@@ -644,6 +648,84 @@
 
             loadMessages();
             setInterval(loadMessages, 2500);
+        }
+
+        // Search functionality for chat1-1
+        const searchInput = document.getElementById('searchInput');
+        const searchResults = document.getElementById('searchResults');
+        let searchTimeout;
+
+        if (searchInput && messageForm) {
+            searchInput.addEventListener('input', async (e) => {
+                clearTimeout(searchTimeout);
+                const keyword = e.target.value.trim();
+
+                if (!keyword) {
+                    searchResults.classList.add('hidden');
+                    return;
+                }
+
+                searchTimeout = setTimeout(async () => {
+                    const conversationId = messageForm.action.match(/conversations\/(\d+)/)?.[1];
+                    if (!conversationId) return;
+
+                    try {
+                        const response = await fetch(
+                            `/chat1-1/conversations/${conversationId}/search?keyword=${encodeURIComponent(keyword)}`,
+                            {
+                                headers: { Accept: 'application/json' },
+                                credentials: 'same-origin',
+                            }
+                        );
+
+                        if (response.ok) {
+                            const data = await response.json();
+                            displaySearchResults(data);
+                        }
+                    } catch (error) {
+                        console.error('Search error:', error);
+                    }
+                }, 300);
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('#searchInput') && !e.target.closest('#searchResults')) {
+                    searchResults.classList.add('hidden');
+                }
+            });
+        }
+
+        function displaySearchResults(data) {
+            if (!data.messages || data.messages.length === 0) {
+                searchResults.innerHTML = '<div class="p-4 text-center text-slate-400 text-sm">Không tìm thấy tin nhắn nào</div>';
+                searchResults.classList.remove('hidden');
+                return;
+            }
+
+            const resultsHtml = data.messages.map(msg => `
+                <div class="border-b border-[#1b3047] p-3 hover:bg-[#101827] cursor-pointer transition" onclick="scrollToMessage(${msg.id})">
+                    <div class="text-xs text-slate-400">${msg.time}</div>
+                    <div class="text-sm text-slate-100 line-clamp-2 mt-1">${escapeHtml(msg.content || '[Tệp đính kèm]')}</div>
+                </div>
+            `).join('');
+
+            searchResults.innerHTML = `
+                <div class="p-3 border-b border-[#1b3047] text-xs text-slate-400 font-semibold">
+                    Tìm thấy ${data.total} kết quả
+                </div>
+                ${resultsHtml}
+            `;
+            searchResults.classList.remove('hidden');
+        }
+
+        function scrollToMessage(messageId) {
+            const messageElement = document.querySelector(`[data-message-id="${messageId}"]`);
+            if (messageElement) {
+                messageElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                messageElement.classList.add('animate-pulse');
+                setTimeout(() => messageElement.classList.remove('animate-pulse'), 2000);
+            }
+            searchResults.classList.add('hidden');
         }
     </script>
 @endsection

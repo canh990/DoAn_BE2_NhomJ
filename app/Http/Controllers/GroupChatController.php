@@ -240,4 +240,37 @@ class GroupChatController extends Controller
             'is_deleted' => $isDeletedForMe,
         ];
     }
+
+    public function searchMessages(Request $request, Conversation $conversation)
+    {
+        $this->authorizeGroupMember($conversation);
+
+        $currentUser = Auth::user();
+        $data = $request->validate([
+            'keyword' => ['required', 'string', 'min:1', 'max:255'],
+        ], [
+            'keyword.required' => 'Vui lòng nhập từ khóa tìm kiếm.',
+            'keyword.min' => 'Từ khóa phải có ít nhất 1 ký tự.',
+        ]);
+
+        $keyword = trim($data['keyword']);
+        $messages = $conversation->messages()
+            ->with(['sender', 'media'])
+            ->whereNotNull('noi_dung')
+            ->where('noi_dung', 'like', '%' . $keyword . '%')
+            ->where(function ($query) {
+                $query->whereNull('kieu_xoa')
+                      ->orWhere('kieu_xoa', '!=', 'ca_hai');
+            })
+            ->orderBy('ngay_tao', 'desc')
+            ->paginate(20);
+
+        return response()->json([
+            'keyword' => $keyword,
+            'total' => $messages->total(),
+            'messages' => $messages->map(fn (Message $message) => $this->formatMessage($message, $currentUser->id))->values(),
+            'current_page' => $messages->currentPage(),
+            'last_page' => $messages->lastPage(),
+        ]);
+    }
 }
