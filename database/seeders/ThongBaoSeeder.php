@@ -95,4 +95,4 @@ class ThongBaoSeeder extends Seeder
 
         $this->command->info('✅ ThongBaoSeeder: Đã tạo ' . count($notifications) . ' thông báo.');
     }
-}
+}   
