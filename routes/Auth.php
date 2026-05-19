@@ -6,8 +6,6 @@ use App\Http\Controllers\SocialLoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\SearchController;
 
-use App\Http\Controllers\SearchController;
-
 // -----------------------------------------------
 // Auth routes
 // -----------------------------------------------
