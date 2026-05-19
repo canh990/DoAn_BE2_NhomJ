@@ -1285,6 +1285,85 @@
             }
         });
     </script>
+    <script>
+
+        const searchInput = document.getElementById('search-user');
+
+        const searchResults = document.getElementById('search-results');
+
+        let timeout = null;
+
+        searchInput.addEventListener('input', function () {
+
+            clearTimeout(timeout);
+
+            timeout = setTimeout(async () => {
+
+                const keyword = this.value.trim();
+
+                if (!keyword) {
+
+                    searchResults.innerHTML = '';
+
+                    searchResults.classList.add('hidden');
+
+                    return;
+                }
+
+                try {
+
+                    const response = await fetch(
+                        `/search/users?q=${encodeURIComponent(keyword)}`
+                    );
+
+                    const users = await response.json();
+
+                    if (users.length === 0) {
+
+                        searchResults.innerHTML = `
+                            <div class="p-4 text-sm text-slate-400">
+                                Không tìm thấy người dùng
+                            </div>
+                        `;
+
+                        searchResults.classList.remove('hidden');
+
+                        return;
+                    }
+
+                    searchResults.innerHTML = users.map(user => `
+                        <a
+                            href="/profile/${user.ten_dang_nhap}"
+                            class="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition cursor-pointer"
+                        >
+                            <img
+                                src="${user.anh_dai_dien ?? '/default-avatar.png'}"
+                                class="w-10 h-10 rounded-full object-cover"
+                            >
+                            <div>
+                                <p class="text-sm font-semibold text-white">
+                                    ${user.ten_dang_nhap}
+                                </p>
+                                <p class="text-xs text-slate-400">
+                                    ${user.tieu_su ?? ''}
+                                </p>
+                            </div>
+                        </a>
+                    `).join('');
+                    searchResults.classList.remove('hidden');
+                } catch (error) {
+                    console.error(error);
+                }
+            }, 300);
+        });
+        // click ngoài -> đóng dropdown
+        document.addEventListener('click', function (e) {
+            if (!searchInput.contains(e.target) &&
+                !searchResults.contains(e.target)) {
+                searchResults.classList.add('hidden');
+            }
+        });
+    </script>
 </body>
 
 </html>
