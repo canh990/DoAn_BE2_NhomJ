@@ -4,13 +4,13 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Settings\PersonalSettingsController;
 use App\Http\Controllers\ChatController;
 
-// --- THÊM CÁC ROUTE CÒN THIẾU VÀO ĐÂY ---
-// Đặt ngoài group 'settings.' để tên route khớp chuẩn 100% với file Blade
+// Các route phụ trợ cho Settings (Đặt ngoài group để tự do custom name)
 Route::post('/settings/cache-clear', [PersonalSettingsController::class, 'clearCache'])->name('cache.clear')->middleware('auth');
 Route::delete('/settings/account-disable', [PersonalSettingsController::class, 'disableAccount'])->name('account.disable')->middleware('auth');
 
+// --- ĐIỀU KHOẢN & CHÍNH SÁCH ĐÃ CHUYỂN THÀNH MODAL (XÓA 2 ROUTE CŨ TẠI ĐÂY) ---
+
 // Lưu ý: Nếu hệ thống của bạn đã có route('logout') từ chức năng đăng nhập/đăng xuất chung thì có thể XÓA dòng này. 
-// Nếu chưa có, hãy để lại để test giao diện.
 Route::post('/logout', [PersonalSettingsController::class, 'logout'])->name('logout')->middleware('auth');
 
 
@@ -23,6 +23,7 @@ Route::prefix('settings')->name('settings.')->middleware('auth')->group(function
     Route::get('/personal', [PersonalSettingsController::class, 'index'])->name('personal.index');
     Route::post('/personal/theme', [PersonalSettingsController::class, 'setTheme'])->name('personal.setTheme');
     Route::post('/personal/language', [PersonalSettingsController::class, 'setLanguage'])->name('personal.setLanguage');
+    
     // Ví dụ khai báo route
     Route::get('/chat', [ChatController::class, 'index'])->name('chat');
-    });
+});
