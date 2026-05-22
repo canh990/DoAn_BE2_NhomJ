@@ -269,29 +269,30 @@
 
                 </div>
 
-                <div class="flex flex-wrap gap-4 md:gap-8">
+             <div class="flex flex-wrap gap-4 md:gap-8">
 
-                    <a href="#" class="text-sm text-on-surface-variant hover:text-primary transition-colors flex items-center gap-1">
-                        <span class="material-symbols-outlined text-sm">description</span>
-                        {{ __('messages.terms') }}
-                    </a>
+    {{-- Đổi thẻ <a> thành <button> để mở Modal tại chỗ --}}
+    <button onclick="openModal('termsModal')" class="text-sm text-on-surface-variant hover:text-primary transition-colors flex items-center gap-1 outline-none">
+        <span class="material-symbols-outlined text-sm">description</span>
+        {{ __('messages.terms') }}
+    </button>
 
-                    <a href="#" class="text-sm text-on-surface-variant hover:text-primary transition-colors flex items-center gap-1">
-                        <span class="material-symbols-outlined text-sm">shield</span>
-                        {{ __('messages.privacy') }}
-                    </a>
+    <button onclick="openModal('privacyModal')" class="text-sm text-on-surface-variant hover:text-primary transition-colors flex items-center gap-1 outline-none">
+        <span class="material-symbols-outlined text-sm">shield</span>
+        {{ __('messages.privacy') }}
+    </button>
 
-                    <a href="#" class="text-sm text-on-surface-variant hover:text-primary transition-colors flex items-center gap-1">
-                        <span class="material-symbols-outlined text-sm">support_agent</span>
-                        {{ __('messages.support') }}
-                    </a>
+    <button onclick="openModal('supportModal')" class="text-sm text-on-surface-variant hover:text-primary transition-colors flex items-center gap-1 outline-none">
+        <span class="material-symbols-outlined text-sm">support_agent</span>
+        {{ __('messages.support') }}
+    </button>
 
-                    <a href="#" class="text-sm text-on-surface-variant hover:text-primary transition-colors flex items-center gap-1">
-                        <span class="material-symbols-outlined text-sm">info</span>
-                        {{ __('messages.about') }}
-                    </a>
+    <button onclick="openModal('aboutModal')" class="text-sm text-on-surface-variant hover:text-primary transition-colors flex items-center gap-1 outline-none">
+        <span class="material-symbols-outlined text-sm">info</span>
+        {{ __('messages.about') }}
+    </button>
 
-                </div>
+</div>
 
             </div>
         </div>
@@ -319,7 +320,100 @@
 
     </div>
 </div>
+{{-- MODAL HỖ TRỢ (SUPPORT) --}}
+<div id="supportModal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/50 backdrop-blur-sm transition-opacity">
+    <div class="glass-panel w-full max-w-sm p-6 rounded-xl relative m-4 border border-white/10 shadow-2xl">
+        {{-- Nút X đóng --}}
+        <button onclick="closeModal('supportModal')" class="absolute top-4 right-4 text-on-surface-variant hover:text-error transition-colors outline-none">
+            <span class="material-symbols-outlined">close</span>
+        </button>
+        
+        <h3 class="text-lg font-bold text-on-surface mb-4 flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary">support_agent</span>
+            Thông tin Hỗ trợ
+        </h3>
+        
+        <div class="space-y-3 text-sm text-on-surface-variant">
+            <p>Nếu bạn gặp sự cố, vui lòng liên hệ bộ phận IT:</p>
+            <div class="p-3 bg-white/5 rounded-lg border border-white/5 space-y-2">
+                <p><strong>Email:</strong> {{ $supportInfo['email'] ?? 'it@company.com' }}</p>
+                <p><strong>Hotline:</strong> {{ $supportInfo['hotline'] ?? '1900 xxxx' }}</p>
+            </div>
+            <a href="{{ $supportInfo['zalo_group'] ?? '#' }}" target="_blank" class="inline-block mt-2 px-4 py-2 bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-colors font-medium">
+                Tham gia nhóm Zalo
+            </a>
+        </div>
+    </div>
+</div>
 
+{{-- MODAL GIỚI THIỆU (ABOUT) --}}
+<div id="aboutModal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/50 backdrop-blur-sm transition-opacity">
+    <div class="glass-panel w-full max-w-sm p-6 rounded-xl relative m-4 border border-white/10 shadow-2xl">
+        {{-- Nút X đóng --}}
+        <button onclick="closeModal('aboutModal')" class="absolute top-4 right-4 text-on-surface-variant hover:text-error transition-colors outline-none">
+            <span class="material-symbols-outlined">close</span>
+        </button>
+        
+        <h3 class="text-lg font-bold text-on-surface mb-4 flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary">info</span>
+            Giới thiệu Hệ thống
+        </h3>
+        
+        <div class="space-y-3 text-sm text-on-surface-variant">
+            <p class="text-base text-on-surface font-medium">{{ $aboutInfo['app_name'] ?? 'Phần mềm Quản trị' }}</p>
+            <p>Phiên bản: <span class="text-primary font-mono bg-primary/10 px-1 rounded">{{ $aboutInfo['version'] ?? 'v1.0' }}</span></p>
+            <p>Cập nhật lần cuối: {{ $aboutInfo['release_date'] ?? 'N/A' }}</p>
+            <div class="pt-3 mt-3 border-t border-white/10">
+                <p>Bản quyền © {{ date('Y') }} thuộc về <strong>{{ $aboutInfo['company'] ?? 'Công ty' }}</strong>.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{{-- MODAL ĐIỀU KHOẢN (TERMS) --}}
+<div id="termsModal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/50 backdrop-blur-sm transition-opacity">
+    <div class="glass-panel w-full max-w-lg p-6 rounded-xl relative m-4 border border-white/10 shadow-2xl">
+        <button onclick="closeModal('termsModal')" class="absolute top-4 right-4 text-on-surface-variant hover:text-error transition-colors outline-none">
+            <span class="material-symbols-outlined">close</span>
+        </button>
+        
+        <h3 class="text-lg font-bold text-on-surface mb-4 flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary">description</span>
+            Điều khoản sử dụng
+        </h3>
+        
+        <div class="space-y-3 text-sm text-on-surface-variant max-h-[60vh] overflow-y-auto pr-2 leading-relaxed">
+            <p class="font-semibold text-on-surface">1. Quy định chung</p>
+            <p>Khi truy cập và sử dụng hệ thống quản trị, bạn đồng ý tuân thủ tuyệt đối các quy chế an toàn thông tin của tổ chức đưa ra.</p>
+            <p class="font-semibold text-on-surface">2. Bảo mật tài khoản</p>
+            <p>Người dùng có trách nhiệm tự bảo mật tài khoản, không cung cấp cookie hoặc token phiên đăng nhập cho bất kỳ bên thứ ba nào.</p>
+            <p class="font-semibold text-on-surface">3. Giới hạn sử dụng</p>
+            <p>Nghiêm cấm mọi hành vi sử dụng công cụ tự động để can thiệp, phá hoại hoặc khai thác dữ liệu trái phép từ hệ thống.</p>
+        </div>
+    </div>
+</div>
+
+{{-- MODAL CHÍNH SÁCH BẢO MẬT (PRIVACY) --}}
+<div id="privacyModal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/50 backdrop-blur-sm transition-opacity">
+    <div class="glass-panel w-full max-w-lg p-6 rounded-xl relative m-4 border border-white/10 shadow-2xl">
+        <button onclick="closeModal('privacyModal')" class="absolute top-4 right-4 text-on-surface-variant hover:text-error transition-colors outline-none">
+            <span class="material-symbols-outlined">close</span>
+        </button>
+        
+        <h3 class="text-lg font-bold text-on-surface mb-4 flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary">shield</span>
+            Chính sách bảo mật
+        </h3>
+        
+        <div class="space-y-3 text-sm text-on-surface-variant max-h-[60vh] overflow-y-auto pr-2 leading-relaxed">
+            <p class="font-semibold text-on-surface">1. Thông tin thu thập</p>
+            <p>Hệ thống thu thập dữ liệu lịch sử đăng nhập bao gồm: Địa chỉ IP, thông tin thiết bị (Hệ điều hành, Trình duyệt) nhằm mục đích bảo vệ tài khoản của chính bạn.</p>
+            <p class="font-semibold text-on-surface">2. Mục đích sử dụng</p>
+            <p>Các dữ liệu thu thập chỉ phục vụ cho tính năng "Quản lý thiết bị" giúp bạn phát hiện các phiên đăng nhập bất thường.</p>
+            <p class="font-semibold text-on-surface">3. Cam kết</p>
+            <p>Chúng tôi cam kết không chia sẻ thông tin nhật ký hoạt động cá nhân của bạn cho bất kỳ đối tác bên ngoài nào.</p>
+        </div>
+    </div>
+</div>
 {{-- Background Effects --}}
 <div class="fixed top-[-10%] right-[-5%] w-[400px] h-[400px] bg-primary/10 rounded-full blur-[120px] -z-10 pointer-events-none"></div>
 
@@ -366,6 +460,27 @@ document.addEventListener('DOMContentLoaded', () => {
         const isDark = this.getAttribute('aria-checked') === 'true';
         setTheme(!isDark);
     });
+});
+// --- XỬ LÝ MODAL POPUP ---
+function openModal(modalId) {
+    const modal = document.getElementById(modalId);
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    modal.classList.remove('flex');
+    modal.classList.add('hidden');
+}
+
+// Cho phép nhấn ra vùng tối bên ngoài để đóng modal
+window.addEventListener('click', function(event) {
+    // Kiểm tra nếu click trúng lớp nền đen (chứa class bg-black/50)
+    if (event.target.classList.contains('bg-black/50')) {
+        event.target.classList.remove('flex');
+        event.target.classList.add('hidden');
+    }
 });
 </script>
 

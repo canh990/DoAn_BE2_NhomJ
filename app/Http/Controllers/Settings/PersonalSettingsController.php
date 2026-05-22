@@ -21,14 +21,28 @@ class PersonalSettingsController extends Controller
             App::setLocale(session('personal_locale'));
         }
 
-        // return view('settings');
         // lấy danh sách phiên đăng nhập
         $sessions = PhienDangNhap::where('nguoi_dung_id', auth()->id())
             ->whereNull('dang_xuat_luc')
             ->latest('lan_hoat_dong_cuoi')
             ->get();
 
-        return view('settings', compact('sessions'));
+        // Chuẩn bị dữ liệu cho Popup Giới thiệu (About)
+        $aboutInfo = [
+            'app_name' => 'Hệ thống Quản trị Nội bộ',
+            'version' => 'v1.2.4',
+            'release_date' => '22/05/2026',
+            'company' => 'Công ty TNHH Giải pháp Số',
+        ];
+
+        // Chuẩn bị dữ liệu cho Popup Hỗ trợ (Support)
+        $supportInfo = [
+            'email' => 'it-support@company.com',
+            'hotline' => '1900 1234',
+            'zalo_group' => 'https://zalo.me/g/nhomhotroIT',
+        ];
+
+        return view('settings', compact('sessions', 'aboutInfo', 'supportInfo'));
     }
 
     // Persist theme choice (light|dark) into session
