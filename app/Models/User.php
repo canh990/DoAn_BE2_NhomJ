@@ -91,4 +91,21 @@ class User extends Authenticatable
     {
         return $this->hasMany(ThongBao::class, 'nguoi_dung_id')->where('da_doc', false);
     }
+
+    /**
+     * Danh sách các dòng dữ liệu Bookmark.
+     */
+    public function bookmarks()
+    {
+        return $this->hasMany(BaiVietDaLuu::class, 'nguoi_dung_id');
+    }
+
+    /**
+     * Danh sách các bài viết mà User đã lưu.
+     */
+    public function bookmarkedPosts()
+    {
+        return $this->belongsToMany(BaiViet::class, 'bai_viet_da_luu', 'nguoi_dung_id', 'bai_viet_id')
+                    ->withPivot('ngay_tao');
+    }
 }

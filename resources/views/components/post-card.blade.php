@@ -109,6 +109,11 @@
     $selectedColor = $selected['color'] ?? 'text-sky-400';
 
     $isProfileUpdate = \Illuminate\Support\Str::startsWith($body, 'vừa cập nhật ảnh');
+
+    $isBookmarked = false;
+    if (auth()->check() && $postId && isset($post->bookmarks)) {
+        $isBookmarked = $post->bookmarks->contains('nguoi_dung_id', auth()->id());
+    }
 @endphp
 
 <article {{ $attributes->merge(['class' => 'glass-panel group rounded-2xl p-6 transition-all hover:border-sky-400/30']) }}>
@@ -304,6 +309,13 @@
                                 </div>
                                 <span class="text-[13px] sm:text-sm font-semibold tracking-wide hidden sm:block">Chia sẻ</span>
                                 <span class="text-[13px] sm:text-sm font-bold text-slate-500 group-hover:text-emerald-400/80" data-share-count>{{ $shareCount > 0 ? '('.$shareCount.')' : '' }}</span>
+                            </button>
+
+                            <button type="button" data-bookmark-button data-post-id="{{ $postId }}" class="group flex items-center gap-1.5 rounded-full px-3 py-1.5 sm:px-4 sm:py-2 text-slate-400 transition-all duration-300 hover:bg-slate-800/60 hover:text-yellow-400">
+                                <div class="relative flex items-center justify-center transition-transform group-hover:scale-110 group-active:scale-95">
+                                    <span class="material-symbols-outlined text-[20px] sm:text-[22px] {{ $isBookmarked ? 'text-yellow-400' : '' }}" data-bookmark-icon style="{{ $isBookmarked ? 'font-variation-settings: \'FILL\' 1;' : '' }}">bookmark</span>
+                                </div>
+                                <span class="text-[13px] sm:text-sm font-semibold tracking-wide hidden sm:block" data-bookmark-text>{{ $isBookmarked ? 'Đã lưu' : 'Lưu' }}</span>
                             </button>
                         </div>
 
