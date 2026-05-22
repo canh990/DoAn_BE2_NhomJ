@@ -29,9 +29,9 @@
     </style>
 
     @php
-        // CĂ¡c helper dĂ¹ng cho giao diá»‡n chat riĂªng tÆ°.
+        // Các helper dùng cho giao diện chat riêng tư.
         $activeUser = $selectedUser;
-        $displayName = fn ($user) => $user->ten_dang_nhap ?: ($user->email ?: 'Nguoi dung');
+        $displayName = fn ($user) => $user->ten_dang_nhap ?: ($user->email ?: 'Người dùng');
         $avatarText = fn ($user) => mb_strtoupper(mb_substr($displayName($user), 0, 1));
         $attachmentName = fn ($media) => basename($media->duong_dan);
     @endphp
@@ -109,30 +109,9 @@
                             </div>
                             <div class="mt-1 flex items-center gap-2 truncate font-medium {{ $isActive ? 'text-sky-300' : 'text-slate-400' }}">
                                 @if ($isMuted)
-                                    <span class="material-symbols-outlined text-[16px] text-amber-300" title="Da tat thong bao">notifications_off</span>
+                                    <span class="material-symbols-outlined text-[16px] text-amber-300" title="Đã tắt thông báo">notifications_off</span>
                                 @endif
-                                <span class="truncate">
-                                    @php
-                                        $lastVisibleMessage = null;
-                                        if ($isActive && $messages->count() > 0) {
-                                            foreach ($messages->reverse() as $msg) {
-                                                if ($msg->kieu_xoa !== 'ca_hai') {
-                                                    $lastVisibleMessage = $msg;
-                                                    break;
-                                                }
-                                            }
-                                        }
-                                    @endphp
-                                    @if ($isActive && $lastVisibleMessage)
-                                        @if ($lastVisibleMessage->kieu_xoa === 'ca_nhan')
-                                            [Tin nhan da bi xoa]
-                                        @else
-                                            {{ $lastVisibleMessage->noi_dung ?: '[Tep dinh kem]' }}
-                                        @endif
-                                    @else
-                                        {{ $user->email ?: 'Bat dau tro chuyen' }}
-                                    @endif
-                                </span>
+                                <span class="truncate">{{ $isActive && $messages->last() ? ($messages->last()->noi_dung ?: '[Tệp đính kèm]') : ($user->email ?: 'Bắt đầu trò chuyện') }}</span>
                             </div>
                         </div>
                     </a>
@@ -291,7 +270,7 @@
                         <input id="messageInput"
                                name="noi_dung"
                                class="h-14 min-w-0 flex-1 rounded-full border border-[#1b3047] bg-[#111a2a] px-6 text-lg font-semibold text-slate-100 outline-none placeholder:text-slate-500 focus:border-sky-400"
-                               placeholder="{{ __('messages.chat_type_message') }}"
+                               placeholder="Nhập tin nhắn của bạn..."
                                autocomplete="off"
                                value="{{ old('noi_dung') }}">
                         <button id="recordButton" class="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-transparent text-slate-400 hover:bg-sky-400/10 hover:text-sky-300" type="button" title="Ghi Ă¢m">
@@ -428,17 +407,10 @@
             const checked = message.is_mine
                 ? '<span class="grid h-3.5 w-3.5 place-items-center rounded-full bg-sky-300 text-[10px] text-[#07111f]">âœ“</span>'
                 : '';
-            
-            let content = '';
-            if (message.is_recalled) {
-                content = '<div class="italic text-slate-400">Tin nháº¯n Ä‘Ă£ bá»‹ thu há»“i</div>';
-            } else if (message.is_deleted) {
-                content = '<div class="italic text-slate-400">Tin nháº¯n Ä‘Ă£ bá»‹ xĂ³a</div>';
-            } else if (message.content) {
-                content = `<div class="whitespace-pre-wrap break-words">${escapeHtml(message.content)}</div>`;
-            }
-            
-            const attachments = (message.is_recalled || message.is_deleted) ? '' : attachmentHtml(message.attachments);
+            const content = message.content
+                ? `<div class="whitespace-pre-wrap break-words">${escapeHtml(message.content)}</div>`
+                : '';
+            const attachments = attachmentHtml(message.attachments);
             const attachmentWrap = attachments
                 ? `<div class="${message.content ? 'mt-3' : ''} space-y-3">${attachments}</div>`
                 : '';

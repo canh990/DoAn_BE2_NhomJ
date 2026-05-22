@@ -29,7 +29,7 @@
     </style>
     @php
         // Các hàm trợ giúp hiển thị tên người dùng/nhóm và tệp đính kèm
-        $displayName = fn ($user) => $user->ten_dang_nhap ?: ($user->email ?: 'Nguoi dung');
+        $displayName = fn ($user) => $user->ten_dang_nhap ?: ($user->email ?: 'Người dùng');
         $avatarText = fn ($text) => mb_strtoupper(mb_substr($text ?: 'N', 0, 1));
         $groupAvatar = fn ($group) => $group->anh_nhom ? asset($group->anh_nhom) : null;
         $attachmentName = fn ($media) => basename($media->duong_dan);
@@ -413,8 +413,8 @@ const name = escapeHtml(file.name || 'Tệp đính kèm');
 
         function groupTypingLabel(users) {
             if (users.length === 0) return '';
-            if (users.length === 1) return `${users[0].name} dang nhap tin nhan...`;
-            return `${users.length} nguoi dang nhap...`;
+            if (users.length === 1) return `${users[0].name} đang nhập tin nhắn...`;
+            return `${users.length} người đang nhập...`;
         }
 
         function pruneGroupTypingUsers() {
