@@ -246,6 +246,10 @@
                 <span class="material-symbols-outlined" data-icon="person">person</span>
                 <span class="text-lg font-medium">{{ __('messages.person_title') }}</span>
             </a>
+            <a class="flex items-center gap-3 {{ request()->routeIs('bookmarks.index') ? 'bg-sky-400/20 text-sky-300 border border-sky-400/20' : 'text-slate-400 hover:bg-white/5 hover:text-sky-200' }} px-4 py-3 rounded-xl transition-colors cursor-pointer transition-transform active:translate-x-1 font-inter text-sm font-medium" href="{{ route('bookmarks.index') }}">
+                <span class="material-symbols-outlined" data-icon="bookmark">bookmark</span>
+                <span class="text-lg font-medium">Bài viết đã lưu</span>
+            </a>
             <a href="{{ route('settings.index') }}" class="flex items-center gap-4 px-4 py-3 rounded-full transition-all hover:bg-white/10 group">
     <span class="material-symbols-outlined" data-icon="settings">settings</span>
     <span class="text-lg font-medium">{{ __('messages.settings_title') }}</span>
@@ -299,7 +303,89 @@
             const commentReplyButton = event.target.closest('[data-comment-reply-button]');
             const commentCancel = event.target.closest('[data-comment-cancel]');
             const shareButton = event.target.closest('[data-share-button]');
+            const bookmarkButton = event.target.closest('[data-bookmark-button]');
             const reactionAreas = document.querySelectorAll('[data-reaction-area]');
+
+            if (bookmarkButton) {
+                event.preventDefault();
+                const postId = bookmarkButton.dataset.postId;
+                const icon = bookmarkButton.querySelector('[data-bookmark-icon]');
+                const text = bookmarkButton.querySelector('[data-bookmark-text]');
+                
+                // Đóng reaction picker của bài viết này nếu đang mở
+                const area = bookmarkButton.closest('[data-reaction-area]');
+                const picker = area?.querySelector('[data-reaction-picker]');
+                if (picker) {
+                    picker.classList.add('hidden');
+                }
+                
+                fetch(`/posts/${postId}/bookmark`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                    }
+                })
+                .then(response => {
+                    if (response.status === 401) {
+                        if (typeof window.showToast === 'function') {
+                            window.showToast('Vui lòng đăng nhập để thực hiện chức năng này.', 'error');
+                        } else {
+                            alert('Vui lòng đăng nhập để thực hiện chức năng này.');
+                        }
+                        throw new Error('Unauthorized');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        const isBookmarked = data.is_bookmarked;
+                        if (isBookmarked) {
+                            icon.classList.add('text-yellow-400');
+                            icon.style.fontVariationSettings = "'FILL' 1";
+                            if (text) text.textContent = 'Đã lưu';
+                        } else {
+                            icon.classList.remove('text-yellow-400');
+                            icon.style.fontVariationSettings = "'FILL' 0";
+                            if (text) text.textContent = 'Lưu';
+                        }
+                        
+                        if (window.location.pathname === '/bookmarks' && !isBookmarked) {
+                            const postCard = bookmarkButton.closest('article');
+                            if (postCard) {
+                                postCard.style.transition = 'all 0.5s ease';
+                                postCard.style.opacity = '0';
+                                postCard.style.transform = 'scale(0.95)';
+                                setTimeout(() => {
+                                    postCard.remove();
+                                    const remainingCards = document.querySelectorAll('main article');
+                                    if (remainingCards.length === 0) {
+                                        window.location.reload();
+                                    }
+                                }, 500);
+                            }
+                        }
+                        
+                        if (typeof window.showToast === 'function') {
+                            window.showToast(data.message, 'success');
+                        }
+                    } else {
+                        if (typeof window.showToast === 'function') {
+                            window.showToast(data.message || 'Có lỗi xảy ra', 'error');
+                        }
+                    }
+                })
+                .catch(error => {
+                    if (error.message !== 'Unauthorized') {
+                        console.error('Lỗi khi lưu bài viết:', error);
+                        if (typeof window.showToast === 'function') {
+                            window.showToast('Không thể kết nối máy chủ.', 'error');
+                        }
+                    }
+                });
+                return;
+            }
 
             if (commentCancel) {
                 event.preventDefault();

@@ -54,4 +54,13 @@ Route::middleware('auth')->group(function () {
 
     Route::delete('/stories/{story}', [StoryController::class, 'destroy'])
         ->name('stories.destroy');
+
+    // -----------------------------------------------
+    // Bookmark routes
+    // -----------------------------------------------
+    Route::post('/posts/{post}/bookmark', [\App\Http\Controllers\BookmarkController::class, 'toggle'])
+        ->name('posts.bookmark');
+
+    Route::get('/bookmarks', [\App\Http\Controllers\BookmarkController::class, 'index'])
+        ->name('bookmarks.index');
 });

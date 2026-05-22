@@ -58,4 +58,21 @@ class BaiViet extends Model
     {
         return $this->hasMany(BaiViet::class, 'bai_goc_id');
     }
+
+    /**
+     * Danh sách các dòng dữ liệu Bookmark của bài viết này.
+     */
+    public function bookmarks(): HasMany
+    {
+        return $this->hasMany(BaiVietDaLuu::class, 'bai_viet_id');
+    }
+
+    /**
+     * Những người dùng đã bookmark bài viết này.
+     */
+    public function bookmarkedBy()
+    {
+        return $this->belongsToMany(User::class, 'bai_viet_da_luu', 'bai_viet_id', 'nguoi_dung_id')
+                    ->withPivot('ngay_tao');
+    }
 }

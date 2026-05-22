@@ -22,6 +22,8 @@ class ProfileController extends Controller
                 $query->where('nguoi_dung_id', auth()->id());
             }, 'comments' => function ($query) {
                 $query->whereNull('binh_luan_cha_id')->with(['user', 'nestedChildren'])->latest('ngay_tao');
+            }, 'bookmarks' => function ($query) {
+                $query->where('nguoi_dung_id', auth()->id());
             }])
             ->whereIn('loai', ['van_ban', 'hinh_anh', 'chia_se'])
             ->where('da_xoa', false)
@@ -66,6 +68,8 @@ class ProfileController extends Controller
                 $query->where('nguoi_dung_id', auth()->id());
             }, 'comments' => function ($query) {
                 $query->whereNull('binh_luan_cha_id')->with(['user', 'nestedChildren'])->latest('ngay_tao');
+            }, 'bookmarks' => function ($query) {
+                $query->where('nguoi_dung_id', auth()->id());
             }])
             ->whereIn('loai', ['van_ban', 'hinh_anh', 'chia_se'])
             ->where('da_xoa', false)
