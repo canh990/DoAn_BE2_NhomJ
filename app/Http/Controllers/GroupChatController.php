@@ -2,16 +2,30 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\ChatTyping;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 
+/**
+ * GroupChatController xử lý hành vi chat nhóm.
+ *
+ * - index(): hiển thị màn hình chat nhóm
+ * - store(): tạo cuộc trò chuyện nhóm mới
+ * - messages(): trả về tin nhắn nhóm qua AJAX
+ * - storeMessage(): lưu tin nhắn nhóm mới
+ * - toggleMute(): bật/tắt thông báo nhóm
+ */
 class GroupChatController extends Controller
 {
+    /**
+     * Hiển thị bảng điều khiển chat nhóm với danh sách nhóm và tin nhắn nhóm đang hoạt động.
+     */
     public function index(Request $request)
     {
         $currentUser = Auth::user();
@@ -43,9 +57,16 @@ class GroupChatController extends Controller
                 ->get();
         }
 
-        return view('message.group', compact('currentUser', 'users', 'groups', 'activeGroup', 'messages'));
+        $activeGroupMuted = $activeGroup instanceof Conversation
+            ? (bool) optional($activeGroup->members->firstWhere('id', $currentUser->id)?->pivot)->tat_thong_bao
+            : false;
+
+        return view('message.group', compact('currentUser', 'users', 'groups', 'activeGroup', 'messages', 'activeGroupMuted'));
     }
 
+    /**
+     * Tạo cuộc trò chuyện nhóm mới và thêm các thành viên được chọn.
+     */
     public function store(Request $request)
     {
         $data = $request->validate([
@@ -95,6 +116,9 @@ class GroupChatController extends Controller
             ->with('status', 'Da tao nhom '.$group->ten_nhom.'.');
     }
 
+    /**
+     * Trả về JSON cho tin nhắn nhóm. Chỉ thành viên của nhóm được truy cập.
+     */
     public function messages(Conversation $conversation)
     {
         $this->authorizeGroupMember($conversation);
@@ -110,6 +134,9 @@ class GroupChatController extends Controller
         ]);
     }
 
+    /**
+     * Lưu tin nhắn mới vào cuộc trò chuyện nhóm.
+     */
     public function storeMessage(Request $request, Conversation $conversation)
     {
         $this->authorizeGroupMember($conversation);
@@ -133,6 +160,9 @@ class GroupChatController extends Controller
         $this->storeAttachments($message, $request);
 
         $conversation->touch();
+        $this->forgetTypingUser($conversation, Auth::id());
+        $this->broadcastTyping($conversation, $this->typingUserPayload(Auth::user()), false);
+        $this->notifyUnmutedMembers($conversation, Auth::id());
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -143,6 +173,76 @@ class GroupChatController extends Controller
         return redirect()->route('chat.groups.index', ['group_id' => $conversation->id]);
     }
 
+    /**
+     * Chuyển trạng thái tắt/bật thông báo cho nhóm.
+     */
+    public function toggleMute(Request $request, Conversation $conversation)
+    {
+        $this->authorizeGroupMember($conversation);
+
+        $currentUserId = Auth::id();
+        $muted = ! (bool) $conversation->members()
+            ->whereKey($currentUserId)
+            ->firstOrFail()
+            ->pivot
+            ->tat_thong_bao;
+
+        $conversation->members()->updateExistingPivot($currentUserId, [
+            'tat_thong_bao' => $muted,
+        ]);
+
+        $message = $muted
+            ? 'Da tat thong bao nhom '.$conversation->ten_nhom.'.'
+            : 'Da bat lai thong bao nhom '.$conversation->ten_nhom.'.';
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'muted' => $muted,
+                'message' => $message,
+            ]);
+        }
+
+        return back()->with('status', $message);
+    }
+
+    public function typingUsers(Conversation $conversation)
+    {
+        $this->authorizeGroupMember($conversation);
+
+        return response()->json([
+            'conversation_id' => $conversation->id,
+            'users' => $this->activeTypingUsers($conversation, Auth::id()),
+        ]);
+    }
+
+    public function startTyping(Conversation $conversation)
+    {
+        $this->authorizeGroupMember($conversation);
+
+        $typingUser = $this->typingUserPayload(Auth::user());
+        $this->rememberTypingUser($conversation, $typingUser);
+        $this->broadcastTyping($conversation, $typingUser, true);
+
+        return response()->json([
+            'conversation_id' => $conversation->id,
+            'typing' => true,
+        ]);
+    }
+
+    public function stopTyping(Conversation $conversation)
+    {
+        $this->authorizeGroupMember($conversation);
+
+        $typingUser = $this->typingUserPayload(Auth::user());
+        $this->forgetTypingUser($conversation, Auth::id());
+        $this->broadcastTyping($conversation, $typingUser, false);
+
+        return response()->json(['typing' => false]);
+    }
+
+    /**
+     * Dừng nếu người dùng hiện tại không phải thành viên của nhóm yêu cầu.
+     */
     private function authorizeGroupMember(Conversation $conversation): void
     {
         abort_unless(
@@ -151,6 +251,91 @@ class GroupChatController extends Controller
         );
     }
 
+    /**
+     * Thông báo cho các thành viên nhóm chưa tắt thông báo.
+     */
+    private function notifyUnmutedMembers(Conversation $conversation, int $senderId): void
+    {
+        $members = $conversation->members()
+            ->where('nguoi_dung.id', '!=', $senderId)
+            ->wherePivot('tat_thong_bao', false)
+            ->get();
+
+        foreach ($members as $member) {
+            \App\Models\ThongBao::create([
+                'nguoi_dung_id' => $member->id,
+                'nguoi_thuc_hien_id' => $senderId,
+                'loai' => 'tin_nhan',
+                'ngay_tao' => now(),
+            ]);
+        }
+    }
+
+    private function activeTypingUsers(Conversation $conversation, int $currentUserId): array
+    {
+        $users = $this->currentTypingMap($conversation);
+        unset($users[$currentUserId]);
+
+        return array_values($users);
+    }
+
+    private function rememberTypingUser(Conversation $conversation, array $user): void
+    {
+        $users = $this->currentTypingMap($conversation);
+        $users[$user['id']] = array_merge($user, [
+            'expires_at' => now()->addSeconds(4)->timestamp,
+        ]);
+
+        Cache::put($this->typingCacheKey($conversation), $users, now()->addMinutes(5));
+    }
+
+    private function forgetTypingUser(Conversation $conversation, int $userId): void
+    {
+        $users = $this->currentTypingMap($conversation);
+        unset($users[$userId]);
+
+        Cache::put($this->typingCacheKey($conversation), $users, now()->addMinutes(5));
+    }
+
+    private function currentTypingMap(Conversation $conversation): array
+    {
+        $now = now()->timestamp;
+        $users = Cache::get($this->typingCacheKey($conversation), []);
+
+        return collect($users)
+            ->filter(fn ($user) => ($user['expires_at'] ?? 0) > $now)
+            ->all();
+    }
+
+    private function typingCacheKey(Conversation $conversation): string
+    {
+        return 'chat_typing:'.$conversation->id;
+    }
+
+    private function typingUserPayload(User $user): array
+    {
+        $name = $user->ten_dang_nhap ?: ($user->email ?: 'Thanh vien');
+
+        return [
+            'id' => $user->id,
+            'name' => $name,
+            'initial' => mb_strtoupper(mb_substr($name, 0, 1)),
+            'avatar_url' => $user->anh_dai_dien ? asset('storage/'.$user->anh_dai_dien) : null,
+        ];
+    }
+
+    private function broadcastTyping(Conversation $conversation, array $user, bool $typing): void
+    {
+        try {
+            broadcast(new ChatTyping($conversation->id, $user, $typing))->toOthers();
+        } catch (\Throwable) {
+            // HTTP polling keeps typing indicators working when broadcasting is not configured locally.
+        }
+    }
+
+    /**
+     * Lưu tệp đính kèm được tải lên cho tin nhắn nhóm.
+     */
     private function storeAttachments(Message $message, Request $request): void
     {
         if (! $request->hasFile('attachments')) {
@@ -177,6 +362,9 @@ class GroupChatController extends Controller
         }
     }
 
+    /**
+     * Xác định loại tệp đính kèm từ MIME type.
+     */
     private function mediaType(?string $mimeType): string
     {
         if (Str::startsWith((string) $mimeType, 'image/')) {
@@ -219,6 +407,9 @@ class GroupChatController extends Controller
         ]);
     }
 
+    /**
+     * Định dạng tin nhắn nhóm để trả về JSON.
+     */
     private function formatMessage(Message $message, int $currentUserId): array
     {
         $isRecalledForBoth = $message->kieu_xoa === 'ca_hai';

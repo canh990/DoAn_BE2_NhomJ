@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\ChatTyping;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
@@ -24,6 +26,8 @@ class ChatController extends Controller
         $selectedUser = null;
         $conversation = null;
         $messages = collect();
+        $muteStates = $this->privateMuteStates($currentUser->id);
+        $activeUserMuted = false;
 
         if ($request->filled('user_id') || $users->isNotEmpty()) {
             $selectedUser = $request->filled('user_id')
@@ -39,10 +43,12 @@ class ChatController extends Controller
                         ->orderBy('ngay_tao')
                         ->get();
                 }
+
+                $activeUserMuted = (bool) ($muteStates[$selectedUser->id] ?? false);
             }
         }
 
-        return view('message.chat1-1', compact('currentUser', 'users', 'selectedUser', 'conversation', 'messages'));
+        return view('message.chat1-1', compact('currentUser', 'users', 'selectedUser', 'conversation', 'messages', 'muteStates', 'activeUserMuted'));
     }
 
     public function storeConversation(Request $request)
@@ -99,7 +105,7 @@ class ChatController extends Controller
 
         $conversation = $this->findPrivateConversation($currentUser->id, $user->id);
         $messages = $conversation
-            ? $conversation->messages()->with(['sender', 'media'])->orderBy('ngay_tao')->get()
+            ? $conversation->messages()->with('media')->orderBy('ngay_tao')->get()
             : collect();
 
         return response()->json([
@@ -124,6 +130,85 @@ class ChatController extends Controller
             'conversation_id' => $conversation->id,
             'message' => $this->formatMessage($message, $currentUser->id),
         ]);
+    }
+
+    public function toggleUserMute(Request $request, User $user)
+    {
+        $currentUser = Auth::user();
+        abort_if($user->id === $currentUser->id, 422);
+
+        $conversation = $this->findPrivateConversation($currentUser->id, $user->id)
+            ?? $this->createPrivateConversation($currentUser->id, $user->id);
+
+        $muted = ! (bool) $conversation->members()
+            ->whereKey($currentUser->id)
+            ->firstOrFail()
+            ->pivot
+            ->tat_thong_bao;
+
+        $conversation->members()->updateExistingPivot($currentUser->id, [
+            'tat_thong_bao' => $muted,
+        ]);
+
+        $message = $muted
+            ? 'Da tat thong bao tu '.$this->displayName($user).'.'
+            : 'Da bat lai thong bao tu '.$this->displayName($user).'.';
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'muted' => $muted,
+                'message' => $message,
+            ]);
+        }
+
+        return back()->with('status', $message);
+    }
+
+    public function typingUsersForUser(User $user)
+    {
+        $currentUser = Auth::user();
+        abort_if($user->id === $currentUser->id, 422);
+
+        $conversation = $this->findPrivateConversation($currentUser->id, $user->id);
+
+        return response()->json([
+            'conversation_id' => $conversation?->id,
+            'users' => $conversation ? $this->typingUsers($conversation, $currentUser->id) : [],
+        ]);
+    }
+
+    public function startTypingForUser(User $user)
+    {
+        $currentUser = Auth::user();
+        abort_if($user->id === $currentUser->id, 422);
+
+        $conversation = $this->findPrivateConversation($currentUser->id, $user->id)
+            ?? $this->createPrivateConversation($currentUser->id, $user->id);
+
+        $typingUser = $this->typingUserPayload($currentUser);
+        $this->rememberTypingUser($conversation, $typingUser);
+        $this->broadcastTyping($conversation, $typingUser, true);
+
+        return response()->json([
+            'conversation_id' => $conversation->id,
+            'typing' => true,
+        ]);
+    }
+
+    public function stopTypingForUser(User $user)
+    {
+        $currentUser = Auth::user();
+        abort_if($user->id === $currentUser->id, 422);
+
+        $conversation = $this->findPrivateConversation($currentUser->id, $user->id);
+
+        if ($conversation) {
+            $typingUser = $this->typingUserPayload($currentUser);
+            $this->forgetTypingUser($conversation, $currentUser->id);
+            $this->broadcastTyping($conversation, $typingUser, false);
+        }
+
+        return response()->json(['typing' => false]);
     }
 
     public function storeFriend(Request $request)
@@ -182,6 +267,61 @@ class ChatController extends Controller
             ->with('status', 'Da ket ban voi '.$friend->ten_dang_nhap.' va mo chat 1-1.');
     }
 
+    public function deleteMessage(Request $request, Message $message)
+    {
+        $currentUser = Auth::user();
+
+        abort_if($message->nguoi_gui_id !== $currentUser->id, 403);
+        abort_unless(
+            $message->conversation->loai === 'ca_nhan'
+            && $message->conversation->members()->whereKey($currentUser->id)->exists(),
+            403
+        );
+
+        $data = $request->validate([
+            'type' => ['required', 'in:ca_nhan,ca_hai'],
+        ]);
+
+        $message->update(['kieu_xoa' => $data['type']]);
+
+        return response()->json([
+            'message' => $this->formatMessage($message->load('media'), $currentUser->id),
+        ]);
+    }
+
+    public function searchMessages(Request $request, Conversation $conversation)
+    {
+        $currentUser = Auth::user();
+        abort_unless($conversation->loai === 'ca_nhan' && $conversation->members()->whereKey($currentUser->id)->exists(), 403);
+
+        $data = $request->validate([
+            'keyword' => ['required', 'string', 'min:1', 'max:255'],
+        ], [
+            'keyword.required' => 'Vui long nhap tu khoa tim kiem.',
+            'keyword.min' => 'Tu khoa phai co it nhat 1 ky tu.',
+        ]);
+
+        $keyword = trim($data['keyword']);
+        $messages = $conversation->messages()
+            ->with(['sender', 'media'])
+            ->whereNotNull('noi_dung')
+            ->where('noi_dung', 'like', '%'.$keyword.'%')
+            ->where(function ($query) {
+                $query->whereNull('kieu_xoa')
+                    ->orWhere('kieu_xoa', '!=', 'ca_hai');
+            })
+            ->orderBy('ngay_tao', 'desc')
+            ->paginate(20);
+
+        return response()->json([
+            'keyword' => $keyword,
+            'total' => $messages->total(),
+            'messages' => $messages->map(fn (Message $message) => $this->formatMessage($message, $currentUser->id))->values(),
+            'current_page' => $messages->currentPage(),
+            'last_page' => $messages->lastPage(),
+        ]);
+    }
+
     private function findPrivateConversation(int $firstUserId, int $secondUserId): ?Conversation
     {
         return Conversation::query()
@@ -204,6 +344,17 @@ class ChatController extends Controller
         return $conversation;
     }
 
+    private function privateMuteStates(int $currentUserId)
+    {
+        return DB::table('thanh_vien_nhom as mine')
+            ->join('cuoc_tro_chuyen as conversations', 'conversations.id', '=', 'mine.cuoc_tro_chuyen_id')
+            ->join('thanh_vien_nhom as others', 'others.cuoc_tro_chuyen_id', '=', 'mine.cuoc_tro_chuyen_id')
+            ->where('conversations.loai', 'ca_nhan')
+            ->where('mine.nguoi_dung_id', $currentUserId)
+            ->where('others.nguoi_dung_id', '!=', $currentUserId)
+            ->pluck('mine.tat_thong_bao', 'others.nguoi_dung_id');
+    }
+
     private function createMessage(Conversation $conversation, int $senderId, ?string $content, Request $request): Message
     {
         $message = Message::create([
@@ -213,11 +364,19 @@ class ChatController extends Controller
         ]);
 
         $this->storeAttachments($message, $request);
-
         $conversation->touch();
+        $this->forgetTypingUser($conversation, $senderId);
 
-        // Tạo thông báo cho các thành viên khác trong cuộc trò chuyện
-        $otherMembers = $conversation->members()->where('nguoi_dung.id', '!=', $senderId)->get();
+        $sender = Auth::user();
+        if ($sender) {
+            $this->broadcastTyping($conversation, $this->typingUserPayload($sender), false);
+        }
+
+        $otherMembers = $conversation->members()
+            ->where('nguoi_dung.id', '!=', $senderId)
+            ->wherePivot('tat_thong_bao', false)
+            ->get();
+
         foreach ($otherMembers as $member) {
             \App\Models\ThongBao::create([
                 'nguoi_dung_id' => $member->id,
@@ -227,7 +386,7 @@ class ChatController extends Controller
             ]);
         }
 
-        return $message;
+        return $message->load('media');
     }
 
     private function validateMessageInput(Request $request, array $rules = []): array
@@ -288,69 +447,76 @@ class ChatController extends Controller
         return 'tap_tin';
     }
 
-    public function deleteMessage(Request $request, Message $message)
+    private function displayName(User $user): string
     {
-        $currentUser = Auth::user();
-        
-        // Check if current user is the sender
-        abort_if($message->nguoi_gui_id !== $currentUser->id, 403);
-        
-        // Check if user is part of the conversation
-        abort_unless(
-            $message->conversation->loai === 'ca_nhan' && 
-            $message->conversation->members()->whereKey($currentUser->id)->exists(),
-            403
-        );
-
-        $data = $request->validate([
-            'type' => ['required', 'in:ca_nhan,ca_hai'],
-        ]);
-
-        $message->update(['kieu_xoa' => $data['type']]);
-
-        return response()->json([
-            'message' => $this->formatMessage($message, $currentUser->id),
-        ]);
+        return $user->ten_dang_nhap ?: ($user->email ?: 'nguoi dung nay');
     }
 
-    public function searchMessages(Request $request, Conversation $conversation)
+    private function typingUsers(Conversation $conversation, int $currentUserId): array
     {
-        $currentUser = Auth::user();
-        abort_unless($conversation->loai === 'ca_nhan' && $conversation->members()->whereKey($currentUser->id)->exists(), 403);
+        $users = $this->currentTypingMap($conversation);
+        unset($users[$currentUserId]);
 
-        $data = $request->validate([
-            'keyword' => ['required', 'string', 'min:1', 'max:255'],
-        ], [
-            'keyword.required' => 'Vui lòng nhập từ khóa tìm kiếm.',
-            'keyword.min' => 'Từ khóa phải có ít nhất 1 ký tự.',
+        return array_values($users);
+    }
+
+    private function rememberTypingUser(Conversation $conversation, array $user): void
+    {
+        $users = $this->currentTypingMap($conversation);
+        $users[$user['id']] = array_merge($user, [
+            'expires_at' => now()->addSeconds(4)->timestamp,
         ]);
 
-        $keyword = trim($data['keyword']);
-        $messages = $conversation->messages()
-            ->with(['sender', 'media'])
-            ->whereNotNull('noi_dung')
-            ->where('noi_dung', 'like', '%' . $keyword . '%')
-            ->where(function ($query) {
-                $query->whereNull('kieu_xoa')
-                      ->orWhere('kieu_xoa', '!=', 'ca_hai');
-            })
-            ->orderBy('ngay_tao', 'desc')
-            ->paginate(20);
+        Cache::put($this->typingCacheKey($conversation), $users, now()->addMinutes(5));
+    }
 
-        return response()->json([
-            'keyword' => $keyword,
-            'total' => $messages->total(),
-            'messages' => $messages->map(fn (Message $message) => $this->formatMessage($message, $currentUser->id))->values(),
-            'current_page' => $messages->currentPage(),
-            'last_page' => $messages->lastPage(),
-        ]);
+    private function forgetTypingUser(Conversation $conversation, int $userId): void
+    {
+        $users = $this->currentTypingMap($conversation);
+        unset($users[$userId]);
+
+        Cache::put($this->typingCacheKey($conversation), $users, now()->addMinutes(5));
+    }
+
+    private function currentTypingMap(Conversation $conversation): array
+    {
+        $now = now()->timestamp;
+        $users = Cache::get($this->typingCacheKey($conversation), []);
+
+        return collect($users)
+            ->filter(fn ($user) => ($user['expires_at'] ?? 0) > $now)
+            ->all();
+    }
+
+    private function typingCacheKey(Conversation $conversation): string
+    {
+        return 'chat_typing:'.$conversation->id;
+    }
+
+    private function typingUserPayload(User $user): array
+    {
+        return [
+            'id' => $user->id,
+            'name' => $this->displayName($user),
+            'initial' => mb_strtoupper(mb_substr($this->displayName($user), 0, 1)),
+            'avatar_url' => $user->anh_dai_dien ? asset('storage/'.$user->anh_dai_dien) : null,
+        ];
+    }
+
+    private function broadcastTyping(Conversation $conversation, array $user, bool $typing): void
+    {
+        try {
+            broadcast(new ChatTyping($conversation->id, $user, $typing))->toOthers();
+        } catch (\Throwable) {
+            // HTTP polling keeps typing indicators working when broadcasting is not configured locally.
+        }
     }
 
     private function formatMessage(Message $message, int $currentUserId): array
     {
         $isRecalledForBoth = $message->kieu_xoa === 'ca_hai';
         $isDeletedForMe = $message->kieu_xoa === 'ca_nhan' && $message->nguoi_gui_id === $currentUserId;
-        
+
         return [
             'id' => $message->id,
             'sender_id' => $message->nguoi_gui_id,
