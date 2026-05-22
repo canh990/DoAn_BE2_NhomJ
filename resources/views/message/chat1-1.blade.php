@@ -12,9 +12,24 @@
                 radial-gradient(circle at 40% 82%, rgba(27, 51, 80, .18), transparent 28%),
                 #080d18;
         }
+        .mute-glass {
+            background: linear-gradient(135deg, rgba(15, 23, 42, .82), rgba(15, 23, 42, .58));
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08), 0 18px 48px rgba(2, 8, 23, .22);
+            backdrop-filter: blur(16px);
+        }
+        .typing-dot {
+            animation: typing-bounce 1.2s infinite ease-in-out;
+        }
+        .typing-dot:nth-child(2) { animation-delay: .16s; }
+        .typing-dot:nth-child(3) { animation-delay: .32s; }
+        @keyframes typing-bounce {
+            0%, 80%, 100% { transform: translateY(0); opacity: .38; }
+            40% { transform: translateY(-4px); opacity: 1; }
+        }
     </style>
 
     @php
+        // Các helper dùng cho giao diện chat riêng tư.
         $activeUser = $selectedUser;
         $displayName = fn ($user) => $user->ten_dang_nhap ?: ($user->email ?: 'Nguoi dung');
         $avatarText = fn ($user) => mb_strtoupper(mb_substr($displayName($user), 0, 1));
@@ -25,18 +40,18 @@
         <section class="flex min-h-0 flex-col border-r border-[#1b3047] bg-[#0b1220]">
             <div class="flex items-center justify-between px-8 py-7">
                 <div>
-                    <h1 class="text-3xl font-extrabold">Tin nhan</h1>
+                    <h1 class="text-3xl font-extrabold">Tin nhắn</h1>
                     <p class="mt-1 text-sm font-semibold text-slate-500">Chat 1-1</p>
                 </div>
                 <a href="{{ route('chat.groups.index') }}" class="rounded-2xl border border-sky-400/30 px-4 py-2 text-sm font-bold text-sky-300 hover:bg-sky-400/10">
-                    Nhom
+                    Nhóm
                 </a>
             </div>
 
             <div class="px-8">
                 <label class="flex h-12 items-center gap-3 rounded-3xl border border-[#1b3047] bg-[#101827] px-4 text-slate-500">
                     <span class="material-symbols-outlined text-xl">search</span>
-                    <input class="w-full border-0 bg-transparent text-base outline-none placeholder:text-slate-500 focus:ring-0" placeholder="Tim kiem cuoc tro chuyen..." type="search">
+                    <input class="w-full border-0 bg-transparent text-base outline-none placeholder:text-slate-500 focus:ring-0" placeholder="Tìm kiếm cuộc trò chuyện..." type="search">
                 </label>
             </div>
 
@@ -45,10 +60,10 @@
                 <div class="flex gap-2">
                     <input name="account"
                            class="h-11 min-w-0 flex-1 rounded-2xl border border-[#1b3047] bg-[#101827] px-4 text-sm font-semibold text-slate-100 outline-none placeholder:text-slate-500 focus:border-sky-400"
-                           placeholder="Email / SDT / ten dang nhap"
+                           placeholder="Email / SDT / tên đăng nhập"
                            value="{{ old('account') }}">
                     <button class="shrink-0 rounded-2xl bg-sky-300 px-4 text-sm font-black text-[#07111f] hover:bg-sky-200" type="submit">
-                        Ket ban
+                        Kết bạn
                     </button>
                 </div>
 
@@ -65,11 +80,13 @@
                 @enderror
             </form>
 
+            {{-- Sidebar user list: choose a contact to open a private conversation. --}}
             <div class="mt-5 min-h-0 flex-1 space-y-3 overflow-y-auto px-5 pb-6">
                 @forelse ($users as $user)
                     @php
                         $isActive = optional($activeUser)->id === $user->id;
                         $name = $displayName($user);
+                        $isMuted = (bool) ($muteStates[$user->id] ?? false);
                     @endphp
                     <a href="{{ route('chat.demo', ['user_id' => $user->id]) }}"
                        class="flex items-center gap-4 rounded-[28px] border px-4 py-4 transition {{ $isActive ? 'border-sky-500/25 bg-sky-500/12' : 'border-transparent hover:bg-white/[.03]' }}">
@@ -84,17 +101,20 @@
                             <div class="flex items-center justify-between gap-3">
                                 <div class="truncate text-lg font-bold">{{ $name }}</div>
                                 <div class="shrink-0 text-sm font-semibold {{ $isActive ? 'text-sky-300' : 'text-slate-400' }}">
-                                    {{ $isActive ? 'Vua xong' : 'Online' }}
-                                </div>
+                                {{ $isActive ? 'Vua xong' : 'Online' }}
                             </div>
-                            <div class="mt-1 truncate font-medium {{ $isActive ? 'text-sky-300' : 'text-slate-400' }}">
-                                {{ $isActive && $messages->last() ? ($messages->last()->noi_dung ?: '[Tep dinh kem]') : ($user->email ?: 'Bat dau tro chuyen') }}
+                        </div>
+                            <div class="mt-1 flex items-center gap-2 truncate font-medium {{ $isActive ? 'text-sky-300' : 'text-slate-400' }}">
+                                @if ($isMuted)
+                                    <span class="material-symbols-outlined text-[16px] text-amber-300" title="Đã tắt thông báo">notifications_off</span>
+                                @endif
+                                <span class="truncate">{{ $isActive && $messages->last() ? ($messages->last()->noi_dung ?: '[Tệp đính kèm]') : ($user->email ?: 'Bắt đầu trò chuyện') }}</span>
                             </div>
                         </div>
                     </a>
                 @empty
                     <div class="rounded-3xl border border-[#1b3047] bg-white/[.03] p-5 text-center text-slate-400">
-                        Chua co nguoi dung khac de chat.
+                        Chưa có người dùng khác để chat.
                     </div>
                 @endforelse
             </div>
@@ -116,13 +136,28 @@
                         </div>
                     </div>
 
-                    <div class="flex items-center gap-6 text-2xl text-slate-400">
+                    <div class="flex items-center gap-3 text-2xl text-slate-400">
                         <button class="material-symbols-outlined hover:text-sky-300" type="button">call</button>
                         <button class="material-symbols-outlined hover:text-sky-300" type="button">videocam</button>
                         <span class="h-8 w-px bg-[#1b3047]"></span>
-                        <button class="material-symbols-outlined hover:text-sky-300" type="button">settings</button>
+                        <form id="muteChatForm"
+                              action="{{ route('chat.user.mute', $activeUser) }}"
+                              method="POST"
+                              data-muted="{{ $activeUserMuted ? '1' : '0' }}"
+                              class="inline-flex">
+                            @csrf
+                            <button id="muteChatButton"
+                                    class="mute-glass group inline-flex h-12 items-center gap-2 rounded-2xl border px-4 text-sm font-black transition {{ $activeUserMuted ? 'border-amber-300/40 text-amber-200 hover:bg-amber-300/10' : 'border-sky-300/25 text-sky-200 hover:bg-sky-300/10' }}"
+                                    type="submit"
+                                    title="{{ $activeUserMuted ? 'Bật lại thông báo' : 'Tắt thông báo' }}">
+                                <span class="material-symbols-outlined text-[22px] transition group-hover:scale-110">{{ $activeUserMuted ? 'notifications_off' : 'notifications' }}</span>
+                                <span>{{ $activeUserMuted ? 'Đang tắt' : 'Tắt chuông' }}</span>
+                            </button>
+                        </form>
+                        <button class="material-symbols-outlined rounded-2xl p-2 hover:bg-white/[.06] hover:text-sky-300" type="button">settings</button>
                     </div>
                 </header>
+                <div id="muteToast" class="pointer-events-none fixed right-6 top-20 z-50 hidden rounded-2xl border border-white/10 bg-[#101827]/90 px-4 py-3 text-sm font-bold text-slate-100 shadow-2xl backdrop-blur-xl"></div>
 
                 <div id="chatMessages" class="min-h-0 flex-1 space-y-8 overflow-y-auto px-8 py-7">
                     <div class="flex justify-center">
@@ -178,9 +213,22 @@
                         </div>
                     @empty
                         <div class="flex h-full items-center justify-center text-lg font-semibold text-slate-500">
-                            Chua co tin nhan. Hay gui tin dau tien.
+                            Chưa có tin nhắn. Hay gửi tin đầu tiên.
                         </div>
                     @endforelse
+                </div>
+                <div id="typingIndicator" class="hidden px-8 pb-1">
+                    <div class="inline-flex max-w-full items-center gap-3 rounded-2xl border border-white/10 bg-[#101827]/70 px-4 py-2 text-sm font-bold text-slate-300 shadow-2xl backdrop-blur-xl">
+                        <div class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-gradient-to-br from-cyan-300 to-emerald-400 text-xs font-black text-[#07111f]">
+                            {{ $activeUser ? $avatarText($activeUser) : '?' }}
+                        </div>
+                        <span id="typingText" class="truncate"></span>
+                        <span class="inline-flex items-center gap-1 rounded-full bg-white/[.06] px-2.5 py-2">
+                            <span class="typing-dot h-1.5 w-1.5 rounded-full bg-sky-200"></span>
+                            <span class="typing-dot h-1.5 w-1.5 rounded-full bg-sky-200"></span>
+                            <span class="typing-dot h-1.5 w-1.5 rounded-full bg-sky-200"></span>
+                        </span>
+                    </div>
                 </div>
 
                 <div class="p-7">
@@ -189,6 +237,10 @@
                           enctype="multipart/form-data"
                           data-fetch-url="{{ route('chat.user.messages.index', $activeUser) }}"
                           data-send-url="{{ route('chat.user.messages.store', $activeUser) }}"
+                          data-typing-url="{{ route('chat.user.typing.start', $activeUser) }}"
+                          data-stop-typing-url="{{ route('chat.user.typing.stop', $activeUser) }}"
+                          data-typing-users-url="{{ route('chat.user.typing.index', $activeUser) }}"
+                          data-conversation-id="{{ $conversation?->id }}"
                           action="{{ $conversation ? route('chat.messages.store', $conversation) : route('chat.conversations.store') }}"
                           class="flex items-center gap-5 rounded-[22px] border border-sky-500/25 bg-[#101827]/95 px-6 py-3 shadow-[0_0_45px_rgba(56,189,248,.08)]">
                         @csrf
@@ -196,7 +248,7 @@
                             <input type="hidden" name="user_id" value="{{ $activeUser->id }}">
                         @endunless
 
-                        <label class="grid h-9 w-9 shrink-0 cursor-pointer place-items-center rounded-full border-2 border-slate-400 text-slate-400 hover:border-sky-300 hover:text-sky-300" title="Gui anh, video, tep">
+                        <label class="grid h-9 w-9 shrink-0 cursor-pointer place-items-center rounded-full border-2 border-slate-400 text-slate-400 hover:border-sky-300 hover:text-sky-300" title="Gửi ảnh, video, tệp">
                             <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.4 11.6 12 21a6 6 0 0 1-8.5-8.5l9.9-9.9a4 4 0 0 1 5.7 5.7l-9.9 9.9a2 2 0 0 1-2.8-2.8l9.2-9.2"/></svg>
                             <input id="attachmentInput" name="attachments[]" type="file" class="hidden" multiple accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar">
                         </label>
@@ -209,10 +261,10 @@
                                placeholder="Nhap tin nhan cua ban..."
                                autocomplete="off"
                                value="{{ old('noi_dung') }}">
-                        <button id="recordButton" class="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-transparent text-slate-400 hover:bg-sky-400/10 hover:text-sky-300" type="button" title="Ghi am">
+                        <button id="recordButton" class="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-transparent text-slate-400 hover:bg-sky-400/10 hover:text-sky-300" type="button" title="Ghi âm">
                             <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3"/></svg>
                         </button>
-                        <button class="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-sky-300 text-[#07111f] transition hover:bg-sky-200" type="submit" title="Gui">
+                        <button class="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-sky-300 text-[#07111f] transition hover:bg-sky-200" type="submit" title="Gửi">
                             <svg class="h-8 w-8" viewBox="0 0 24 24" fill="currentColor"><path d="M3.4 20.4 21 12 3.4 3.6 3 10l10 2-10 2 .4 6.4Z"/></svg>
                         </button>
                     </form>
@@ -233,15 +285,17 @@
                     <div id="attachmentPreview" class="mt-2 px-3 text-sm font-semibold text-sky-300"></div>
                 </div>
             @else
+                {{-- Chưa chọn người dùng: nhắc bắt đầu chat. --}}
                 <div class="flex h-full flex-col items-center justify-center gap-4 text-slate-400">
                     <div class="grid h-20 w-20 place-items-center rounded-full bg-sky-400/10 text-4xl text-sky-300">≡</div>
-                    <div class="text-xl font-bold">Chon mot nguoi dung de bat dau chat.</div>
+                    <div class="text-xl font-bold">Chọn một người dùng để bắt đầu chat.</div>
                 </div>
             @endif
         </main>
     </div>
 
     <script>
+        // Các phần tử DOM cho tính năng tương tác chat riêng tư.
         const chatMessages = document.getElementById('chatMessages');
         const messageForm = document.getElementById('messageForm');
         const messageInput = document.getElementById('messageInput');
@@ -250,11 +304,21 @@
         const recordButton = document.getElementById('recordButton');
         const emojiButton = document.getElementById('emojiButton');
         const emojiPicker = document.getElementById('emojiPicker');
-        const otherAvatar = @json($activeUser ? $avatarText($activeUser) : '');
+        const muteChatForm = document.getElementById('muteChatForm');
+        const muteChatButton = document.getElementById('muteChatButton');
+        const muteToast = document.getElementById('muteToast');
+        const typingIndicator = document.getElementById('typingIndicator');
+        const typingText = document.getElementById('typingText');
+        const otherAvatar = '{{ addslashes($activeUser ? $avatarText($activeUser) : '') }}';
         let mediaRecorder = null;
         let recordedChunks = [];
         let lastMessagesFingerprint = '';
+        let typingStopTimer = null;
+        let lastTypingSentAt = 0;
+        let isTyping = false;
+        let typingUsers = new Map();
 
+        // Thoát ký tự không an toàn trước khi hiển thị trong trình duyệt.
         function escapeHtml(value) {
             return String(value ?? '')
                 .replaceAll('&', '&amp;')
@@ -267,7 +331,7 @@
         function attachmentHtml(attachments) {
             return (attachments || []).map((file) => {
                 const url = escapeHtml(file.url);
-                const name = escapeHtml(file.name || 'Tep dinh kem');
+                const name = escapeHtml(file.name || 'Tệp đính kèm');
 
                 if (file.type === 'hinh_anh') {
                     return `<a href="${url}" target="_blank" class="block overflow-hidden rounded-2xl border border-white/10">
@@ -348,7 +412,7 @@
             const nearBottom = chatMessages.scrollHeight - chatMessages.scrollTop - chatMessages.clientHeight < 120;
             const body = messages.length
                 ? messages.map(messageHtml).join('')
-                : '<div class="flex h-full items-center justify-center text-lg font-semibold text-slate-500">Chua co tin nhan. Hay gui tin dau tien.</div>';
+                : '<div class="flex h-full items-center justify-center text-lg font-semibold text-slate-500">Chưa có tin nhắn. Hãy gửi tin đầu tiên.</div>';
 
             chatMessages.innerHTML = `
                 <div class="flex justify-center">
@@ -359,6 +423,113 @@
 
             if (nearBottom) {
                 chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+        }
+
+        function typingLabel(users) {
+            if (users.length === 0) return '';
+            if (users.length === 1) return `${users[0].name} dang nhap tin nhan...`;
+            return `${users.length} nguoi dang nhap...`;
+        }
+
+        function pruneTypingUsers() {
+            const now = Math.floor(Date.now() / 1000);
+            typingUsers.forEach((user, id) => {
+                if ((user.expires_at || 0) <= now) typingUsers.delete(id);
+            });
+        }
+
+        function renderTypingUsers(users = null) {
+            if (!typingIndicator || !typingText) return;
+
+            if (Array.isArray(users)) {
+                typingUsers = new Map(users.map((user) => [Number(user.id), user]));
+            }
+
+            pruneTypingUsers();
+            const activeUsers = Array.from(typingUsers.values());
+            typingText.textContent = typingLabel(activeUsers);
+            typingIndicator.classList.toggle('hidden', activeUsers.length === 0);
+        }
+
+        async function loadTypingUsers() {
+            if (!messageForm || document.hidden) return;
+
+            const response = await fetch(messageForm.dataset.typingUsersUrl, {
+                headers: { Accept: 'application/json' },
+                credentials: 'same-origin',
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data.conversation_id) {
+                    messageForm.dataset.conversationId = data.conversation_id;
+                    subscribeTypingChannel(data.conversation_id);
+                }
+                renderTypingUsers(data.users || []);
+            }
+        }
+
+        async function sendTypingState(typing) {
+            if (!messageForm) return;
+
+            const token = messageForm.querySelector('input[name="_token"]').value;
+            const response = await fetch(typing ? messageForm.dataset.typingUrl : messageForm.dataset.stopTypingUrl, {
+                method: typing ? 'POST' : 'DELETE',
+                headers: {
+                    Accept: 'application/json',
+                    'X-CSRF-TOKEN': token,
+                },
+                credentials: 'same-origin',
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data.conversation_id) {
+                    messageForm.dataset.conversationId = data.conversation_id;
+                    subscribeTypingChannel(data.conversation_id);
+                }
+            }
+        }
+
+        function subscribeTypingChannel(conversationId) {
+            if (!conversationId || !window.Echo || messageForm?.dataset.typingSubscribed === String(conversationId)) return;
+            messageForm.dataset.typingSubscribed = String(conversationId);
+            window.Echo.private(`chat.conversation.${conversationId}`)
+                .listen('.typing', (event) => {
+                    const user = event.user || {};
+                    if (!user.id) return;
+                    if (event.typing) {
+                        typingUsers.set(Number(user.id), user);
+                    } else {
+                        typingUsers.delete(Number(user.id));
+                    }
+                    renderTypingUsers();
+                });
+        }
+
+        function markTypingActivity() {
+            if (!messageInput || !messageInput.value.trim()) return;
+
+            const now = Date.now();
+            if (!isTyping || now - lastTypingSentAt > 2200) {
+                isTyping = true;
+                lastTypingSentAt = now;
+                sendTypingState(true);
+            }
+
+            window.clearTimeout(typingStopTimer);
+            typingStopTimer = window.setTimeout(() => {
+                isTyping = false;
+                sendTypingState(false);
+            }, 2800);
+        }
+
+        function stopLocalTyping() {
+            window.clearTimeout(typingStopTimer);
+            if (isTyping) {
+                isTyping = false;
+                sendTypingState(false);
             }
         }
 
@@ -380,6 +551,43 @@
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
 
+        function showMuteToast(message) {
+            if (!muteToast) return;
+            muteToast.textContent = message;
+            muteToast.classList.remove('hidden');
+            window.clearTimeout(showMuteToast.timer);
+            showMuteToast.timer = window.setTimeout(() => muteToast.classList.add('hidden'), 2200);
+        }
+
+        if (muteChatForm && muteChatButton) {
+            muteChatForm.addEventListener('submit', async (event) => {
+                event.preventDefault();
+
+                const token = muteChatForm.querySelector('input[name="_token"]').value;
+                const response = await fetch(muteChatForm.action, {
+                    method: 'POST',
+                    headers: {
+                        Accept: 'application/json',
+                        'X-CSRF-TOKEN': token,
+                    },
+                    credentials: 'same-origin',
+                });
+
+                if (!response.ok) return;
+
+                const data = await response.json();
+                const muted = Boolean(data.muted);
+                const icon = muteChatButton.querySelector('.material-symbols-outlined');
+                const label = muteChatButton.querySelector('span:last-child');
+                muteChatForm.dataset.muted = muted ? '1' : '0';
+                muteChatButton.title = muted ? 'Bật lại thông báo' : 'Tắt thông báo';
+                muteChatButton.className = `mute-glass group inline-flex h-12 items-center gap-2 rounded-2xl border px-4 text-sm font-black transition ${muted ? 'border-amber-300/40 text-amber-200 hover:bg-amber-300/10' : 'border-sky-300/25 text-sky-200 hover:bg-sky-300/10'}`;
+                if (icon) icon.textContent = muted ? 'notifications_off' : 'notifications';
+                if (label) label.textContent = muted ? 'Đang tắt' : 'Đang bật';
+                showMuteToast(data.message || (muted ? 'Đã tắt thông báo.' : 'Đã bật lại thông báo.'));
+            });
+        }
+
         if (messageForm && messageInput) {
             messageForm.addEventListener('submit', async (event) => {
                 event.preventDefault();
@@ -393,6 +601,7 @@
                 body.set('noi_dung', content);
                 messageInput.value = '';
                 if (attachmentPreview) attachmentPreview.textContent = '';
+                stopLocalTyping();
 
                 const response = await fetch(messageForm.dataset.sendUrl, {
                     method: 'POST',
@@ -406,7 +615,7 @@
 
                 if (!response.ok) {
                     messageInput.value = content;
-                    if (attachmentPreview && hasFiles) attachmentPreview.textContent = `${attachmentInput.files.length} tep dang cho gui`;
+                    if (attachmentPreview && hasFiles) attachmentPreview.textContent = `${attachmentInput.files.length} tệp đang chờ gửi`;
                     return;
                 }
 
@@ -417,7 +626,7 @@
             attachmentInput?.addEventListener('change', () => {
                 if (!attachmentPreview) return;
                 const count = attachmentInput.files.length;
-                attachmentPreview.textContent = count ? `${count} tep da chon` : '';
+                attachmentPreview.textContent = count ? `${count} tệp đã chọn` : '';
             });
 
             emojiButton?.addEventListener('click', () => {
@@ -451,7 +660,7 @@
                 body.append('attachments[]', blob, `ghi-am-${Date.now()}.webm`);
 
                 messageInput.value = '';
-                if (attachmentPreview) attachmentPreview.textContent = 'Dang gui ghi am...';
+                if (attachmentPreview) attachmentPreview.textContent = 'Đang gửi ghi âm...';
 
                 const response = await fetch(messageForm.dataset.sendUrl, {
                     method: 'POST',
@@ -474,7 +683,7 @@
                 }
 
                 if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) {
-                    if (attachmentPreview) attachmentPreview.textContent = 'Trinh duyet khong ho tro ghi am.';
+                    if (attachmentPreview) attachmentPreview.textContent = 'Trình duyệt không hỗ trợ ghi âm.';
                     return;
                 }
 
@@ -482,7 +691,7 @@
                 try {
                     stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 } catch (error) {
-                    if (attachmentPreview) attachmentPreview.textContent = 'Khong the mo micro. Hay cap quyen ghi am cho trinh duyet.';
+                    if (attachmentPreview) attachmentPreview.textContent = 'Không thể mở micro. Hay cấp quyền ghi âm cho trình duyệt.';
                     return;
                 }
                 recordedChunks = [];
@@ -498,7 +707,7 @@
                 });
 
                 recordButton.classList.add('border-red-400', 'bg-red-400/15', 'text-red-300');
-                if (attachmentPreview) attachmentPreview.textContent = 'Dang ghi am... bam micro de dung va gui';
+                if (attachmentPreview) attachmentPreview.textContent = 'Đang ghi âm... bấm micro để dùng và gửi';
                 mediaRecorder.start();
             });
 
@@ -508,9 +717,18 @@
                     messageForm.requestSubmit();
                 }
             });
+            messageInput.addEventListener('input', markTypingActivity);
+            messageInput.addEventListener('blur', () => {
+                window.clearTimeout(typingStopTimer);
+                typingStopTimer = window.setTimeout(stopLocalTyping, 600);
+            });
 
+            subscribeTypingChannel(messageForm.dataset.conversationId);
             loadMessages();
+            loadTypingUsers();
             setInterval(loadMessages, 2500);
+            setInterval(loadTypingUsers, 1500);
+            setInterval(() => renderTypingUsers(), 1000);
         }
     </script>
 @endsection

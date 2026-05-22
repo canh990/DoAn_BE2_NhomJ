@@ -4,6 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * Message đại diện cho một tin nhắn trong cuộc trò chuyện riêng tư hoặc nhóm.
+ */
 class Message extends Model
 {
     protected $table = 'tin_nhan';
@@ -18,16 +21,25 @@ class Message extends Model
         'trang_thai',
     ];
 
+    /**
+     * Cuộc trò chuyện mà tin nhắn này thuộc về.
+     */
     public function conversation()
     {
         return $this->belongsTo(Conversation::class, 'cuoc_tro_chuyen_id');
     }
 
+    /**
+     * Người dùng đã gửi tin nhắn này.
+     */
     public function sender()
     {
         return $this->belongsTo(User::class, 'nguoi_gui_id');
     }
 
+    /**
+     * Các tệp đính kèm liên quan đến tin nhắn này.
+     */
     public function media()
     {
         return $this->hasMany(MessageMedia::class, 'tin_nhan_id');
