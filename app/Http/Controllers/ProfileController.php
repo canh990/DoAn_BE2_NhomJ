@@ -274,13 +274,18 @@ class ProfileController extends Controller
         $isFollowing = count($status['attached']) > 0;
 
         if ($isFollowing) {
-            // Tạo thông báo cho người được theo dõi
-            \App\Models\ThongBao::create([
-                'nguoi_dung_id' => $user->id,
-                'nguoi_thuc_hien_id' => $me->id,
-                'loai' => 'theo_doi',
-                'ngay_tao' => now(),
-            ]);
+            // Tạo hoặc cập nhật thông báo cho người được theo dõi
+            \App\Models\ThongBao::updateOrCreate(
+                [
+                    'nguoi_dung_id' => $user->id,
+                    'nguoi_thuc_hien_id' => $me->id,
+                    'loai' => 'theo_doi',
+                ],
+                [
+                    'da_doc' => false,
+                    'ngay_tao' => now(),
+                ]
+            );
         } else {
             // Xóa thông báo nếu bỏ theo dõi
             \App\Models\ThongBao::where([

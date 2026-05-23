@@ -32,13 +32,18 @@
                     case 'binh_luan':
                     case 'chia_se':
                     case 'dang_bai':
+                    case 'tag':
                         $redirectUrl = $notification->bai_viet_id ? route('posts.show', $notification->bai_viet_id) : '#';
                         break;
                     case 'theo_doi':
                         $redirectUrl = route('profile.public', $notification->nguoiThucHien->ten_dang_nhap);
                         break;
                     case 'tin_nhan':
+                    case 'ket_ban':
                         $redirectUrl = route('chat.demo', ['user_id' => $notification->nguoi_thuc_hien_id]);
+                        break;
+                    case 'tin_nhan_nhom':
+                        $redirectUrl = $notification->cuoc_tro_chuyen_id ? route('chat.groups.index', ['group_id' => $notification->cuoc_tro_chuyen_id]) : '#';
                         break;
                     case 'dang_tin':
                         $redirectUrl = route('home'); // Stories usually on home
@@ -47,7 +52,7 @@
             @endphp
             <div class="notification-item group relative glass-panel rounded-2xl p-4 transition-all hover:bg-white/5 hover:border-sky-400/30 cursor-pointer {{ $notification->da_doc ? 'opacity-80' : 'border-l-4 border-sky-400' }}" 
                  data-id="{{ $notification->id }}"
-                 onclick="handleNotificationClick(event, '{{ $redirectUrl }}')">
+                 onclick="handleNotificationClick(event, '{{ $notification->id }}', '{{ $redirectUrl }}', {{ $notification->da_doc ? 'true' : 'false' }})">
                 
                 <div class="flex gap-4 relative z-10">
                     {{-- Actor Avatar --}}
@@ -62,8 +67,10 @@
                             @switch($notification->loai)
                                 @case('thich') bg-rose-500 @break
                                 @case('binh_luan') bg-sky-500 @break
-                                @case('theo_doi') bg-purple-500 @break
+                                @case('theo_doi') @case('ket_ban') bg-purple-500 @break
                                 @case('chia_se') bg-emerald-500 @break
+                                @case('tag') bg-amber-500 @break
+                                @case('tin_nhan') @case('tin_nhan_nhom') bg-indigo-500 @break
                                 @default bg-slate-500
                             @endswitch">
                             <span class="material-symbols-outlined text-white text-[14px]">
@@ -71,8 +78,11 @@
                                     @case('thich') favorite @break
                                     @case('binh_luan') chat_bubble @break
                                     @case('theo_doi') person_add @break
+                                    @case('ket_ban') handshake @break
                                     @case('chia_se') share @break
                                     @case('tin_nhan') mail @break
+                                    @case('tin_nhan_nhom') forum @break
+                                    @case('tag') alternate_email @break
                                     @case('dang_bai') article @break
                                     @default notifications
                                 @endswitch
@@ -101,11 +111,24 @@
                                 @case('theo_doi')
                                     đã bắt đầu theo dõi bạn.
                                     @break
+                                @case('ket_ban')
+                                    đã trở thành bạn bè với bạn.
+                                    @break
                                 @case('chia_se')
                                     đã chia sẻ bài viết của bạn.
                                     @break
                                 @case('tin_nhan')
                                     đã gửi cho bạn một tin nhắn mới.
+                                    @break
+                                @case('tin_nhan_nhom')
+                                    đã gửi tin nhắn mới trong nhóm chat.
+                                    @break
+                                @case('tag')
+                                    @if($notification->binh_luan_id)
+                                        đã nhắc đến bạn trong một bình luận.
+                                    @else
+                                        đã nhắc đến bạn trong một bài viết.
+                                    @endif
                                     @break
                                 @case('dang_bai')
                                     vừa đăng một bài viết mới.
@@ -124,7 +147,7 @@
                         <div class="flex items-center gap-3 mt-1.5">
                             <span class="text-[11px] text-slate-500 font-medium">{{ $notification->ngay_tao->diffForHumans() }}</span>
                             @if(!$notification->da_doc)
-                                <span class="w-1.5 h-1.5 rounded-full bg-sky-400 shadow-[0_0_8px_rgba(125,211,252,0.5)]"></span>
+                                <span class="unread-dot w-1.5 h-1.5 rounded-full bg-sky-400 shadow-[0_0_8px_rgba(125,211,252,0.5)]"></span>
                             @endif
                         </div>
 
@@ -183,9 +206,79 @@
 </div>
 
 <script>
-    function handleNotificationClick(event, url) {
+    // Cập nhật số thông báo chưa đọc realtime trên giao diện
+    function decrementBadgeCount(amount = 1) {
+        const badges = document.querySelectorAll('.notification-badge');
+        badges.forEach(badge => {
+            let count = parseInt(badge.textContent);
+            if (!isNaN(count)) {
+                count = Math.max(0, count - amount);
+                if (count > 0) {
+                    badge.textContent = count > 99 ? '99+' : count;
+                    badge.classList.remove('hidden');
+                } else {
+                    badge.classList.add('hidden');
+                    badge.textContent = '0';
+                }
+            }
+        });
+    }
+
+    function handleNotificationClick(event, id, url, daDoc) {
+        // Nếu click trúng link cá nhân, nút check hoặc nút xóa thì không xử lý click dòng
+        if (event.target.closest('a') || event.target.closest('button')) {
+            return;
+        }
+
+        const openInNewTab = event.ctrlKey || event.metaKey || event.button === 1;
+
+        if (daDoc) {
+            if (url && url !== '#') {
+                if (openInNewTab) {
+                    window.open(url, '_blank');
+                } else {
+                    window.location.href = url;
+                }
+            }
+            return;
+        }
+
+        // Cập nhật giao diện lập tức (Realtime)
+        const item = event.currentTarget;
+        if (item) {
+            item.classList.remove('border-l-4', 'border-sky-400');
+            item.classList.add('opacity-80');
+            const readBtn = item.querySelector('.mark-read-btn');
+            if (readBtn) readBtn.remove();
+            const unreadDot = item.querySelector('.unread-dot');
+            if (unreadDot) unreadDot.remove();
+        }
+
+        // Giảm badge chưa đọc realtime
+        decrementBadgeCount(1);
+
+        // Gửi fetch API đánh dấu đã đọc
+        const fetchPromise = fetch(`/notifications/${id}/read`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            }
+        }).then(() => {
+            if (typeof updateGlobalNotificationCount === 'function') {
+                updateGlobalNotificationCount();
+            }
+        });
+
         if (url && url !== '#') {
-            window.location.href = url;
+            if (openInNewTab) {
+                window.open(url, '_blank');
+            } else {
+                // Đợi request hoàn thành (hoặc bị lỗi) trước khi chuyển hướng
+                fetchPromise.finally(() => {
+                    window.location.href = url;
+                });
+            }
         }
     }
 
@@ -193,21 +286,28 @@
         event.stopPropagation();
         const item = event.target.closest('.notification-item');
         
+        if (item && !item.classList.contains('opacity-80')) {
+            // Cập nhật UI lập tức
+            item.classList.remove('border-l-4', 'border-sky-400');
+            item.classList.add('opacity-80');
+            const readBtn = item.querySelector('.mark-read-btn');
+            if (readBtn) readBtn.remove();
+            const unreadDot = item.querySelector('.unread-dot');
+            if (unreadDot) unreadDot.remove();
+            
+            // Giảm badge chưa đọc
+            decrementBadgeCount(1);
+        }
+        
         fetch(`/notifications/${id}/read`, {
             method: 'POST',
             headers: {
                 'X-CSRF-TOKEN': '{{ csrf_token() }}',
                 'Accept': 'application/json'
             }
-        })
-        .then(res => res.json())
-        .then(data => {
-            if(data.success) {
-                item.classList.remove('border-l-4', 'border-sky-400');
-                item.classList.add('opacity-80');
-                const readBtn = item.querySelector('.mark-read-btn');
-                if(readBtn) readBtn.remove();
-                if(window.updateGlobalNotificationCount) window.updateGlobalNotificationCount();
+        }).then(() => {
+            if (typeof updateGlobalNotificationCount === 'function') {
+                updateGlobalNotificationCount();
             }
         });
     }
@@ -216,38 +316,13 @@
         event.stopPropagation();
         const item = event.target.closest('.notification-item');
         
-        item.classList.add('removing');
-        
-        setTimeout(() => {
-            fetch(`/notifications/${id}`, {
-                method: 'DELETE',
-                headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    'Accept': 'application/json'
-                }
-            })
-            .then(res => res.json())
-            .then(data => {
-                if(data.success) {
-                    item.remove();
-                    if(document.querySelectorAll('.notification-item').length === 0) {
-                        location.reload(); // Show empty state
-                    }
-                    if(window.updateGlobalNotificationCount) window.updateGlobalNotificationCount();
-                } else {
-                    item.classList.remove('removing');
-                }
-            })
-            .catch(() => item.classList.remove('removing'));
-        }, 300);
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-        const markAllBtn = document.getElementById('mark-all-read');
-        if(markAllBtn) {
-            markAllBtn.addEventListener('click', function() {
-                fetch('{{ route('notifications.markAllRead') }}', {
-                    method: 'POST',
+        const performDelete = () => {
+            const isUnread = item && !item.classList.contains('opacity-80');
+            item.classList.add('removing');
+            
+            setTimeout(() => {
+                fetch(`/notifications/${id}`, {
+                    method: 'DELETE',
                     headers: {
                         'X-CSRF-TOKEN': '{{ csrf_token() }}',
                         'Accept': 'application/json'
@@ -256,14 +331,82 @@
                 .then(res => res.json())
                 .then(data => {
                     if(data.success) {
-                        document.querySelectorAll('.notification-item').forEach(item => {
-                            item.classList.remove('border-l-4', 'border-sky-400');
-                            item.classList.add('opacity-80');
-                            const btn = item.querySelector('.mark-read-btn');
-                            if(btn) btn.remove();
-                        });
-                        this.remove();
-                        if(window.updateGlobalNotificationCount) window.updateGlobalNotificationCount();
+                        item.remove();
+                        if (isUnread) {
+                            decrementBadgeCount(1);
+                        }
+                        if (typeof updateGlobalNotificationCount === 'function') {
+                            updateGlobalNotificationCount();
+                        }
+                        
+                        // Hiển thị thông báo xóa thành công
+                        if (typeof window.showToast === 'function') {
+                            window.showToast('Xóa thông báo thành công!', 'success');
+                        }
+                        
+                        if(document.querySelectorAll('.notification-item').length === 0) {
+                            location.reload(); // Hiển thị trạng thái trống
+                        }
+                    } else {
+                        item.classList.remove('removing');
+                        if (typeof window.showToast === 'function') {
+                            window.showToast(data.message || 'Xóa thông báo thất bại!', 'error');
+                        }
+                    }
+                })
+                .catch(() => {
+                    item.classList.remove('removing');
+                    if (typeof window.showToast === 'function') {
+                        window.showToast('Lỗi kết nối khi xóa thông báo!', 'error');
+                    }
+                });
+            }, 300);
+        };
+
+        // Sử dụng Global Confirm Modal nếu có, ngược lại dùng confirm mặc định
+        if (typeof window.openConfirmModal === 'function') {
+            window.openConfirmModal(
+                'Xác nhận xóa', 
+                'Bạn có chắc chắn muốn xóa thông báo này không? Thao tác này không thể hoàn tác.', 
+                performDelete, 
+                'Xóa ngay'
+            );
+        } else {
+            if (confirm('Bạn có chắc chắn muốn xóa thông báo này không?')) {
+                performDelete();
+            }
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const markAllBtn = document.getElementById('mark-all-read');
+        if(markAllBtn) {
+            markAllBtn.addEventListener('click', function() {
+                // Đếm xem có bao nhiêu thông báo chưa đọc trên trang hiện tại để giảm badge
+                const unreadCount = document.querySelectorAll('.notification-item:not(.opacity-80)').length;
+                
+                // Cập nhật UI lập tức
+                document.querySelectorAll('.notification-item').forEach(item => {
+                    item.classList.remove('border-l-4', 'border-sky-400');
+                    item.classList.add('opacity-80');
+                    const btn = item.querySelector('.mark-read-btn');
+                    if(btn) btn.remove();
+                    const unreadDot = item.querySelector('.unread-dot');
+                    if(unreadDot) unreadDot.remove();
+                });
+                
+                decrementBadgeCount(unreadCount);
+                this.remove();
+
+                fetch('{{ route('notifications.markAllRead') }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    }
+                }).then(() => {
+                    if (typeof updateGlobalNotificationCount === 'function') {
+                        updateGlobalNotificationCount();
                     }
                 });
             });
@@ -272,7 +415,7 @@
         const clearAllBtn = document.getElementById('clear-all-notifications');
         if(clearAllBtn) {
             clearAllBtn.addEventListener('click', function() {
-                if(confirm('Xóa tất cả thông báo? Thao tác này không thể hoàn tác.')) {
+                const performClearAll = () => {
                     fetch('{{ route('notifications.deleteAll') }}', {
                         method: 'DELETE',
                         headers: {
@@ -283,10 +426,38 @@
                     .then(res => res.json())
                     .then(data => {
                         if(data.success) {
-                            document.getElementById('notification-list').innerHTML = '';
-                            location.reload();
+                            if (typeof window.showToast === 'function') {
+                                window.showToast('Đã xóa tất cả thông báo thành công!', 'success');
+                            }
+                            setTimeout(() => {
+                                document.getElementById('notification-list').innerHTML = '';
+                                location.reload();
+                            }, 500);
+                        } else {
+                            if (typeof window.showToast === 'function') {
+                                window.showToast(data.message || 'Xóa tất cả thông báo thất bại!', 'error');
+                            }
+                        }
+                    })
+                    .catch(() => {
+                        if (typeof window.showToast === 'function') {
+                            window.showToast('Lỗi kết nối khi xóa tất cả thông báo!', 'error');
                         }
                     });
+                };
+
+                // Sử dụng Global Confirm Modal nếu có, ngược lại dùng confirm mặc định
+                if (typeof window.openConfirmModal === 'function') {
+                    window.openConfirmModal(
+                        'Xóa tất cả thông báo', 
+                        'Bạn có chắc chắn muốn xóa tất cả thông báo không? Thao tác này không thể hoàn tác.', 
+                        performClearAll, 
+                        'Xóa tất cả'
+                    );
+                } else {
+                    if(confirm('Bạn có chắc chắn muốn xóa tất cả thông báo không? Thao tác này không thể hoàn tác.')) {
+                        performClearAll();
+                    }
                 }
             });
         }

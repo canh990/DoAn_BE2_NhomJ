@@ -113,9 +113,35 @@ class PostController extends Controller
             }
         }
 
-        // --- TẠO THÔNG BÁO CHO NGƯỜI THEO DÕI ---
+        // --- QUÉT MENTION/TAG VÀ TẠO THÔNG BÁO ---
         $user = auth()->user();
-        $followers = $user->followers()->where('trang_thai', 'da_chap_nhan')->get();
+        $taggedUserIds = [];
+        if (!empty($post->noi_dung)) {
+            preg_match_all('/@([a-zA-Z0-9_]+)/', $post->noi_dung, $matches);
+            if (!empty($matches[1])) {
+                $usernames = array_unique($matches[1]);
+                $taggedUsers = \App\Models\User::whereIn('ten_dang_nhap', $usernames)
+                    ->where('id', '!=', $user->id) // Không tự tag chính mình
+                    ->get();
+                
+                foreach ($taggedUsers as $taggedUser) {
+                    \App\Models\ThongBao::create([
+                        'nguoi_dung_id' => $taggedUser->id,
+                        'nguoi_thuc_hien_id' => $user->id,
+                        'loai' => 'tag',
+                        'bai_viet_id' => $post->id,
+                        'ngay_tao' => now(),
+                    ]);
+                    $taggedUserIds[] = $taggedUser->id;
+                }
+            }
+        }
+
+        // --- TẠO THÔNG BÁO CHO NGƯỜI THEO DÕI ---
+        $followers = $user->followers()
+            ->where('trang_thai', 'da_chap_nhan')
+            ->whereNotIn('nguoi_dung.id', $taggedUserIds) // Tránh gửi trùng dạng đăng bài nếu đã bị tag
+            ->get();
         foreach ($followers as $follower) {
             \App\Models\ThongBao::create([
                 'nguoi_dung_id' => $follower->id,

@@ -49,11 +49,34 @@ class CommentController extends Controller
             }
         }
 
-        // --- TẠO THÔNG BÁO ---
+        // --- QUÉT MENTION/TAG VÀ TẠO THÔNG BÁO ---
         $currentUser = $request->user();
-        
+        $taggedUserIds = [];
+        if (!empty($comment->noi_dung)) {
+            preg_match_all('/@([a-zA-Z0-9_]+)/', $comment->noi_dung, $matches);
+            if (!empty($matches[1])) {
+                $usernames = array_unique($matches[1]);
+                $taggedUsers = \App\Models\User::whereIn('ten_dang_nhap', $usernames)
+                    ->where('id', '!=', $currentUser->id) // Không tự tag chính mình
+                    ->get();
+                
+                foreach ($taggedUsers as $taggedUser) {
+                    \App\Models\ThongBao::create([
+                        'nguoi_dung_id' => $taggedUser->id,
+                        'nguoi_thuc_hien_id' => $currentUser->id,
+                        'loai' => 'tag',
+                        'bai_viet_id' => $post->id,
+                        'binh_luan_id' => $comment->id,
+                        'ngay_tao' => now(),
+                    ]);
+                    $taggedUserIds[] = $taggedUser->id;
+                }
+            }
+        }
+
+        // --- TẠO THÔNG BÁO ---
         // 1. Thông báo cho chủ bài viết
-        if ($post->nguoi_dung_id !== $currentUser->id) {
+        if ($post->nguoi_dung_id !== $currentUser->id && !in_array($post->nguoi_dung_id, $taggedUserIds)) {
             \App\Models\ThongBao::create([
                 'nguoi_dung_id' => $post->nguoi_dung_id,
                 'nguoi_thuc_hien_id' => $currentUser->id,
@@ -67,10 +90,11 @@ class CommentController extends Controller
         // 2. Thông báo cho chủ bình luận cha (nếu là trả lời)
         if (!empty($validated['binh_luan_cha_id'])) {
             $parentComment = BinhLuan::find($validated['binh_luan_cha_id']);
-            // Tránh gửi trùng nếu chủ bình luận cha cũng là chủ bài viết (đã gửi ở trên)
+            // Tránh gửi trùng nếu chủ bình luận cha cũng là chủ bài viết (đã gửi ở trên) hoặc đã bị tag
             if ($parentComment && 
                 $parentComment->nguoi_dung_id !== $currentUser->id && 
-                $parentComment->nguoi_dung_id !== $post->nguoi_dung_id) {
+                $parentComment->nguoi_dung_id !== $post->nguoi_dung_id &&
+                !in_array($parentComment->nguoi_dung_id, $taggedUserIds)) {
                 
                 \App\Models\ThongBao::create([
                     'nguoi_dung_id' => $parentComment->nguoi_dung_id,

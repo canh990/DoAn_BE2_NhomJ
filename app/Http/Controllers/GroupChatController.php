@@ -265,7 +265,8 @@ class GroupChatController extends Controller
             \App\Models\ThongBao::create([
                 'nguoi_dung_id' => $member->id,
                 'nguoi_thuc_hien_id' => $senderId,
-                'loai' => 'tin_nhan',
+                'loai' => 'tin_nhan_nhom',
+                'cuoc_tro_chuyen_id' => $conversation->id,
                 'ngay_tao' => now(),
             ]);
         }
