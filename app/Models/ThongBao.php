@@ -20,7 +20,9 @@ class ThongBao extends Model
         'loai',
         'bai_viet_id',
         'binh_luan_id',
+        'cuoc_tro_chuyen_id',
         'da_doc',
+        'noi_dung',
         'ngay_tao',
     ];
 
@@ -47,5 +49,10 @@ class ThongBao extends Model
     public function binhLuan()
     {
         return $this->belongsTo(BinhLuan::class, 'binh_luan_id');
+    }
+
+    public function cuocTroChuyen()
+    {
+        return $this->belongsTo(Conversation::class, 'cuoc_tro_chuyen_id');
     }
 }

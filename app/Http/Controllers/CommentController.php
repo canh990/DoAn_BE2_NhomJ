@@ -49,11 +49,14 @@ class CommentController extends Controller
             }
         }
 
-        // --- TẠO THÔNG BÁO ---
+        // --- QUÉT MENTION/TAG VÀ TẠO THÔNG BÁO ---
         $currentUser = $request->user();
-        
+        $mentionService = resolve(\App\Services\MentionService::class);
+        $taggedUserIds = $mentionService->processMentions($comment->noi_dung ?? '', $currentUser, $post, $comment);
+
+        // --- TẠO THÔNG BÁO ---
         // 1. Thông báo cho chủ bài viết
-        if ($post->nguoi_dung_id !== $currentUser->id) {
+        if ($post->nguoi_dung_id !== $currentUser->id && !in_array($post->nguoi_dung_id, $taggedUserIds)) {
             \App\Models\ThongBao::create([
                 'nguoi_dung_id' => $post->nguoi_dung_id,
                 'nguoi_thuc_hien_id' => $currentUser->id,
@@ -67,10 +70,11 @@ class CommentController extends Controller
         // 2. Thông báo cho chủ bình luận cha (nếu là trả lời)
         if (!empty($validated['binh_luan_cha_id'])) {
             $parentComment = BinhLuan::find($validated['binh_luan_cha_id']);
-            // Tránh gửi trùng nếu chủ bình luận cha cũng là chủ bài viết (đã gửi ở trên)
+            // Tránh gửi trùng nếu chủ bình luận cha cũng là chủ bài viết (đã gửi ở trên) hoặc đã bị tag
             if ($parentComment && 
                 $parentComment->nguoi_dung_id !== $currentUser->id && 
-                $parentComment->nguoi_dung_id !== $post->nguoi_dung_id) {
+                $parentComment->nguoi_dung_id !== $post->nguoi_dung_id &&
+                !in_array($parentComment->nguoi_dung_id, $taggedUserIds)) {
                 
                 \App\Models\ThongBao::create([
                     'nguoi_dung_id' => $parentComment->nguoi_dung_id,
@@ -95,7 +99,7 @@ class CommentController extends Controller
                 'comment' => [
                     'id' => $comment->id,
                     'parent_id' => $comment->binh_luan_cha_id,
-                    'content' => $comment->noi_dung,
+                    'content' => $comment->formatted_content,
                     'created_at' => $comment->ngay_tao->diffForHumans(),
                     'user_name' => $comment->user?->name ?? 'Người dùng',
                     'user_avatar' => $comment->user && $comment->user->anh_dai_dien ? asset('storage/' . $comment->user->anh_dai_dien) : asset('storage/avatars/avtmacdinh.png'),

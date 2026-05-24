@@ -259,6 +259,19 @@ class ChatController extends Controller
             ]
         );
 
+        // Tạo thông báo kết bạn cho đối phương
+        \App\Models\ThongBao::updateOrCreate(
+            [
+                'nguoi_dung_id' => $friend->id,
+                'nguoi_thuc_hien_id' => $currentUser->id,
+                'loai' => 'ket_ban',
+            ],
+            [
+                'da_doc' => false,
+                'ngay_tao' => now(),
+            ]
+        );
+
         $conversation = $this->findPrivateConversation($currentUser->id, $friend->id)
             ?? $this->createPrivateConversation($currentUser->id, $friend->id);
 

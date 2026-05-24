@@ -23,7 +23,13 @@ class BaiViet extends Model
         'hoat_dong',
         'quyen_rieng_tu',
         'da_chinh_sua',
+        'da_ghim',
     ];
+
+    public function getFormattedContentAttribute()
+    {
+        return resolve(\App\Services\MentionService::class)->highlightMentions($this->noi_dung);
+    }
 
     public function user(): BelongsTo
     {

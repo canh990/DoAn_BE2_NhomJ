@@ -1,4 +1,4 @@
-<div class="comment-thread w-full" data-comment-id="{{ $comment->id }}">
+<div class="comment-thread w-full" data-comment-id="{{ $comment->id }}" id="comment-{{ $comment->id }}">
     <div class="rounded-2xl border border-white/10 bg-slate-950 p-3">
         <div class="flex gap-3 items-start">
             <a href="{{ ($comment->user && $comment->user->ten_dang_nhap) ? route('profile.public', $comment->user->ten_dang_nhap) : '#' }}" class="shrink-0 hover:opacity-80 transition-opacity" title="Xem trang cá nhân của {{ $comment->user?->name ?? 'Người dùng' }}">
@@ -11,7 +11,7 @@
                     </a>
                     <span class="text-xs text-slate-500">{{ $comment->ngay_tao?->diffForHumans() ?? '' }}</span>
                 </div>
-                <p class="mt-1 text-sm leading-relaxed text-slate-300">{{ $comment->noi_dung }}</p>
+                <p class="mt-1 text-sm leading-relaxed text-slate-300">{!! $comment->formatted_content !!}</p>
                 
                 @php
                     $mediaItems = $comment->media ?? collect();
@@ -37,7 +37,7 @@
                 
                 <div class="mt-3 flex items-center gap-3 text-xs text-slate-400">
                     <button type="button" data-comment-reply-button data-comment-id="{{ $comment->id }}" data-comment-user="{{ $comment->user?->name ?? 'Người dùng' }}" class="hover:text-sky-300">Trả lời</button>
-                    
+
                     @if(auth()->check() && (auth()->id() === $comment->nguoi_dung_id || auth()->id() === optional($comment->post)->nguoi_dung_id))
                         <button type="button" class="hover:text-red-400 transition-colors" onclick="if(confirm('Bạn chắc chắn muốn xóa bình luận này? Thao tác này sẽ xoá luôn các ảnh/video đính kèm.')) {
                             fetch('{{ route('comments.destroy', $comment->id) }}', {

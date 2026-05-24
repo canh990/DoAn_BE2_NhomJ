@@ -113,9 +113,16 @@ class PostController extends Controller
             }
         }
 
-        // --- TẠO THÔNG BÁO CHO NGƯỜI THEO DÕI ---
+        // --- QUÉT MENTION/TAG VÀ TẠO THÔNG BÁO ---
         $user = auth()->user();
-        $followers = $user->followers()->where('trang_thai', 'da_chap_nhan')->get();
+        $mentionService = resolve(\App\Services\MentionService::class);
+        $taggedUserIds = $mentionService->processMentions($post->noi_dung ?? '', $user, $post);
+
+        // --- TẠO THÔNG BÁO CHO NGƯỜI THEO DÕI ---
+        $followers = $user->followers()
+            ->where('trang_thai', 'da_chap_nhan')
+            ->whereNotIn('nguoi_dung.id', $taggedUserIds) // Tránh gửi trùng dạng đăng bài nếu đã bị tag
+            ->get();
         foreach ($followers as $follower) {
             \App\Models\ThongBao::create([
                 'nguoi_dung_id' => $follower->id,
