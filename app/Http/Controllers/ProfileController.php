@@ -27,6 +27,7 @@ class ProfileController extends Controller
             }])
             ->whereIn('loai', ['van_ban', 'hinh_anh', 'chia_se'])
             ->where('da_xoa', false)
+            ->orderBy('da_ghim', 'desc')
             ->latest()
             ->take(20)
             ->get();
@@ -73,6 +74,7 @@ class ProfileController extends Controller
             }])
             ->whereIn('loai', ['van_ban', 'hinh_anh', 'chia_se'])
             ->where('da_xoa', false)
+            ->orderBy('da_ghim', 'desc')
             ->latest()
             ->take(20)
             ->get();

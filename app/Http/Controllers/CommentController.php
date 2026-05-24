@@ -51,28 +51,8 @@ class CommentController extends Controller
 
         // --- QUÉT MENTION/TAG VÀ TẠO THÔNG BÁO ---
         $currentUser = $request->user();
-        $taggedUserIds = [];
-        if (!empty($comment->noi_dung)) {
-            preg_match_all('/@([a-zA-Z0-9_]+)/', $comment->noi_dung, $matches);
-            if (!empty($matches[1])) {
-                $usernames = array_unique($matches[1]);
-                $taggedUsers = \App\Models\User::whereIn('ten_dang_nhap', $usernames)
-                    ->where('id', '!=', $currentUser->id) // Không tự tag chính mình
-                    ->get();
-                
-                foreach ($taggedUsers as $taggedUser) {
-                    \App\Models\ThongBao::create([
-                        'nguoi_dung_id' => $taggedUser->id,
-                        'nguoi_thuc_hien_id' => $currentUser->id,
-                        'loai' => 'tag',
-                        'bai_viet_id' => $post->id,
-                        'binh_luan_id' => $comment->id,
-                        'ngay_tao' => now(),
-                    ]);
-                    $taggedUserIds[] = $taggedUser->id;
-                }
-            }
-        }
+        $mentionService = resolve(\App\Services\MentionService::class);
+        $taggedUserIds = $mentionService->processMentions($comment->noi_dung ?? '', $currentUser, $post, $comment);
 
         // --- TẠO THÔNG BÁO ---
         // 1. Thông báo cho chủ bài viết
@@ -119,7 +99,7 @@ class CommentController extends Controller
                 'comment' => [
                     'id' => $comment->id,
                     'parent_id' => $comment->binh_luan_cha_id,
-                    'content' => $comment->noi_dung,
+                    'content' => $comment->formatted_content,
                     'created_at' => $comment->ngay_tao->diffForHumans(),
                     'user_name' => $comment->user?->name ?? 'Người dùng',
                     'user_avatar' => $comment->user && $comment->user->anh_dai_dien ? asset('storage/' . $comment->user->anh_dai_dien) : asset('storage/avatars/avtmacdinh.png'),

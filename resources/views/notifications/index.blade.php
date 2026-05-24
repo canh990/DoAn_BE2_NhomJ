@@ -32,8 +32,16 @@
                     case 'binh_luan':
                     case 'chia_se':
                     case 'dang_bai':
-                    case 'tag':
                         $redirectUrl = $notification->bai_viet_id ? route('posts.show', $notification->bai_viet_id) : '#';
+                        break;
+                    case 'tag':
+                    case 'tag_all':
+                        if ($notification->bai_viet_id) {
+                            $redirectUrl = route('posts.show', $notification->bai_viet_id);
+                            if ($notification->binh_luan_id) {
+                                $redirectUrl .= '#comment-' . $notification->binh_luan_id;
+                            }
+                        }
                         break;
                     case 'theo_doi':
                         $redirectUrl = route('profile.public', $notification->nguoiThucHien->ten_dang_nhap);
@@ -69,7 +77,8 @@
                                 @case('binh_luan') bg-sky-500 @break
                                 @case('theo_doi') @case('ket_ban') bg-purple-500 @break
                                 @case('chia_se') bg-emerald-500 @break
-                                @case('tag') bg-amber-500 @break
+                                @case('tag') @case('tag_all') bg-amber-500 @break
+                                @case('ghim_binh_luan') bg-yellow-500 @break
                                 @case('tin_nhan') @case('tin_nhan_nhom') bg-indigo-500 @break
                                 @default bg-slate-500
                             @endswitch">
@@ -83,6 +92,8 @@
                                     @case('tin_nhan') mail @break
                                     @case('tin_nhan_nhom') forum @break
                                     @case('tag') alternate_email @break
+                                    @case('tag_all') groups @break
+                                    @case('ghim_binh_luan') push_pin @break
                                     @case('dang_bai') article @break
                                     @default notifications
                                 @endswitch
@@ -129,6 +140,16 @@
                                     @else
                                         đã nhắc đến bạn trong một bài viết.
                                     @endif
+                                    @break
+                                @case('tag_all')
+                                    @if($notification->binh_luan_id)
+                                        đã nhắc đến mọi người trong một bình luận.
+                                    @else
+                                        đã nhắc đến mọi người trong một bài viết.
+                                    @endif
+                                    @break
+                                @case('ghim_binh_luan')
+                                    đã ghim bình luận của bạn.
                                     @break
                                 @case('dang_bai')
                                     vừa đăng một bài viết mới.

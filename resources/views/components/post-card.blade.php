@@ -212,7 +212,7 @@
 
             @if (filled($body) && data_get($post, 'loai') !== 'chia_se' && !$isProfileUpdate)
                 <p class="whitespace-pre-line leading-relaxed text-on-surface-variant">
-                    {{ $body }}
+                    {!! data_get($post, 'formatted_content') ?? $body !!}
                 </p>
             @endif
 

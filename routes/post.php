@@ -63,4 +63,10 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/bookmarks', [\App\Http\Controllers\BookmarkController::class, 'index'])
         ->name('bookmarks.index');
+
+    // -----------------------------------------------
+    // Mention suggestions API
+    // -----------------------------------------------
+    Route::get('/api/users/mention-suggestions', [\App\Http\Controllers\MentionController::class, 'suggestions'])
+        ->name('api.users.mention-suggestions');
 });

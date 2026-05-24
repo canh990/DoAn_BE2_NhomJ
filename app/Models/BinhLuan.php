@@ -18,7 +18,13 @@ class BinhLuan extends Model
         'binh_luan_cha_id',
         'noi_dung',
         'da_xoa',
+        'da_ghim',
     ];
+
+    public function getFormattedContentAttribute()
+    {
+        return resolve(\App\Services\MentionService::class)->highlightMentions($this->noi_dung);
+    }
 
     public const CREATED_AT = 'ngay_tao';
     public const UPDATED_AT = 'ngay_cap_nhat';

@@ -22,6 +22,7 @@ class ThongBao extends Model
         'binh_luan_id',
         'cuoc_tro_chuyen_id',
         'da_doc',
+        'noi_dung',
         'ngay_tao',
     ];
 

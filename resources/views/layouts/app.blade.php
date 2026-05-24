@@ -134,6 +134,42 @@
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
             background: rgba(125, 211, 252, 0.4);
         }
+
+        /* Textarea Mention Highlighter Styling */
+        .textarea-highlighter-wrapper {
+            position: relative;
+            display: block;
+            width: 100%;
+        }
+        .textarea-highlighter-backdrop {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            color: #e2e8f0; /* slate-200 / default text color */
+            overflow: hidden;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            z-index: 1;
+        }
+        .textarea-highlighter-wrapper textarea {
+            position: relative;
+            background: transparent !important;
+            color: transparent !important;
+            -webkit-text-fill-color: transparent !important;
+            caret-color: #e2e8f0 !important; /* caret must be white/slate-200 */
+            z-index: 2;
+        }
+        .textarea-highlighter-wrapper textarea::placeholder {
+            color: #64748b !important;
+            -webkit-text-fill-color: #64748b !important;
+            opacity: 1 !important;
+        }
+        .textarea-highlighter-backdrop span {
+            color: #38bdf8 !important; /* sky-400 blue */
+        }
     </style>
 </head>
 <body class="antialiased selection:bg-primary/30 selection:text-primary">
@@ -515,7 +551,7 @@
             event.preventDefault();
             const action = commentForm.action;
             const body = new FormData(commentForm);
-
+            console.log('Submitting comment content:', commentForm.querySelector('textarea[name="noi_dung"]').value);
             fetch(action, {
                 method: 'POST',
                 headers: {
@@ -559,6 +595,7 @@
 
                     if (textarea) {
                         textarea.value = '';
+                        textarea.dispatchEvent(new Event('input', { bubbles: true }));
                     }
 
                     const mediaInput = commentForm.querySelector('.comment-media-input');
@@ -1442,12 +1479,306 @@
                 }
             }, 300);
         });
-        // click ngoài -> đóng dropdown
-        document.addEventListener('click', function (e) {
-            if (!searchInput.contains(e.target) &&
-                !searchResults.contains(e.target)) {
-                searchResults.classList.add('hidden');
+    </script>
+    <!-- Complete Mentions Suggestions Logic -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Mention Suggestions logic
+            let activeTextarea = null;
+            let suggestionBox = null;
+            let selectedIndex = -1;
+            let queryStart = -1;
+
+            // 1. Textarea Mention Highlighter setup
+            function initHighlighter(textarea) {
+                if (textarea.dataset.highlighterInit) return;
+                textarea.dataset.highlighterInit = "true";
+
+                // Create wrapper
+                const wrapper = document.createElement('div');
+                wrapper.className = 'textarea-highlighter-wrapper';
+                
+                // Insert wrapper before textarea, then move textarea inside it
+                textarea.parentNode.insertBefore(wrapper, textarea);
+                wrapper.appendChild(textarea);
+                
+                // Create backdrop
+                const backdrop = document.createElement('div');
+                backdrop.className = 'textarea-highlighter-backdrop';
+                
+                // Insert backdrop before textarea inside wrapper
+                wrapper.insertBefore(backdrop, textarea);
+
+                // Copy layout styles to wrapper
+                const computed = window.getComputedStyle(textarea);
+                wrapper.style.display = computed.display === 'inline' ? 'inline-block' : computed.display;
+                wrapper.style.margin = computed.margin;
+                wrapper.style.verticalAlign = computed.verticalAlign;
+                wrapper.style.flexGrow = computed.flexGrow;
+
+                function escapeHtml(str) {
+                    return str
+                        .replace(/&/g, '&amp;')
+                        .replace(/</g, '&lt;')
+                        .replace(/>/g, '&gt;')
+                        .replace(/"/g, '&quot;')
+                        .replace(/'/g, '&#039;');
+                }
+
+                function sync() {
+                    const comp = window.getComputedStyle(textarea);
+                    backdrop.style.fontFamily = comp.fontFamily;
+                    backdrop.style.fontSize = comp.fontSize;
+                    backdrop.style.fontWeight = comp.fontWeight;
+                    backdrop.style.lineHeight = comp.lineHeight;
+                    backdrop.style.letterSpacing = comp.letterSpacing;
+                    backdrop.style.padding = comp.padding;
+                    backdrop.style.borderWidth = comp.borderWidth;
+                    backdrop.style.borderColor = 'transparent';
+                    backdrop.style.borderStyle = comp.borderStyle;
+                    backdrop.style.boxSizing = comp.boxSizing;
+                    backdrop.style.whiteSpace = 'pre-wrap';
+                    backdrop.style.wordBreak = 'break-word';
+                    backdrop.style.textAlign = comp.textAlign;
+                    backdrop.style.textTransform = comp.textTransform;
+                    
+                    let text = textarea.value;
+                    let html = escapeHtml(text);
+                    
+                    // Highlight @all
+                    html = html.replace(/(?<=^|(?<=[^a-zA-Z0-9_\.]))@all/iu, '<span class="text-sky-400">@all</span>');
+                    
+                    // Highlight @username
+                    html = html.replace(/(?<=^|(?<=[^a-zA-Z0-9_\.]))@([a-zA-Z0-9_]+)/gu, function(match, username) {
+                        if (username.toLowerCase() === 'all') return match;
+                        return `<span class="text-sky-400 font-bold">@${username}</span>`;
+                    });
+
+                    // Avoid space collapse in HTML backdrop by replacing consecutive spaces and trailing spaces
+                    html = html.replace(/ {2}/g, ' &nbsp;');
+                    html = html.replace(/ \n/g, '&nbsp;\n');
+                    html = html.replace(/ $/g, '&nbsp;');
+                    html = html.replace(/<\/span> /g, '<\/span>&nbsp;');
+                    
+                    backdrop.innerHTML = html + (text.endsWith('\n') ? '\n' : '');
+                    backdrop.scrollTop = textarea.scrollTop;
+                    backdrop.scrollLeft = textarea.scrollLeft;
+                }
+
+                textarea.addEventListener('input', sync);
+                textarea.addEventListener('scroll', () => {
+                    backdrop.scrollTop = textarea.scrollTop;
+                    backdrop.scrollLeft = textarea.scrollLeft;
+                });
+
+                if (window.ResizeObserver) {
+                    const ro = new ResizeObserver(() => {
+                        sync();
+                    });
+                    ro.observe(textarea);
+                }
+
+                sync();
             }
+
+            // Initialize existing textareas
+            document.querySelectorAll('textarea').forEach(initHighlighter);
+
+            // Observe dynamic textareas (e.g., dynamically appended comments/replies)
+            const observer = new MutationObserver((mutations) => {
+                for (const mutation of mutations) {
+                    for (const node of mutation.addedNodes) {
+                        if (node.nodeType === Node.ELEMENT_NODE) {
+                            if (node.tagName === 'TEXTAREA') {
+                                initHighlighter(node);
+                            } else {
+                                node.querySelectorAll('textarea').forEach(initHighlighter);
+                            }
+                        }
+                    }
+                }
+            });
+            observer.observe(document.body, { childList: true, subtree: true });
+
+            // 2. Mention Autocomplete logic
+            function createSuggestionBox() {
+                if (document.getElementById('mention-suggestions')) {
+                    suggestionBox = document.getElementById('mention-suggestions');
+                    return;
+                }
+                suggestionBox = document.createElement('div');
+                suggestionBox.id = 'mention-suggestions';
+                suggestionBox.className = 'hidden absolute bg-slate-950/95 border border-white/10 rounded-2xl shadow-2xl p-2 z-[99999] max-h-60 overflow-y-auto w-64 backdrop-blur-md custom-scrollbar';
+                document.body.appendChild(suggestionBox);
+            }
+
+            document.addEventListener('input', async function(e) {
+                const target = e.target;
+                if (target.tagName !== 'TEXTAREA' && !(target.tagName === 'INPUT' && target.type === 'text')) {
+                    return;
+                }
+                
+                activeTextarea = target;
+                createSuggestionBox();
+                
+                const value = activeTextarea.value;
+                const selectionStart = activeTextarea.selectionStart;
+                const textBeforeCaret = value.substring(0, selectionStart);
+                
+                // Match last typed '@' that is either at the beginning or preceded by whitespace
+                const atIndex = textBeforeCaret.lastIndexOf('@');
+                if (atIndex !== -1 && (atIndex === 0 || /\s/.test(textBeforeCaret.charAt(atIndex - 1)))) {
+                    const searchQ = textBeforeCaret.substring(atIndex + 1);
+                    if (!/\s/.test(searchQ)) { // Suggestion trigger active if no space typed after @
+                        queryStart = atIndex;
+                        await fetchSuggestions(searchQ);
+                        return;
+                    }
+                }
+                hideSuggestions();
+            });
+
+            async function fetchSuggestions(q) {
+                try {
+                    let postId = '';
+                    if (activeTextarea) {
+                        const form = activeTextarea.closest('form');
+                        if (form) {
+                            const action = form.getAttribute('action');
+                            if (action) {
+                                const match = action.match(/\/posts\/(\d+)\/comments?/);
+                                if (match) {
+                                    postId = match[1];
+                                }
+                            }
+                        }
+                    }
+                    
+                    const response = await fetch(`/api/users/mention-suggestions?q=${encodeURIComponent(q)}&post_id=${postId}`);
+                    const users = await response.json();
+                    
+                    if (users.length === 0) {
+                        hideSuggestions();
+                        return;
+                    }
+                    
+                    renderSuggestions(users);
+                } catch (err) {
+                    console.error(err);
+                }
+            }
+
+            function renderSuggestions(users) {
+                suggestionBox.innerHTML = users.map((user, idx) => {
+                    const avatarHtml = user.is_all 
+                        ? `<div class="w-8 h-8 rounded-full flex items-center justify-center bg-sky-500/20 text-sky-400 border border-sky-500/30">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
+                           </div>`
+                        : `<img src="${user.avatar}" class="w-8 h-8 rounded-full object-cover border border-white/10">`;
+
+                    const relationHtml = user.relation 
+                        ? `<span class="px-1.5 py-0.5 rounded text-[10px] bg-sky-500/10 text-sky-400 font-medium">${user.relation}</span>`
+                        : '';
+
+                    return `
+                        <div class="suggestion-item flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer hover:bg-white/5 transition duration-200 ${idx === 0 ? 'bg-white/5' : ''}" data-username="${user.username}" data-index="${idx}">
+                            ${avatarHtml}
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-center gap-2">
+                                    <p class="text-sm font-semibold text-white truncate">${user.name}</p>
+                                    ${relationHtml}
+                                </div>
+                                <p class="text-xs text-slate-400 truncate">@${user.username}</p>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+                selectedIndex = 0;
+                positionSuggestionBox();
+                suggestionBox.classList.remove('hidden');
+            }
+
+            function positionSuggestionBox() {
+                const rect = activeTextarea.getBoundingClientRect();
+                // Position it right below or above the input area
+                suggestionBox.style.left = `${rect.left + window.scrollX}px`;
+                suggestionBox.style.top = `${rect.bottom + window.scrollY + 6}px`;
+            }
+
+            function hideSuggestions() {
+                if (suggestionBox) {
+                    suggestionBox.classList.add('hidden');
+                }
+                selectedIndex = -1;
+                queryStart = -1;
+            }
+
+            document.addEventListener('click', function(e) {
+                if (suggestionBox && !suggestionBox.contains(e.target) && e.target !== activeTextarea) {
+                    hideSuggestions();
+                }
+                
+                const item = e.target.closest('.suggestion-item');
+                if (item) {
+                    insertMention(item.dataset.username);
+                }
+            });
+
+            function insertMention(username) {
+                if (!activeTextarea) return;
+                const value = activeTextarea.value;
+                const selectionStart = activeTextarea.selectionStart;
+                
+                const before = value.substring(0, queryStart);
+                const after = value.substring(selectionStart);
+                
+                activeTextarea.value = before + '@' + username + ' ' + after;
+                activeTextarea.focus();
+                
+                const newCursorPos = queryStart + username.length + 2; // account for @ and space
+                activeTextarea.setSelectionRange(newCursorPos, newCursorPos);
+                
+                // Force input event dispatch to immediately sync highlighter styling
+                activeTextarea.dispatchEvent(new Event('input', { bubbles: true }));
+                
+                hideSuggestions();
+            }
+
+            // Add keyboard navigation
+            document.addEventListener('keydown', function(e) {
+                if (!suggestionBox || suggestionBox.classList.contains('hidden')) return;
+                
+                const items = suggestionBox.querySelectorAll('.suggestion-item');
+                if (items.length === 0) return;
+                
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    if (items[selectedIndex]) items[selectedIndex].classList.remove('bg-white/5');
+                    selectedIndex = (selectedIndex + 1) % items.length;
+                    if (items[selectedIndex]) {
+                        items[selectedIndex].classList.add('bg-white/5');
+                        items[selectedIndex].scrollIntoView({ block: 'nearest' });
+                    }
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    if (items[selectedIndex]) items[selectedIndex].classList.remove('bg-white/5');
+                    selectedIndex = (selectedIndex - 1 + items.length) % items.length;
+                    if (items[selectedIndex]) {
+                        items[selectedIndex].classList.add('bg-white/5');
+                        items[selectedIndex].scrollIntoView({ block: 'nearest' });
+                    }
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (selectedIndex >= 0 && selectedIndex < items.length) {
+                        insertMention(items[selectedIndex].dataset.username);
+                    }
+                } else if (e.key === 'Escape') {
+                    hideSuggestions();
+                }
+            });
         });
     </script>
 </body>
