@@ -232,7 +232,7 @@
 
   <a href="{{ route('profile') }}" class="mb-4 px-4 py-2 block hover:bg-white/5 rounded-2xl transition-all group">
     <div class="flex items-center gap-3 mb-1">
-        <div class="w-10 h-10 overflow-hidden rounded-full border border-sky-400/30 group-hover:border-sky-400/60 transition-colors">
+        <div class="w-10 h-10 shrink-0 overflow-hidden rounded-full border border-sky-400/30 group-hover:border-sky-400/60 transition-colors">
             <img 
                 class="w-full h-full object-cover" 
                 alt="{{ $user->name }}" 
@@ -240,17 +240,18 @@
             />
         </div>
         
-        <div>
-            <p class="text-sm font-bold text-sky-300 font-inter leading-tight group-hover:text-sky-200 transition-colors flex items-center gap-1">
-                {{ $user->name }}
+        <div class="min-w-0 flex-1">
+            <div class="flex items-center gap-1">
+                <p class="text-sm font-bold text-sky-300 font-inter leading-tight group-hover:text-sky-200 transition-colors truncate" title="{{ $user->name }}">
+                    {{ $user->name }}
+                </p>
                 @if($user->da_xac_thuc)
-                <span class="material-symbols-outlined text-[14px] text-sky-400" data-icon="verified" style="font-variation-settings: 'FILL' 1;">
+                <span class="material-symbols-outlined text-[14px] text-sky-400 shrink-0" data-icon="verified" style="font-variation-settings: 'FILL' 1;" title="Đã xác thực">
                     verified
                 </span>
                 @endif
-            </p>
-            {{-- Bạn có thể thêm @username ở đây nếu muốn --}}
-            <p class="text-[10px] text-slate-500 font-medium group-hover:text-slate-400 transition-colors">
+            </div>
+            <p class="text-[11px] text-slate-500 font-medium group-hover:text-slate-400 transition-colors truncate" title="{{ '@' . ($user->ten_dang_nhap ?? 'nguoidung') }}">
                 {{ '@' . ($user->ten_dang_nhap ?? 'nguoidung') }}
             </p>
         </div>

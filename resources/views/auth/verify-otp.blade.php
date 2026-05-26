@@ -71,15 +71,18 @@
         </form>
 
         {{-- Gửi lại OTP --}}
-        <div class="mt-4">
-            <form action="{{ $resendRoute }}" method="POST">
+        <div class="mt-4 text-center">
+            <form action="{{ $resendRoute }}" method="POST" id="resend-otp-form">
                 @csrf
                 @if(!$isRegisterFlow)
                     <input type="hidden" name="email" value="{{ session('email_reset') }}">
                 @endif
-                <button type="submit" class="w-full text-sm text-on-surface-variant hover:text-primary transition-colors py-2">
-                    Không nhận được mã? <span class="text-primary font-semibold">Gửi lại</span>
-                </button>
+                <p class="text-sm text-on-surface-variant py-2">
+                    Không nhận được mã? 
+                    <button type="submit" id="resend-otp-btn" class="text-primary font-semibold hover:underline disabled:opacity-50 disabled:cursor-not-allowed disabled:no-underline transition-all disabled:text-on-surface-variant">
+                        Gửi lại
+                    </button>
+                </p>
             </form>
         </div>
 
@@ -117,29 +120,43 @@
         const otpInputs = document.querySelectorAll('#otp-inputs input');
 
         otpInputs.forEach((input, index) => {
-            input.addEventListener('input', function() {
-                // Chỉ cho phép số
-                this.value = this.value.replace(/[^0-9]/g, '');
-                if (this.value.length === 1 && index < otpInputs.length - 1) {
-                    otpInputs[index + 1].focus();
+            // Xử lý khi nhập (chấp nhận mọi bàn phím, kể cả tiếng Việt)
+            input.addEventListener('input', function(e) {
+                // Lọc bỏ mọi ký tự không phải số
+                let val = this.value.replace(/[^0-9]/g, '');
+                
+                if (val.length > 0) {
+                    // Ưu tiên lấy số vừa được gõ thêm vào (số cuối cùng)
+                    this.value = val.slice(-1);
+                    
+                    // Tự động nhảy sang ô tiếp theo
+                    if (index < otpInputs.length - 1) {
+                        otpInputs[index + 1].focus();
+                    }
+                } else {
+                    this.value = '';
                 }
             });
 
+            // Chỉ dùng keydown để điều hướng (Backspace)
             input.addEventListener('keydown', function(e) {
-                if (e.key === 'Backspace' && this.value.length === 0 && index > 0) {
-                    otpInputs[index - 1].focus();
+                if (e.key === 'Backspace') {
+                    if (this.value === '' && index > 0) {
+                        otpInputs[index - 1].focus();
+                    }
                 }
             });
 
-            // Hỗ trợ paste mã OTP
+            // Paste mã OTP
             input.addEventListener('paste', function(e) {
                 e.preventDefault();
                 const pasteData = (e.clipboardData || window.clipboardData).getData('text').replace(/[^0-9]/g, '');
-                for (let i = 0; i < Math.min(pasteData.length, 6); i++) {
+                for (let i = 0; i < Math.min(pasteData.length, otpInputs.length); i++) {
                     otpInputs[i].value = pasteData[i];
                 }
-                if (pasteData.length > 0) {
-                    otpInputs[Math.min(pasteData.length, 6) - 1].focus();
+                const focusIdx = Math.min(pasteData.length, otpInputs.length - 1);
+                if (focusIdx >= 0) {
+                    otpInputs[focusIdx].focus();
                 }
             });
         });
@@ -167,6 +184,48 @@
                 countdownEl.textContent = 'Đã hết hạn';
             }
         }, 1000);
+        // Resend OTP Cooldown timer (60s) dùng localStorage chống refresh
+        const resendForm = document.getElementById('resend-otp-form');
+        const resendBtn = document.getElementById('resend-otp-btn');
+        const COOLDOWN_MS = 60000; // 60 seconds
+        const emailKey = '{{ session('email_reset', Auth::user()->email ?? 'default') }}';
+        const storageKey = `last_otp_request_${emailKey}`;
+
+        // Nếu mới vào lần đầu (chưa có trong localStorage), set để bắt đầu đếm 60s
+        if (!localStorage.getItem(storageKey)) {
+            localStorage.setItem(storageKey, Date.now());
+        }
+
+        function updateResendButton() {
+            const lastSend = localStorage.getItem(storageKey);
+            if (lastSend) {
+                const elapsed = Date.now() - parseInt(lastSend, 10);
+                if (elapsed < COOLDOWN_MS) {
+                    const remaining = Math.ceil((COOLDOWN_MS - elapsed) / 1000);
+                    resendBtn.disabled = true;
+                    resendBtn.innerHTML = `Gửi lại sau <span class="font-bold text-error">${remaining}s</span>`;
+                    return true;
+                }
+            }
+            resendBtn.disabled = false;
+            resendBtn.innerHTML = 'Gửi lại';
+            return false;
+        }
+
+        let resendInterval = setInterval(() => {
+            if (!updateResendButton()) clearInterval(resendInterval);
+        }, 1000);
+        updateResendButton();
+
+        if (resendForm) {
+            resendForm.addEventListener('submit', function(e) {
+                if (updateResendButton()) {
+                    e.preventDefault();
+                    return;
+                }
+                localStorage.setItem(storageKey, Date.now());
+            });
+        }
     });
 </script>
 @endsection
