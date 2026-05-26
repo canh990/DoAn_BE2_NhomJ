@@ -175,76 +175,98 @@
 
     @foreach ($sessions as $session)
 
-    <div class="p-4 bg-white/5 rounded-lg border border-white/5 flex items-start gap-4">
+    <div class="p-4 bg-white/5 rounded-lg border border-white/5 flex justify-between items-start gap-4">
 
-        <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary">
+        <div class="flex items-start gap-4">
 
-            <span class="material-symbols-outlined">
+            <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary shrink-0">
 
-                @if (
-                    str_contains($session->he_dieu_hanh, 'Android') ||
-                    str_contains($session->he_dieu_hanh, 'iPhone')
-                )
+                <span class="material-symbols-outlined">
 
-                    smartphone
+                    @if (
+                        str_contains($session->he_dieu_hanh, 'Android') ||
+                        str_contains($session->he_dieu_hanh, 'iPhone')
+                    )
 
-                @elseif (
-                    str_contains($session->he_dieu_hanh, 'MacOS')
-                )
+                        smartphone
 
-                    laptop_mac
+                    @elseif (
+                        str_contains($session->he_dieu_hanh, 'MacOS')
+                    )
 
-                @elseif (
-                    str_contains($session->he_dieu_hanh, 'Windows')
-                )
+                        laptop_mac
 
-                    laptop_windows
+                    @elseif (
+                        str_contains($session->he_dieu_hanh, 'Windows')
+                    )
 
-                @elseif (
-                    str_contains($session->he_dieu_hanh, 'Linux')
-                )
+                        laptop_windows
 
-                    computer
+                    @elseif (
+                        str_contains($session->he_dieu_hanh, 'Linux')
+                    )
 
-                @else
+                        computer
 
-                    devices
+                    @else
 
-                @endif
+                        devices
 
-            </span>
+                    @endif
 
-        </div>
-
-        <div class="flex-1">
-
-            <div class="flex justify-between">
-
-                <p class="font-semibold text-sm">
-                    {{ $session->ten_thiet_bi }}
-                </p>
-
-                @if ($session->la_phien_hien_tai)
-
-                    <span class="text-[10px] bg-primary/20 text-primary px-1.5 py-0.5 rounded uppercase font-bold">
-                        {{ __('messages.current') }}
-                    </span>
-
-                @endif
+                </span>
 
             </div>
 
-            <p class="text-xs text-on-surface-variant">
-                {{ $session->dia_chi_ip }}
-            </p>
+            <div>
 
-            <p class="text-[10px] text-on-surface-variant mt-2">
-                {{ $session->trinh_duyet }}
-                •
-                {{ $session->lan_hoat_dong_cuoi->diffForHumans() }}
-            </p>
+                <div class="flex items-center gap-2 flex-wrap">
+
+                    <p class="font-semibold text-sm">
+                        {{ $session->ten_thiet_bi }}
+                    </p>
+
+                    @if ($session->la_phien_hien_tai)
+
+                        <span class="text-[10px] bg-primary/20 text-primary px-1.5 py-0.5 rounded uppercase font-bold shrink-0">
+                            {{ __('messages.current') }}
+                        </span>
+
+                    @endif
+
+                </div>
+
+                <p class="text-xs text-on-surface-variant">
+                    {{ $session->dia_chi_ip }}
+                </p>
+
+                <p class="text-[10px] text-on-surface-variant mt-2">
+                    {{ $session->trinh_duyet }}
+                    •
+                    {{ $session->lan_hoat_dong_cuoi ? $session->lan_hoat_dong_cuoi->diffForHumans() : '' }}
+                </p>
+
+            </div>
 
         </div>
+
+        @if (!$session->la_phien_hien_tai)
+
+            <form id="logout-session-{{ $session->id }}" action="{{ route('settings.sessions.logout', $session->id) }}" method="POST" class="shrink-0">
+
+                @csrf
+
+                @method('DELETE')
+
+                <button type="button" onclick="window.openConfirmModal('Đăng xuất thiết bị?', 'Bạn có chắc chắn muốn đăng xuất khỏi thiết bị này không?', () => document.getElementById('logout-session-{{ $session->id }}').submit(), 'Đăng xuất')" class="w-8 h-8 rounded-full bg-error/10 hover:bg-error/20 text-error flex items-center justify-center transition-all active:scale-95" title="Đăng xuất thiết bị">
+
+                    <span class="material-symbols-outlined text-sm">logout</span>
+
+                </button>
+
+            </form>
+
+        @endif
 
     </div>
 

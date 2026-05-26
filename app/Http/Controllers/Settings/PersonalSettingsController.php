@@ -98,4 +98,19 @@ class PersonalSettingsController extends Controller
         
         return redirect('/')->with('success', 'Tài khoản đã bị vô hiệu hóa.');
     }
+
+    public function logoutSession($id)
+    {
+        $session = PhienDangNhap::where('nguoi_dung_id', auth()->id())
+            ->where('id', $id)
+            ->firstOrFail();
+
+        // Đánh dấu đã đăng xuất
+        $session->update([
+            'dang_xuat_luc' => now(),
+            'la_phien_hien_tai' => false,
+        ]);
+
+        return back()->with('success', 'Đã đăng xuất thiết bị thành công!');
+    }
 }
