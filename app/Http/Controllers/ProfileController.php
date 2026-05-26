@@ -305,8 +305,43 @@ class ProfileController extends Controller
 
         return response()->json([
             'is_following' => $isFollowing,
+            'status' => $isFollowing ? $trangThai : null,
             'followers_count' => $user->followers()->count()
         ]);
+    }
+
+    public function acceptFollow(User $follower)
+    {
+        $me = auth()->user();
+        
+        $me->followers()->updateExistingPivot($follower->id, [
+            'trang_thai' => 'da_chap_nhan'
+        ]);
+
+        // Cập nhật thông báo nếu có
+        \App\Models\ThongBao::where([
+            'nguoi_dung_id' => $me->id,
+            'nguoi_thuc_hien_id' => $follower->id,
+            'loai' => 'theo_doi',
+        ])->update(['da_doc' => true]);
+        
+        return response()->json(['success' => true, 'message' => 'Đã chấp nhận yêu cầu theo dõi.']);
+    }
+
+    public function declineFollow(User $follower)
+    {
+        $me = auth()->user();
+        
+        $me->followers()->detach($follower->id);
+
+        // Xóa thông báo nếu có
+        \App\Models\ThongBao::where([
+            'nguoi_dung_id' => $me->id,
+            'nguoi_thuc_hien_id' => $follower->id,
+            'loai' => 'theo_doi',
+        ])->delete();
+        
+        return response()->json(['success' => true, 'message' => 'Đã từ chối yêu cầu theo dõi.']);
     }
 
     public function followers(string $username)

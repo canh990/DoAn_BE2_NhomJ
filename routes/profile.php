@@ -25,6 +25,10 @@ Route::middleware('auth')->group(function () {
         ->name('profile.remove-cover');
     Route::post('/user/{user}/toggle-follow', [ProfileController::class, 'toggleFollow'])
         ->name('user.toggle-follow');
+    Route::post('/user/{follower}/accept-follow', [ProfileController::class, 'acceptFollow'])
+        ->name('user.accept-follow');
+    Route::post('/user/{follower}/decline-follow', [ProfileController::class, 'declineFollow'])
+        ->name('user.decline-follow');
 });
 
 Route::get('/profile/{username}/followers', [ProfileController::class, 'followers'])

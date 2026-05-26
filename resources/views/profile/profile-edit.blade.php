@@ -182,15 +182,26 @@
 
             <div class="space-y-2">
                 <label class="text-xs font-bold uppercase tracking-wider text-slate-500 ml-1">Quyền riêng tư hồ sơ</label>
-                <div class="relative">
-                    <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">lock</span>
-                    <select
-                        name="quyen_rieng_tu"
-                        class="w-full bg-slate-900/50 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-on-surface focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all outline-none appearance-none">
-                        <option value="cong_khai" @selected(old('quyen_rieng_tu', $user->quyen_rieng_tu) === 'cong_khai')>Công khai với mọi người</option>
-                        <option value="ban_be" @selected(old('quyen_rieng_tu', $user->quyen_rieng_tu) === 'ban_be')>Chỉ bạn bè mới thấy</option>
-                        <option value="rieng_tu" @selected(old('quyen_rieng_tu', $user->quyen_rieng_tu) === 'rieng_tu')>Chỉ mình tôi</option>
-                    </select>
+                <div class="grid grid-cols-2 gap-4 bg-slate-950/40 p-1.5 rounded-2xl border border-white/5">
+                    <!-- Công khai -->
+                    <label class="relative flex flex-col md:flex-row items-center justify-center gap-2 rounded-xl py-3.5 px-4 cursor-pointer transition-all duration-300 group select-none overflow-hidden {{ old('quyen_rieng_tu', $user->quyen_rieng_tu) === 'cong_khai' ? 'bg-primary text-white font-bold shadow-lg shadow-primary/20' : 'text-slate-400 hover:text-white hover:bg-white/5' }}" id="label-privacy-public">
+                        <input type="radio" name="quyen_rieng_tu" value="cong_khai" class="sr-only" @checked(old('quyen_rieng_tu', $user->quyen_rieng_tu) === 'cong_khai') onchange="togglePrivacyUI('cong_khai')">
+                        <span class="material-symbols-outlined text-lg">public</span>
+                        <div class="text-center md:text-left">
+                            <p class="text-sm font-semibold">Công khai (Public)</p>
+                            <p class="text-[10px] opacity-75 font-normal">Mọi người đều xem được hồ sơ</p>
+                        </div>
+                    </label>
+
+                    <!-- Riêng tư -->
+                    <label class="relative flex flex-col md:flex-row items-center justify-center gap-2 rounded-xl py-3.5 px-4 cursor-pointer transition-all duration-300 group select-none overflow-hidden {{ old('quyen_rieng_tu', $user->quyen_rieng_tu) === 'rieng_tu' ? 'bg-primary text-white font-bold shadow-lg shadow-primary/20' : 'text-slate-400 hover:text-white hover:bg-white/5' }}" id="label-privacy-private">
+                        <input type="radio" name="quyen_rieng_tu" value="rieng_tu" class="sr-only" @checked(old('quyen_rieng_tu', $user->quyen_rieng_tu) === 'rieng_tu') onchange="togglePrivacyUI('rieng_tu')">
+                        <span class="material-symbols-outlined text-lg">lock</span>
+                        <div class="text-center md:text-left">
+                            <p class="text-sm font-semibold">Riêng tư (Private)</p>
+                            <p class="text-[10px] opacity-75 font-normal">Chỉ người theo dõi đã chấp nhận mới xem được</p>
+                        </div>
+                    </label>
                 </div>
             </div>
 
@@ -703,6 +714,19 @@
             
             fileInput.removeAttribute('data-saved');
         }, 'image/png');
+    }
+
+    function togglePrivacyUI(mode) {
+        const publicLabel = document.getElementById('label-privacy-public');
+        const privateLabel = document.getElementById('label-privacy-private');
+        
+        if (mode === 'cong_khai') {
+            publicLabel.className = 'relative flex flex-col md:flex-row items-center justify-center gap-2 rounded-xl py-3.5 px-4 cursor-pointer transition-all duration-300 group select-none overflow-hidden bg-primary text-white font-bold shadow-lg shadow-primary/20';
+            privateLabel.className = 'relative flex flex-col md:flex-row items-center justify-center gap-2 rounded-xl py-3.5 px-4 cursor-pointer transition-all duration-300 group select-none overflow-hidden text-slate-400 hover:text-white hover:bg-white/5';
+        } else {
+            privateLabel.className = 'relative flex flex-col md:flex-row items-center justify-center gap-2 rounded-xl py-3.5 px-4 cursor-pointer transition-all duration-300 group select-none overflow-hidden bg-primary text-white font-bold shadow-lg shadow-primary/20';
+            publicLabel.className = 'relative flex flex-col md:flex-row items-center justify-center gap-2 rounded-xl py-3.5 px-4 cursor-pointer transition-all duration-300 group select-none overflow-hidden text-slate-400 hover:text-white hover:bg-white/5';
+        }
     }
 </script>
 

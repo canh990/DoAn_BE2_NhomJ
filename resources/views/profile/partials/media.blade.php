@@ -1,4 +1,4 @@
-@if(!$isOwnProfile && $user->quyen_rieng_tu === 'rieng_tu')
+@if(!$isOwnProfile && $user->quyen_rieng_tu === 'rieng_tu' && !$isAcceptedFollower)
 <div class="glass-panel flex flex-col items-center justify-center rounded-3xl p-12 text-center h-full min-h-[300px]">
     <div class="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-slate-800/50 text-slate-500 border border-slate-700/50">
         <span class="material-symbols-outlined text-4xl" data-icon="lock">lock</span>
