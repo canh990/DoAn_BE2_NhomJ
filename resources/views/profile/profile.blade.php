@@ -14,6 +14,10 @@ $isAcceptedFollower = auth()->check() && ! $isOwnProfile
 $isPendingFollower = auth()->check() && ! $isOwnProfile
 ? auth()->user()->following()->where('nguoi_duoc_theo_doi_id', $user->id)->where('theo_doi.trang_thai', 'cho_chap_nhan')->exists()
 : false;
+$isFollowedBy = auth()->check() && ! $isOwnProfile
+? auth()->user()->followers()->where('nguoi_theo_doi_id', $user->id)->where('theo_doi.trang_thai', 'da_chap_nhan')->exists()
+: false;
+$isMutual = $isAcceptedFollower && $isFollowedBy;
 $profileUrl = route('profile.public', ['username' => $user->ten_dang_nhap]);
 @endphp
 
@@ -58,14 +62,21 @@ $profileUrl = route('profile.public', ['username' => $user->ten_dang_nhap]);
                         Chỉnh sửa hồ sơ
                     </a>
                     @elseif(auth()->check())
-                    <button id="follow-btn" data-user-id="{{ $user->id }}" class="rounded-xl border border-sky-400/20 glass-panel px-6 py-2 font-semibold transition-all hover:bg-white/10 {{ $isFollowing ? 'text-slate-300' : 'text-sky-300' }}">
+                    <button id="follow-btn" data-user-id="{{ $user->id }}" class="rounded-xl border {{ $isMutual ? 'border-emerald-500/20 text-emerald-400' : ($isFollowing ? 'border-sky-400/20 text-slate-300' : 'border-sky-400/20 text-sky-300') }} glass-panel px-6 py-2 font-semibold transition-all hover:bg-white/10 flex items-center justify-center gap-1.5 shadow-lg">
                         @if($isPendingFollower)
                             Chờ chấp nhận
+                        @elseif($isMutual)
+                            <span class="material-symbols-outlined text-[18px]">handshake</span>
+                            Bạn bè
                         @elseif($isFollowing)
                             Bỏ theo dõi
                         @else
                             Theo dõi
                         @endif
+                    </button>
+                    <button type="button" onclick="openBlockModal('{{ $user->id }}', '{{ $user->name }}')" class="rounded-xl border border-red-500/20 glass-panel px-6 py-2 font-semibold text-red-400 transition-all hover:bg-red-500/10 active:scale-95 flex items-center gap-1.5 shadow-lg shadow-red-500/5">
+                        <span class="material-symbols-outlined text-[18px]">block</span>
+                        Chặn
                     </button>
                     @else
                     <a href="{{ route('login') }}" class="inline-flex items-center rounded-xl border border-sky-400/20 glass-panel px-6 py-2 font-semibold text-sky-300 transition-all hover:bg-white/10">
@@ -295,8 +306,104 @@ $profileUrl = route('profile.public', ['username' => $user->ten_dang_nhap]);
     </div>
 </div>
 
+{{-- Block Confirmation Modal --}}
+<div id="block-user-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+    {{-- Backdrop with glass effect --}}
+    <div class="absolute inset-0 bg-[#070b13]/80 backdrop-blur-sm" onclick="closeBlockModal()"></div>
+    
+    {{-- Content --}}
+    <div class="relative w-full max-w-md overflow-hidden rounded-3xl border border-red-500/20 bg-[#0b0f19] p-6 shadow-2xl transition-all duration-300 transform scale-95 opacity-0" id="block-modal-content">
+        <div class="flex flex-col items-center text-center">
+            <div class="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-500/10 text-red-500 border border-red-500/20 shadow-lg shadow-red-500/5">
+                <span class="material-symbols-outlined text-3xl">gavel</span>
+            </div>
+            
+            <h3 class="text-xl font-bold text-on-surface">Chặn người dùng này?</h3>
+            <p class="mt-3 text-sm text-slate-400 leading-relaxed">
+                Bạn có chắc chắn muốn chặn <span class="font-semibold text-red-400" id="block-user-name-placeholder">Người dùng</span>? Khi đã chặn, cả hai bên sẽ không thể theo dõi, xem hồ sơ, xem bài viết hoặc nhắn tin trò chuyện với nhau.
+            </p>
+        </div>
+        
+        <div class="mt-6 flex gap-3">
+            <button type="button" onclick="closeBlockModal()" class="flex-1 rounded-xl border border-white/10 bg-white/5 py-3 text-sm font-semibold text-slate-300 transition-all hover:bg-white/10 active:scale-95">
+                Hủy
+            </button>
+            <button type="button" id="confirm-block-btn" class="flex-1 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 py-3 text-sm font-semibold text-white shadow-lg shadow-red-500/20 transition-all hover:brightness-110 active:scale-95 flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined text-base">block</span>
+                Chặn ngay
+            </button>
+        </div>
+    </div>
+</div>
+
 <script>
+    let blockTargetUserId = null;
+
+    window.openBlockModal = function(userId, userName) {
+        blockTargetUserId = userId;
+        document.getElementById('block-user-name-placeholder').innerText = userName;
+        
+        const modal = document.getElementById('block-user-modal');
+        const content = document.getElementById('block-modal-content');
+        
+        modal.classList.remove('hidden');
+        setTimeout(() => {
+            content.classList.remove('scale-95', 'opacity-0');
+            content.classList.add('scale-100', 'opacity-100');
+        }, 10);
+    }
+
+    window.closeBlockModal = function() {
+        const modal = document.getElementById('block-user-modal');
+        const content = document.getElementById('block-modal-content');
+        
+        content.classList.remove('scale-100', 'opacity-100');
+        content.classList.add('scale-95', 'opacity-0');
+        setTimeout(() => {
+            modal.classList.add('hidden');
+        }, 300);
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
+        const confirmBlockBtn = document.getElementById('confirm-block-btn');
+        if (confirmBlockBtn) {
+            confirmBlockBtn.addEventListener('click', async function() {
+                if (!blockTargetUserId) return;
+                
+                try {
+                    const response = await fetch(`/user/${blockTargetUserId}/block`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        closeBlockModal();
+                        if (typeof window.showToast === 'function') {
+                            window.showToast(data.message || 'Đã chặn thành công!', 'success');
+                        }
+                        if (data.redirect_url) {
+                            setTimeout(() => {
+                                window.location.href = data.redirect_url;
+                            }, 1000);
+                        }
+                    } else {
+                        const err = await response.json();
+                        if (typeof window.showToast === 'function') {
+                            window.showToast(err.error || 'Có lỗi xảy ra.', 'error');
+                        }
+                    }
+                } catch (error) {
+                    console.error('Lỗi khi chặn:', error);
+                }
+            });
+        }
+
         // Tab switching logic
         const tabBtns = document.querySelectorAll('.tab-btn');
         const tabContents = document.querySelectorAll('.tab-content');
@@ -356,15 +463,18 @@ $profileUrl = route('profile.public', ['username' => $user->ten_dang_nhap]);
                         const data = await response.json();
                         if (data.is_following) {
                             if (data.status === 'cho_chap_nhan') {
-                                this.innerText = 'Chờ chấp nhận';
-                                this.className = "rounded-xl border border-sky-400/20 glass-panel px-6 py-2 font-semibold transition-all hover:bg-white/10 text-slate-300";
+                                this.innerHTML = 'Chờ chấp nhận';
+                                this.className = "rounded-xl border border-sky-400/20 glass-panel px-6 py-2 font-semibold transition-all hover:bg-white/10 text-slate-300 flex items-center justify-center gap-1.5 shadow-lg";
+                            } else if (data.is_mutual) {
+                                this.innerHTML = '<span class="material-symbols-outlined text-[18px]">handshake</span> Bạn bè';
+                                this.className = "rounded-xl border border-emerald-500/20 text-emerald-400 glass-panel px-6 py-2 font-semibold transition-all hover:bg-white/10 flex items-center justify-center gap-1.5 shadow-lg";
                             } else {
-                                this.innerText = 'Bỏ theo dõi';
-                                this.className = "rounded-xl border border-sky-400/20 glass-panel px-6 py-2 font-semibold transition-all hover:bg-white/10 text-slate-300";
+                                this.innerHTML = 'Bỏ theo dõi';
+                                this.className = "rounded-xl border border-sky-400/20 glass-panel px-6 py-2 font-semibold transition-all hover:bg-white/10 text-slate-300 flex items-center justify-center gap-1.5 shadow-lg";
                             }
                         } else {
-                            this.innerText = 'Theo dõi';
-                            this.className = "rounded-xl border border-sky-400/20 glass-panel px-6 py-2 font-semibold transition-all hover:bg-white/10 text-sky-300";
+                            this.innerHTML = 'Theo dõi';
+                            this.className = "rounded-xl border border-sky-400/20 glass-panel px-6 py-2 font-semibold transition-all hover:bg-white/10 text-sky-300 flex items-center justify-center gap-1.5 shadow-lg";
                         }
                         followersCount.innerText = new Intl.NumberFormat().format(data.followers_count);
                     }

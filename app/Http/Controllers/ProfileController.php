@@ -62,6 +62,10 @@ class ProfileController extends Controller
             return redirect()->route('home')->with('error', 'Không tìm thấy tài khoản người dùng.');
         }
 
+        if (auth()->check() && auth()->user()->hasAnyBlockRelationship($user->id)) {
+            return redirect()->route('home')->with('error', 'Bạn không thể xem trang cá nhân của người này.');
+        }
+
         $posts = $user->posts()
             ->with(['user', 'media', 'originalPost.user', 'originalPost.media'])
             ->withCount(['reactions', 'comments', 'shares'])
@@ -99,8 +103,12 @@ class ProfileController extends Controller
 
     public function edit()
     {
+        $user = auth()->user();
+        $blockedUsers = $user->blockedUsers()->get();
+
         return view('profile.profile-edit', [
-            'user' => auth()->user(),
+            'user' => $user,
+            'blockedUsers' => $blockedUsers,
         ]);
     }
 
@@ -280,6 +288,10 @@ class ProfileController extends Controller
         ]);
         
         $isFollowing = count($status['attached']) > 0;
+        
+        $isMutual = $isFollowing && 
+            ($trangThai === 'da_chap_nhan') && 
+            $me->followers()->where('nguoi_theo_doi_id', $user->id)->where('theo_doi.trang_thai', 'da_chap_nhan')->exists();
 
         if ($isFollowing) {
             // Tạo hoặc cập nhật thông báo cho người được theo dõi
@@ -306,6 +318,7 @@ class ProfileController extends Controller
         return response()->json([
             'is_following' => $isFollowing,
             'status' => $isFollowing ? $trangThai : null,
+            'is_mutual' => $isMutual,
             'followers_count' => $user->followers()->count()
         ]);
     }
@@ -486,5 +499,56 @@ class ProfileController extends Controller
         $request->session()->regenerateToken();
 
         return redirect()->route('login')->with('success', 'Tài khoản của bạn đã được xóa vĩnh viễn khỏi hệ thống.');
+    }
+
+    public function blockUser(Request $request, User $user)
+    {
+        $currentUser = auth()->user();
+        if ($currentUser->id === $user->id) {
+            return response()->json(['error' => 'Bạn không thể tự chặn chính mình.'], 400);
+        }
+
+        // Tạo bản ghi chặn
+        \App\Models\Chan::firstOrCreate([
+            'nguoi_chan_id' => $currentUser->id,
+            'nguoi_bi_chan_id' => $user->id,
+        ]);
+
+        // Hủy mọi mối quan hệ theo dõi giữa hai người
+        \DB::table('theo_doi')->where(function ($query) use ($currentUser, $user) {
+            $query->where('nguoi_theo_doi_id', $currentUser->id)
+                  ->where('nguoi_duoc_theo_doi_id', $user->id);
+        })->orWhere(function ($query) use ($currentUser, $user) {
+            $query->where('nguoi_theo_doi_id', $user->id)
+                  ->where('nguoi_duoc_theo_doi_id', $currentUser->id);
+        })->delete();
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Đã chặn người dùng này thành công.',
+                'redirect_url' => route('profile')
+            ]);
+        }
+
+        return redirect()->route('profile')->with('success', 'Đã chặn người dùng thành công.');
+    }
+
+    public function unblockUser(Request $request, User $user)
+    {
+        $currentUser = auth()->user();
+
+        \App\Models\Chan::where('nguoi_chan_id', $currentUser->id)
+            ->where('nguoi_bi_chan_id', $user->id)
+            ->delete();
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Đã bỏ chặn người dùng thành công.'
+            ]);
+        }
+
+        return back()->with('success', 'Đã bỏ chặn người dùng thành công.');
     }
 }

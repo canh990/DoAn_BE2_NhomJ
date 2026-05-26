@@ -180,28 +180,38 @@
                 </div>
             </div>
 
-            <div class="space-y-2">
-                <label class="text-xs font-bold uppercase tracking-wider text-slate-500 ml-1">Quyền riêng tư hồ sơ</label>
-                <div class="grid grid-cols-2 gap-4 bg-slate-950/40 p-1.5 rounded-2xl border border-white/5">
-                    <!-- Công khai -->
-                    <label class="relative flex flex-col md:flex-row items-center justify-center gap-2 rounded-xl py-3.5 px-4 cursor-pointer transition-all duration-300 group select-none overflow-hidden {{ old('quyen_rieng_tu', $user->quyen_rieng_tu) === 'cong_khai' ? 'bg-primary text-white font-bold shadow-lg shadow-primary/20' : 'text-slate-400 hover:text-white hover:bg-white/5' }}" id="label-privacy-public">
-                        <input type="radio" name="quyen_rieng_tu" value="cong_khai" class="sr-only" @checked(old('quyen_rieng_tu', $user->quyen_rieng_tu) === 'cong_khai') onchange="togglePrivacyUI('cong_khai')">
-                        <span class="material-symbols-outlined text-lg">public</span>
-                        <div class="text-center md:text-left">
-                            <p class="text-sm font-semibold">Công khai (Public)</p>
-                            <p class="text-[10px] opacity-75 font-normal">Mọi người đều xem được hồ sơ</p>
+            <div class="space-y-4">
+                <div class="glass-panel rounded-2xl p-6 flex flex-col justify-between shadow-[0_0_30px_rgba(125,211,252,0.02)] border border-white/5 relative">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                                    <span class="material-symbols-outlined">lock</span>
+                                </div>
+                                <h3 class="text-xl font-bold text-on-surface">Chế độ riêng tư</h3>
+                            </div>
+                            <p class="text-on-surface-variant text-sm leading-relaxed max-w-md">
+                                Khi tài khoản của bạn ở chế độ riêng tư, chỉ những người theo dõi bạn mới có thể xem nội dung và các bài đăng của bạn.
+                            </p>
                         </div>
-                    </label>
-
-                    <!-- Riêng tư -->
-                    <label class="relative flex flex-col md:flex-row items-center justify-center gap-2 rounded-xl py-3.5 px-4 cursor-pointer transition-all duration-300 group select-none overflow-hidden {{ old('quyen_rieng_tu', $user->quyen_rieng_tu) === 'rieng_tu' ? 'bg-primary text-white font-bold shadow-lg shadow-primary/20' : 'text-slate-400 hover:text-white hover:bg-white/5' }}" id="label-privacy-private">
-                        <input type="radio" name="quyen_rieng_tu" value="rieng_tu" class="sr-only" @checked(old('quyen_rieng_tu', $user->quyen_rieng_tu) === 'rieng_tu') onchange="togglePrivacyUI('rieng_tu')">
-                        <span class="material-symbols-outlined text-lg">lock</span>
-                        <div class="text-center md:text-left">
-                            <p class="text-sm font-semibold">Riêng tư (Private)</p>
-                            <p class="text-[10px] opacity-75 font-normal">Chỉ người theo dõi đã chấp nhận mới xem được</p>
+                        <!-- Premium Toggle -->
+                        <label class="relative inline-flex items-center cursor-pointer mt-1">
+                            <input type="checkbox" id="privacy-toggle" name="quyen_rieng_tu_toggle" class="sr-only peer" @checked(old('quyen_rieng_tu', $user->quyen_rieng_tu) === 'rieng_tu') onchange="handlePrivacyToggle(this)">
+                            <input type="hidden" name="quyen_rieng_tu" id="quyen_rieng_tu_value" value="{{ old('quyen_rieng_tu', $user->quyen_rieng_tu ?? 'cong_khai') }}">
+                            <div class="w-14 h-8 bg-surface-container-highest rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-1 after:left-1 after:bg-primary after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-primary/20 border border-white/10"></div>
+                        </label>
+                    </div>
+                    
+                    <div class="mt-8 flex gap-4">
+                        <div class="flex-1 glass-panel-elevated p-4 rounded-lg border transition-all duration-300 {{ old('quyen_rieng_tu', $user->quyen_rieng_tu) !== 'rieng_tu' ? 'border-primary/50 bg-primary/5' : 'border-white/5 opacity-40' }}" id="panel-privacy-public">
+                            <span class="text-primary text-xs font-bold uppercase tracking-wider block mb-1">Công khai</span>
+                            <p class="text-xs text-on-surface-variant">Mọi người đều có thể tìm thấy bạn.</p>
                         </div>
-                    </label>
+                        <div class="flex-1 glass-panel-elevated p-4 rounded-lg border transition-all duration-300 {{ old('quyen_rieng_tu', $user->quyen_rieng_tu) === 'rieng_tu' ? 'border-tertiary/50 bg-tertiary/5' : 'border-white/5 opacity-40' }}" id="panel-privacy-private">
+                            <span class="text-tertiary text-xs font-bold uppercase tracking-wider block mb-1">Riêng tư</span>
+                            <p class="text-xs text-on-surface-variant">Yêu cầu phê duyệt người theo dõi.</p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -215,6 +225,51 @@
             </div>
         </div>
     </form>
+
+    {{-- Blocked Users List Panel --}}
+    <div class="glass-panel rounded-3xl p-6 md:p-8 space-y-6 mt-8 animate-fade-in">
+        <div class="flex items-center gap-3">
+            <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/20 shadow-lg shadow-amber-500/5">
+                <span class="material-symbols-outlined text-2xl">gavel</span>
+            </div>
+            <div>
+                <h3 class="text-xl font-bold text-on-surface">Danh sách người dùng đã chặn</h3>
+                <p class="text-sm text-slate-400">Quản lý những tài khoản bạn đã chặn. Khi chặn, cả hai bên sẽ không thể tương tác hoặc theo dõi nhau.</p>
+            </div>
+        </div>
+
+        <div id="blocked-users-list" class="space-y-4 pt-4 border-t border-white/5">
+            @forelse($blockedUsers as $blockedUser)
+                <div class="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/10 transition-all block-user-item duration-300" data-user-id="{{ $blockedUser->id }}">
+                    <div class="flex items-center gap-3">
+                        <img 
+                            src="{{ $blockedUser->anh_dai_dien ? asset('storage/' . $blockedUser->anh_dai_dien) : 'https://ui-avatars.com/api/?name='.urlencode($blockedUser->name).'&background=random' }}" 
+                            alt="{{ $blockedUser->name }}" 
+                            class="w-12 h-12 rounded-full object-cover border-2 border-white/10"
+                        />
+                        <div>
+                            <p class="font-bold text-on-surface text-sm">{{ $blockedUser->name }}</p>
+                            <p class="text-xs text-slate-400">{{ '@' . $blockedUser->ten_dang_nhap }}</p>
+                        </div>
+                    </div>
+                    
+                    <button 
+                        type="button" 
+                        onclick="unblockUserAction('{{ $blockedUser->id }}', '{{ $blockedUser->name }}', this)" 
+                        class="rounded-xl border border-sky-400/20 bg-sky-400/5 px-4 py-2 text-xs font-semibold text-sky-400 hover:bg-sky-400/20 transition-all active:scale-95 flex items-center gap-1 shadow-lg shadow-sky-500/5"
+                    >
+                        <span class="material-symbols-outlined text-sm">lock_open</span>
+                        Bỏ chặn
+                    </button>
+                </div>
+            @empty
+                <div class="text-center py-8" id="blocked-empty-state">
+                    <span class="material-symbols-outlined text-4xl text-slate-600 mb-2">person_off</span>
+                    <p class="text-slate-400 text-sm font-medium">Bạn chưa chặn người dùng nào.</p>
+                </div>
+            @endforelse
+        </div>
+    </div>
 
     <div class="glass-panel border-red-500/20 rounded-3xl p-6 flex flex-col md:flex-row items-center justify-between gap-4 mt-8 mb-4 border" style="border-color: rgba(239, 68, 68, 0.2);">
         <div>
@@ -419,6 +474,87 @@
 @endif
 
 <script>
+    window.handlePrivacyToggle = function(toggle) {
+        const hiddenVal = document.getElementById('quyen_rieng_tu_value');
+        const panelPublic = document.getElementById('panel-privacy-public');
+        const panelPrivate = document.getElementById('panel-privacy-private');
+        
+        if (toggle.checked) {
+            hiddenVal.value = 'rieng_tu';
+            
+            panelPublic.classList.add('opacity-40');
+            panelPublic.classList.remove('border-primary/50', 'bg-primary/5');
+            panelPublic.classList.add('border-white/5');
+            
+            panelPrivate.classList.remove('opacity-40', 'border-white/5');
+            panelPrivate.classList.add('border-tertiary/50', 'bg-tertiary/5');
+        } else {
+            hiddenVal.value = 'cong_khai';
+            
+            panelPrivate.classList.add('opacity-40');
+            panelPrivate.classList.remove('border-tertiary/50', 'bg-tertiary/5');
+            panelPrivate.classList.add('border-white/5');
+            
+            panelPublic.classList.remove('opacity-40', 'border-white/5');
+            panelPublic.classList.add('border-primary/50', 'bg-primary/5');
+        }
+    }
+
+    async function unblockUserAction(userId, userName, btn) {
+        if (!confirm(`Bạn có chắc chắn muốn bỏ chặn ${userName} không?`)) return;
+        
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-[12px]">progress_activity</span>';
+
+        try {
+            const response = await fetch(`/user/${userId}/unblock`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                if (window.showToast) {
+                    window.showToast(data.message || 'Đã bỏ chặn thành công!', 'success');
+                }
+                
+                // Find and fade out user element
+                const row = document.querySelector(`.block-user-item[data-user-id="${userId}"]`);
+                if (row) {
+                    row.classList.add('scale-95', 'opacity-0');
+                    setTimeout(() => {
+                        row.remove();
+                        // Check if block list is now empty, if so, show empty state
+                        const remaining = document.querySelectorAll('.block-user-item');
+                        if (remaining.length === 0) {
+                            const list = document.getElementById('blocked-users-list');
+                            list.innerHTML = `
+                                <div class="text-center py-8" id="blocked-empty-state">
+                                    <span class="material-symbols-outlined text-4xl text-slate-600 mb-2">person_off</span>
+                                    <p class="text-slate-400 text-sm font-medium">Bạn chưa chặn người dùng nào.</p>
+                                </div>
+                            `;
+                        }
+                    }, 300);
+                }
+            } else {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+                if (window.showToast) window.showToast('Có lỗi xảy ra, vui lòng thử lại.', 'error');
+            }
+        } catch (error) {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+            console.error('Lỗi bỏ chặn:', error);
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         const selectNoiO = document.getElementById('select-noi-o');
         if (selectNoiO) {

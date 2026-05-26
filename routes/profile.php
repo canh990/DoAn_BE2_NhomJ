@@ -29,6 +29,10 @@ Route::middleware('auth')->group(function () {
         ->name('user.accept-follow');
     Route::post('/user/{follower}/decline-follow', [ProfileController::class, 'declineFollow'])
         ->name('user.decline-follow');
+    Route::post('/user/{user}/block', [ProfileController::class, 'blockUser'])
+        ->name('user.block');
+    Route::post('/user/{user}/unblock', [ProfileController::class, 'unblockUser'])
+        ->name('user.unblock');
 });
 
 Route::get('/profile/{username}/followers', [ProfileController::class, 'followers'])
