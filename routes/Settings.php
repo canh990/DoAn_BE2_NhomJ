@@ -23,6 +23,7 @@ Route::prefix('settings')->name('settings.')->middleware('auth')->group(function
     Route::get('/personal', [PersonalSettingsController::class, 'index'])->name('personal.index');
     Route::post('/personal/theme', [PersonalSettingsController::class, 'setTheme'])->name('personal.setTheme');
     Route::post('/personal/language', [PersonalSettingsController::class, 'setLanguage'])->name('personal.setLanguage');
+    Route::delete('/sessions/{id}', [PersonalSettingsController::class, 'logoutSession'])->name('sessions.logout');
     
     // Ví dụ khai báo route
     Route::get('/chat', [ChatController::class, 'index'])->name('chat');
