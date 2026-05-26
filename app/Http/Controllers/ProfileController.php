@@ -133,6 +133,12 @@ class ProfileController extends Controller
             'ngay_sinh.before_or_equal' => 'Ngày,Tháng,Năm sinh không thể lớn hơn hiện tại.',
             'ten_dang_nhap.unique' => 'Tên đăng nhập này đã được sử dụng.',
             'so_dien_thoai.unique' => 'Số điện thoại này đã được sử dụng.',
+            'anh_dai_dien.image' => 'Ảnh đại diện phải là một tệp hình ảnh.',
+            'anh_dai_dien.mimes' => 'Ảnh đại diện chỉ chấp nhận định dạng: jpg, jpeg, png, webp.',
+            'anh_dai_dien.max' => 'Kích thước ảnh đại diện không được vượt quá 2MB.',
+            'anh_bia.image' => 'Ảnh bìa phải là một tệp hình ảnh.',
+            'anh_bia.mimes' => 'Ảnh bìa chỉ chấp nhận định dạng: jpg, jpeg, png, webp.',
+            'anh_bia.max' => 'Kích thước ảnh bìa không được vượt quá 4MB.',
         ]);
 
         // Xử lý ảnh đại diện

@@ -64,7 +64,7 @@ $profileUrl = route('profile.public', ['username' => $user->ten_dang_nhap]);
                     <button
                         type="button"
                         class="rounded-xl border border-sky-400/20 glass-panel p-2 text-on-surface transition-all hover:bg-white/10"
-                        onclick="navigator.clipboard.writeText('{{ $profileUrl }}')"
+                        onclick="navigator.clipboard.writeText('{{ $profileUrl }}'); if(typeof window.showToast === 'function') { window.showToast('Đã sao chép liên kết hồ sơ!', 'success'); }"
                         title="Sao chép liên kết hồ sơ">
                         <span class="material-symbols-outlined" data-icon="share">share</span>
                     </button>
