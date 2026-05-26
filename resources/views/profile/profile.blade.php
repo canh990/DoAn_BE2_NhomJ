@@ -8,6 +8,12 @@ $isOwnProfile = auth()->check() && auth()->id() === $user->id;
 $isFollowing = auth()->check() && ! $isOwnProfile
 ? auth()->user()->following()->where('nguoi_duoc_theo_doi_id', $user->id)->exists()
 : false;
+$isAcceptedFollower = auth()->check() && ! $isOwnProfile
+? auth()->user()->following()->where('nguoi_duoc_theo_doi_id', $user->id)->where('theo_doi.trang_thai', 'da_chap_nhan')->exists()
+: false;
+$isPendingFollower = auth()->check() && ! $isOwnProfile
+? auth()->user()->following()->where('nguoi_duoc_theo_doi_id', $user->id)->where('theo_doi.trang_thai', 'cho_chap_nhan')->exists()
+: false;
 $profileUrl = route('profile.public', ['username' => $user->ten_dang_nhap]);
 @endphp
 
@@ -52,8 +58,14 @@ $profileUrl = route('profile.public', ['username' => $user->ten_dang_nhap]);
                         Chỉnh sửa hồ sơ
                     </a>
                     @elseif(auth()->check())
-                    <button id="follow-btn" data-user-id="{{ $user->id }}" class="rounded-xl border border-sky-400/20 glass-panel px-6 py-2 font-semibold text-sky-300 transition-all hover:bg-white/10">
-                        {{ $isFollowing ? 'Bỏ theo dõi' : 'Theo dõi' }}
+                    <button id="follow-btn" data-user-id="{{ $user->id }}" class="rounded-xl border border-sky-400/20 glass-panel px-6 py-2 font-semibold transition-all hover:bg-white/10 {{ $isFollowing ? 'text-slate-300' : 'text-sky-300' }}">
+                        @if($isPendingFollower)
+                            Chờ chấp nhận
+                        @elseif($isFollowing)
+                            Bỏ theo dõi
+                        @else
+                            Theo dõi
+                        @endif
                     </button>
                     @else
                     <a href="{{ route('login') }}" class="inline-flex items-center rounded-xl border border-sky-400/20 glass-panel px-6 py-2 font-semibold text-sky-300 transition-all hover:bg-white/10">
@@ -114,36 +126,46 @@ $profileUrl = route('profile.public', ['username' => $user->ten_dang_nhap]);
     </div>
 
     <div class="mt-8 px-6">
-        <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
+        @if(!$isOwnProfile && $user->quyen_rieng_tu === 'rieng_tu' && !$isAcceptedFollower)
+            {{-- Private Profile View: Hide everything else, show beautiful full-width lock panel --}}
+            <div class="glass-panel flex flex-col items-center justify-center rounded-3xl p-16 text-center min-h-[380px] border border-white/5 shadow-xl bg-slate-900/40 backdrop-blur-md">
+                <div class="mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-slate-800/40 text-sky-400 border border-sky-400/20 shadow-lg shadow-sky-400/5">
+                    <span class="material-symbols-outlined text-5xl" style="font-variation-settings: 'FILL' 1;">lock</span>
+                </div>
+                <h3 class="text-2xl font-black text-on-surface tracking-wide">Đây là tài khoản riêng tư</h3>
+                <p class="mt-3 text-slate-400 max-w-md mx-auto text-sm leading-relaxed">Chỉ những người theo dõi được chấp nhận mới có thể xem ảnh, bài viết và thông tin chi tiết của người dùng này.</p>
+            </div>
+        @else
+            <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
             <div class="space-y-6 md:col-span-1">
                 <div class="glass-panel space-y-4 rounded-2xl p-5">
                     <h3 class="text-lg font-bold text-sky-300">Giới thiệu</h3>
                     <div class="space-y-3">
-                        @if(!empty($user->noi_o) && ($isOwnProfile || $user->quyen_rieng_tu !== 'rieng_tu'))
-                        <div class="flex items-center gap-3 text-slate-300">
-                            <span class="material-symbols-outlined text-sky-400/70" data-icon="location_on">location_on</span>
-                            <span class="text-sm">{{ $user->noi_o }}</span>
+                        @if(!empty($user->noi_o) && ($isOwnProfile || $user->quyen_rieng_tu !== 'rieng_tu' || $isAcceptedFollower))
+                        <div class="flex items-center gap-3 text-slate-300 min-w-0">
+                            <span class="material-symbols-outlined text-sky-400/70 shrink-0" data-icon="location_on">location_on</span>
+                            <span class="text-sm truncate" title="{{ $user->noi_o }}">{{ $user->noi_o }}</span>
                         </div>
                         @endif
                         
-                        @if(!empty($user->ngay_sinh) && ($isOwnProfile || $user->quyen_rieng_tu !== 'rieng_tu'))
-                        <div class="flex items-center gap-3 text-slate-300">
-                            <span class="material-symbols-outlined text-sky-400/70" data-icon="cake">cake</span>
-                            <span class="text-sm">{{ \Illuminate\Support\Carbon::parse($user->ngay_sinh)->format('d/m/Y') }}</span>
+                        @if(!empty($user->ngay_sinh) && ($isOwnProfile || $user->quyen_rieng_tu !== 'rieng_tu' || $isAcceptedFollower))
+                        <div class="flex items-center gap-3 text-slate-300 min-w-0">
+                            <span class="material-symbols-outlined text-sky-400/70 shrink-0" data-icon="cake">cake</span>
+                            <span class="text-sm truncate" title="{{ \Illuminate\Support\Carbon::parse($user->ngay_sinh)->format('d/m/Y') }}">{{ \Illuminate\Support\Carbon::parse($user->ngay_sinh)->format('d/m/Y') }}</span>
                         </div>
                         @endif
 
-                        @if(!empty($user->so_dien_thoai) && ($isOwnProfile || $user->quyen_rieng_tu !== 'rieng_tu'))
-                        <div class="flex items-center gap-3 text-slate-300">
-                            <span class="material-symbols-outlined text-sky-400/70" data-icon="call">call</span>
-                            <span class="text-sm">{{ $user->so_dien_thoai }}</span>
+                        @if(!empty($user->so_dien_thoai) && ($isOwnProfile || $user->quyen_rieng_tu !== 'rieng_tu' || $isAcceptedFollower))
+                        <div class="flex items-center gap-3 text-slate-300 min-w-0">
+                            <span class="material-symbols-outlined text-sky-400/70 shrink-0" data-icon="call">call</span>
+                            <span class="text-sm truncate" title="{{ $user->so_dien_thoai }}">{{ $user->so_dien_thoai }}</span>
                         </div>
                         @endif
 
-                        @if(!empty($user->email) && ($isOwnProfile || $user->quyen_rieng_tu !== 'rieng_tu'))
-                        <div class="flex items-center gap-3 text-slate-300">
-                            <span class="material-symbols-outlined text-sky-400/70" data-icon="mail">mail</span>
-                            <span class="text-sm">{{ $user->email }}</span>
+                        @if(!empty($user->email) && ($isOwnProfile || $user->quyen_rieng_tu !== 'rieng_tu' || $isAcceptedFollower))
+                        <div class="flex items-center gap-3 text-slate-300 min-w-0">
+                            <span class="material-symbols-outlined text-sky-400/70 shrink-0" data-icon="mail">mail</span>
+                            <span class="text-sm truncate" title="{{ $user->email }}">{{ $user->email }}</span>
                         </div>
                         @endif
                     </div>
@@ -184,16 +206,7 @@ $profileUrl = route('profile.public', ['username' => $user->ten_dang_nhap]);
             </div>
 
             <div class="space-y-6 md:col-span-2">
-                @if(!$isOwnProfile && $user->quyen_rieng_tu === 'rieng_tu')
-                    <div class="glass-panel flex flex-col items-center justify-center rounded-3xl p-12 text-center h-full min-h-[300px]">
-                        <div class="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-slate-800/50 text-slate-500 border border-slate-700/50">
-                            <span class="material-symbols-outlined text-4xl" data-icon="lock">lock</span>
-                        </div>
-                        <h3 class="text-xl font-bold text-on-surface">Đây là tài khoản riêng tư</h3>
-                        <p class="mt-2 text-slate-400">Chỉ những người được cấp quyền mới có thể xem nội dung của người dùng này.</p>
-                    </div>
-                @else
-                    {{-- Tab Bài đăng --}}
+                {{-- Tab Bài đăng --}}
                     <div id="tab-content-bai-dang" class="tab-content space-y-6">
                         @include('components.stories-bar', ['stories' => $stories ?? collect()])
 
@@ -276,9 +289,9 @@ $profileUrl = route('profile.public', ['username' => $user->ten_dang_nhap]);
                             <p class="text-slate-400 text-lg font-medium">Chức năng xem bài viết đã thích đang được phát triển.</p>
                         </div>
                     </div>
-                @endif
             </div>
         </div>
+        @endif
     </div>
 </div>
 
@@ -341,7 +354,18 @@ $profileUrl = route('profile.public', ['username' => $user->ten_dang_nhap]);
 
                     if (response.ok) {
                         const data = await response.json();
-                        this.innerText = data.is_following ? 'Bỏ theo dõi' : 'Theo dõi';
+                        if (data.is_following) {
+                            if (data.status === 'cho_chap_nhan') {
+                                this.innerText = 'Chờ chấp nhận';
+                                this.className = "rounded-xl border border-sky-400/20 glass-panel px-6 py-2 font-semibold transition-all hover:bg-white/10 text-slate-300";
+                            } else {
+                                this.innerText = 'Bỏ theo dõi';
+                                this.className = "rounded-xl border border-sky-400/20 glass-panel px-6 py-2 font-semibold transition-all hover:bg-white/10 text-slate-300";
+                            }
+                        } else {
+                            this.innerText = 'Theo dõi';
+                            this.className = "rounded-xl border border-sky-400/20 glass-panel px-6 py-2 font-semibold transition-all hover:bg-white/10 text-sky-300";
+                        }
                         followersCount.innerText = new Intl.NumberFormat().format(data.followers_count);
                     }
                 } catch (error) {

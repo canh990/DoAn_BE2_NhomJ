@@ -43,14 +43,27 @@
                                 </div>
                             </a>
                             
-                            @if(auth()->check() && auth()->id() !== $connection->id)
-                                @php
-                                    $isFollowingConnection = auth()->user()->following()->where('nguoi_duoc_theo_doi_id', $connection->id)->exists();
-                                @endphp
-                                <button class="follow-btn rounded-xl border border-sky-400/20 px-4 py-1.5 text-sm font-semibold transition-all hover:bg-white/10 {{ $isFollowingConnection ? 'text-slate-300' : 'text-sky-300' }}" 
-                                        data-user-id="{{ $connection->id }}">
-                                    {{ $isFollowingConnection ? 'Bỏ theo dõi' : 'Theo dõi' }}
-                                </button>
+                            @if(auth()->check())
+                                @if(auth()->id() === $user->id && $type === 'followers' && isset($connection->pivot) && $connection->pivot->trang_thai === 'cho_chap_nhan')
+                                    <div class="flex items-center gap-2" id="action-container-{{ $connection->id }}">
+                                        <button onclick="approveFollower({{ $connection->id }}, this)" class="px-3.5 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-xl shadow-lg shadow-emerald-500/20 transition-all hover:scale-[1.03] active:scale-95 flex items-center gap-1">
+                                            <span class="material-symbols-outlined text-[14px]">done</span>
+                                            Chấp nhận
+                                        </button>
+                                        <button onclick="declineFollower({{ $connection->id }}, this)" class="px-3.5 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-xs font-bold rounded-xl border border-rose-500/20 transition-all hover:scale-[1.03] active:scale-95 flex items-center gap-1">
+                                            <span class="material-symbols-outlined text-[14px]">close</span>
+                                            Từ chối
+                                        </button>
+                                    </div>
+                                @elseif(auth()->id() !== $connection->id)
+                                    @php
+                                        $isFollowingConnection = auth()->user()->following()->where('nguoi_duoc_theo_doi_id', $connection->id)->exists();
+                                    @endphp
+                                    <button class="follow-btn rounded-xl border border-sky-400/20 px-4 py-1.5 text-sm font-semibold transition-all hover:bg-white/10 {{ $isFollowingConnection ? 'text-slate-300' : 'text-sky-300' }}" 
+                                            data-user-id="{{ $connection->id }}">
+                                        {{ $isFollowingConnection ? 'Bỏ theo dõi' : 'Theo dõi' }}
+                                    </button>
+                                @endif
                             @endif
                         </div>
                     @endforeach
@@ -72,6 +85,60 @@
 </div>
 
 <script>
+    async function approveFollower(followerId, btn) {
+        try {
+            const response = await fetch(`/user/${followerId}/accept-follow`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                if (window.showToast) window.showToast(data.message, 'success');
+                
+                // Thay thế nút bằng badge Đã chấp nhận
+                const container = document.getElementById(`action-container-${followerId}`);
+                if (container) {
+                    container.innerHTML = `<span class="px-3 py-1 bg-emerald-500/10 text-emerald-400 text-xs font-bold rounded-lg border border-emerald-500/20">Người theo dõi</span>`;
+                }
+            }
+        } catch (error) {
+            console.error('Lỗi:', error);
+        }
+    }
+
+    async function declineFollower(followerId, btn) {
+        try {
+            const response = await fetch(`/user/${followerId}/decline-follow`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                if (window.showToast) window.showToast(data.message, 'success');
+                
+                // Ẩn/xóa card của follower này
+                const card = btn.closest('.flex.items-center.justify-between');
+                if (card) {
+                    card.style.opacity = '0.5';
+                    card.style.pointerEvents = 'none';
+                    setTimeout(() => card.remove(), 500);
+                }
+            }
+        } catch (error) {
+            console.error('Lỗi:', error);
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         const followBtns = document.querySelectorAll('.follow-btn');
         
