@@ -12,7 +12,7 @@
             <div class="relative w-16 h-24 rounded-2xl overflow-hidden bg-slate-800 border-2 border-sky-400/30 group-hover:border-sky-400 transition-colors shadow-lg">
                 {{-- Ảnh nền là avatar --}}
                 <img class="w-full h-full object-cover opacity-60"
-                     src="{{ Auth::user()->anh_dai_dien ? asset('storage/' . Auth::user()->anh_dai_dien) : asset('storage/avatars/avtmacdinh.png') }}"
+                     src="{{ Auth::user()->anh_dai_dien ? asset('storage/' . Auth::user()->anh_dai_dien) : 'https://ui-avatars.com/api/?name=' . urlencode(Auth::user()->name) . '&background=random' }}"
                      alt="Thêm tin">
                 {{-- Nút + --}}
                 <div class="absolute bottom-2 left-1/2 -translate-x-1/2 w-7 h-7 rounded-full bg-sky-400 flex items-center justify-center border-2 border-[#0f1524] shadow">
@@ -30,7 +30,7 @@
                 $isOwn = $story->nguoi_dung_id === auth()->id();
                 $avatarSrc = $story->user?->anh_dai_dien
                     ? asset('storage/' . $story->user->anh_dai_dien)
-                    : asset('storage/avatars/avtmacdinh.png');
+                    : 'https://ui-avatars.com/api/?name=' . urlencode($story->user?->name ?? 'Người dùng') . '&background=random';
             @endphp
 
             <div class="shrink-0 flex flex-col items-center gap-1.5 group relative" data-story-id="{{ $story->id }}">

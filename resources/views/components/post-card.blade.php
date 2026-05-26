@@ -33,7 +33,7 @@
         ? (\Illuminate\Support\Str::startsWith($avatarPath, ['http://', 'https://'])
             ? $avatarPath
             : asset('storage/' . ltrim($avatarPath, '/')))
-        : asset('storage/avatars/avtmacdinh.png');
+        : 'https://ui-avatars.com/api/?name=' . urlencode($authorName) . '&background=random';
 
     $body = $content
         ?? data_get($post, 'noi_dung')

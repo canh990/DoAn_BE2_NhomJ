@@ -3,6 +3,10 @@
 @section('title', 'Chỉnh sửa hồ sơ - ' . ($user->name ?? 'Người dùng'))
 
 @section('content')
+<!-- Cropper.js for premium profile cropping -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" crossorigin="anonymous" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js" crossorigin="anonymous"></script>
+
 <div class="max-w-4xl mx-auto p-4 md:p-8 pb-24">
     <div class="flex items-center gap-4 mb-8">
         <a href="{{ route('profile') }}" class="p-2 glass-panel rounded-full text-slate-400 hover:text-primary transition-colors">
@@ -29,7 +33,7 @@
         <input type="hidden" name="remove_cover" id="remove_cover" value="0">
 
         <section class="relative mb-24">
-            <div class="h-48 md:h-64 rounded-3xl overflow-hidden relative group bg-slate-800">
+            <div class="h-48 md:h-64 rounded-3xl overflow-hidden relative group bg-slate-800 {{ $errors->has('anh_bia') ? 'border-2 border-red-500' : '' }}">
                 <img
                     id="cover-preview"
                     alt="Ảnh bìa"
@@ -49,11 +53,18 @@
                     <span class="material-symbols-outlined text-sm font-bold">close</span>
                 </button>
                 @endif
+
+                @error('anh_bia')
+                <div class="absolute top-4 left-4 flex items-center gap-1.5 rounded-xl bg-red-500/90 backdrop-blur-md px-3 py-1.5 text-white border border-red-500/20 text-xs font-bold z-10 animate-fade-in">
+                    <span class="material-symbols-outlined text-sm">error</span>
+                    <span>{{ $message }}</span>
+                </div>
+                @enderror
             </div>
 
             <div class="absolute -bottom-16 left-8 group">
                 <div class="relative">
-                    <div class="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-background overflow-hidden glass-panel-elevated shadow-2xl">
+                    <div class="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 {{ $errors->has('anh_dai_dien') ? 'border-red-500' : 'border-background' }} overflow-hidden glass-panel-elevated shadow-2xl">
                         <img
                             id="avatar-preview"
                             class="w-full h-full object-cover"
@@ -70,6 +81,13 @@
                     <span class="material-symbols-outlined text-sm font-bold">close</span>
                 </button>
                 @endif
+
+                @error('anh_dai_dien')
+                <div class="absolute -bottom-10 left-1/2 -translate-x-1/2 whitespace-nowrap flex items-center gap-1 text-red-400 text-xs font-bold animate-fade-in bg-slate-950/90 px-3 py-1.5 rounded-xl border border-red-500/20 shadow-lg">
+                    <span class="material-symbols-outlined text-[14px]">error</span>
+                    <span>{{ $message }}</span>
+                </div>
+                @enderror
             </div>
         </section>
 
@@ -89,18 +107,6 @@
                 </div>
 
                 <div class="space-y-2">
-                    <label class="text-xs font-bold uppercase tracking-wider text-slate-500 ml-1">Địa chỉ Email</label>
-                    <div class="relative opacity-60">
-                        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">mail</span>
-                        <input
-                            type="email"
-                            value="{{ $user->email }}"
-                            disabled
-                            class="w-full bg-slate-900/50 border border-white/5 rounded-2xl py-3.5 pl-12 pr-4 text-slate-400 cursor-not-allowed">
-                    </div>
-                </div>
-
-                <div class="space-y-2 md:col-span-2">
                     <label class="text-xs font-bold uppercase tracking-wider text-slate-500 ml-1">Số điện thoại</label>
                     <div class="relative group">
                         <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-primary transition-colors">call</span>
@@ -112,6 +118,18 @@
                             class="w-full bg-slate-900/50 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-on-surface focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all outline-none">
                     </div>
                     @error('so_dien_thoai') <p class="text-xs text-red-400 mt-1">{{ $message }}</p> @enderror
+                </div>
+
+                <div class="space-y-2 md:col-span-2">
+                    <label class="text-xs font-bold uppercase tracking-wider text-slate-500 ml-1">Địa chỉ Email</label>
+                    <div class="relative opacity-60">
+                        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">mail</span>
+                        <input
+                            type="email"
+                            value="{{ $user->email }}"
+                            disabled
+                            class="w-full bg-slate-900/50 border border-white/5 rounded-2xl py-3.5 pl-12 pr-4 text-slate-400 cursor-not-allowed">
+                    </div>
                 </div>
             </div>
 
@@ -149,12 +167,15 @@
                     <label class="text-xs font-bold uppercase tracking-wider text-slate-500 ml-1">Nơi ở</label>
                     <div class="relative">
                         <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">location_on</span>
-                        <input
+                        <select
+                            id="select-noi-o"
                             name="noi_o"
-                            type="text"
-                            value="{{ old('noi_o', $user->noi_o) }}"
-                            placeholder="Ví dụ: Hà Nội, Việt Nam"
-                            class="w-full bg-slate-900/50 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-on-surface focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all outline-none">
+                            class="w-full bg-slate-900/50 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-on-surface focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all outline-none appearance-none">
+                            <option value="">Chọn tỉnh / thành phố</option>
+                            @if(!empty($user->noi_o))
+                                <option value="{{ $user->noi_o }}" selected>{{ $user->noi_o }}</option>
+                            @endif
+                        </select>
                     </div>
                 </div>
             </div>
@@ -315,6 +336,60 @@
             </form>
         </div>
     </div>
+
+    <!-- Crop Image Modal -->
+    <div id="crop-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+        <div class="glass-panel rounded-3xl w-full max-w-2xl animate-fade-in relative bg-slate-900/95 border border-white/10 overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+            <!-- Header -->
+            <div class="flex items-center justify-between px-6 py-4 border-b border-white/5">
+                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">crop_free</span>
+                    Chỉnh sửa hình ảnh
+                </h3>
+                <button type="button" onclick="closeCropModal()" class="text-slate-400 hover:text-white transition-colors">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+
+            <!-- Content Area -->
+            <div class="p-6 flex-1 overflow-y-auto flex flex-col items-center justify-center min-h-[300px] max-h-[50vh] bg-slate-950/30">
+                <div class="w-full h-full flex items-center justify-center overflow-hidden rounded-2xl border border-white/5 relative bg-black/20">
+                    <img id="crop-image" class="max-w-full max-h-full block" src="" alt="Source image">
+                </div>
+            </div>
+
+            <!-- Controls (Zoom & Actions) -->
+            <div class="px-6 py-4 border-t border-white/5 space-y-4 bg-slate-900/60">
+                <!-- Zoom Slider -->
+                <div class="flex items-center gap-4">
+                    <span class="material-symbols-outlined text-slate-400 text-sm">zoom_out</span>
+                    <input type="range" id="crop-zoom" min="0" max="100" value="0" class="flex-1 accent-primary h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer">
+                    <span class="material-symbols-outlined text-slate-400 text-sm">zoom_in</span>
+                </div>
+
+                <!-- Footer Buttons -->
+                <div class="flex items-center justify-between pt-2">
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="rotateImage(-90)" class="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition-all" title="Xoay trái">
+                            <span class="material-symbols-outlined">rotate_left</span>
+                        </button>
+                        <button type="button" onclick="rotateImage(90)" class="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition-all" title="Xoay phải">
+                            <span class="material-symbols-outlined">rotate_right</span>
+                        </button>
+                    </div>
+                    <div class="flex gap-3">
+                        <button type="button" onclick="closeCropModal()" class="px-5 py-2.5 rounded-xl font-medium text-slate-400 hover:bg-white/5 transition-colors">
+                            Hủy
+                        </button>
+                        <button type="button" onclick="saveCroppedImage()" class="px-6 py-2.5 bg-primary text-white font-bold rounded-xl hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-primary/20 flex items-center gap-2">
+                            <span class="material-symbols-outlined text-sm">check</span>
+                            Cắt & Lưu
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 @if($errors->has('password_deactivate') || $errors->has('otp_deactivate'))
@@ -333,6 +408,48 @@
 @endif
 
 <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const selectNoiO = document.getElementById('select-noi-o');
+        if (selectNoiO) {
+            const currentValue = "{{ old('noi_o', $user->noi_o) }}";
+            
+            fetch('https://provinces.open-api.vn/api/v2/p/')
+                .then(response => response.json())
+                .then(data => {
+                    // Clear existing options except placeholder
+                    selectNoiO.innerHTML = '<option value="">Chọn tỉnh / thành phố</option>';
+                    
+                    data.forEach(province => {
+                        const option = document.createElement('option');
+                        option.value = province.name;
+                        option.textContent = province.name;
+                        
+                        // Check if it matches the current value
+                        if (currentValue && (
+                            province.name.toLowerCase() === currentValue.toLowerCase() ||
+                            province.name.replace(/^(Thành phố|Tỉnh)\s+/i, '').toLowerCase() === currentValue.toLowerCase()
+                        )) {
+                            option.selected = true;
+                        }
+                        
+                        selectNoiO.appendChild(option);
+                    });
+                    
+                    // If current value doesn't match any standard province name, keep it as custom option at top
+                    if (currentValue && !Array.from(selectNoiO.options).some(opt => opt.value === currentValue)) {
+                        const customOption = document.createElement('option');
+                        customOption.value = currentValue;
+                        customOption.textContent = currentValue;
+                        customOption.selected = true;
+                        selectNoiO.insertBefore(customOption, selectNoiO.options[1]);
+                    }
+                })
+                .catch(error => {
+                    console.error('Lỗi khi tải danh sách tỉnh/thành phố:', error);
+                });
+        }
+    });
+
     function removeAvatarAction() {
         window.openConfirmModal('Xóa ảnh đại diện?', 'Bạn có chắc chắn muốn xóa ảnh đại diện hiện tại không?', () => {
             const preview = document.getElementById('avatar-preview');
@@ -425,67 +542,192 @@
     }
 </script>
 <script>
+    let cropperInstance = null;
+    let activeInputId = null;
+
     /**
      * Hàm hiển thị ảnh xem trước ngay lập tức
      */
     function previewImage(input, previewId) {
-        const preview = document.getElementById(previewId);
         const file = input.files[0];
 
         if (file) {
-            // Kiểm tra xem file có phải là ảnh không
-            if (!file.type.startsWith('image/')) {
-                alert('Vui lòng chọn tệp hình ảnh!');
+            // 1. Kiểm tra loại tệp
+            const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+            if (!validTypes.includes(file.type)) {
+                const errMsg = 'Định dạng ảnh không hợp lệ! Vui lòng chọn ảnh jpg, jpeg, png hoặc webp.';
+                if (window.showToast) window.showToast(errMsg, 'error');
+                else alert(errMsg);
+                input.value = '';
+                return;
+            }
+
+            // 2. Kiểm tra kích thước tệp
+            const maxSize = previewId === 'avatar-preview' ? 2 * 1024 * 1024 : 4 * 1024 * 1024;
+            const limitText = previewId === 'avatar-preview' ? '2MB' : '4MB';
+            if (file.size > maxSize) {
+                const errMsg = `Kích thước ảnh vượt quá giới hạn cho phép (${limitText})!`;
+                if (window.showToast) window.showToast(errMsg, 'error');
+                else alert(errMsg);
+                input.value = '';
                 return;
             }
 
             const reader = new FileReader();
-
-            // Hiệu ứng bắt đầu load (làm mờ nhẹ ảnh cũ)
-            preview.style.opacity = '0.5';
-
             reader.onload = function(e) {
-                preview.src = e.target.result;
-
-                // Reset flag xóa và hiện nút xóa nếu có ảnh mới
-                if (previewId === 'avatar-preview') {
-                    const removeAvatarInput = document.getElementById('remove_avatar');
-                    if (removeAvatarInput) removeAvatarInput.value = '0';
-                    const btn = document.getElementById('btn-remove-avatar');
-                    if (btn) btn.classList.remove('hidden');
-                } else if (previewId === 'cover-preview') {
-                    const removeCoverInput = document.getElementById('remove_cover');
-                    if (removeCoverInput) removeCoverInput.value = '0';
-                    const btn = document.getElementById('btn-remove-cover');
-                    if (btn) btn.classList.remove('hidden');
-                }
-
-                // Khi ảnh mới đã load xong
-                preview.onload = function() {
-                    preview.style.opacity = '1';
-                    // Thêm hiệu ứng xuất hiện mượt mà
-                    preview.animate([{
-                            opacity: 0,
-                            transform: 'scale(0.95)'
-                        },
-                        {
-                            opacity: 1,
-                            transform: 'scale(1)'
-                        }
-                    ], {
-                        duration: 300,
-                        easing: 'ease-out'
-                    });
-                };
+                openCropModal(e.target.result, input.id);
             };
-
             reader.readAsDataURL(file);
         }
     }
+
+    function openCropModal(imgSrc, inputId) {
+        activeInputId = inputId;
+        const cropModal = document.getElementById('crop-modal');
+        const cropImage = document.getElementById('crop-image');
+        
+        cropImage.src = imgSrc;
+        
+        // Hiện Modal
+        cropModal.classList.remove('hidden');
+        
+        const isAvatar = inputId === 'anh_dai_dien';
+        
+        if (isAvatar) {
+            cropModal.classList.add('circle-crop');
+        } else {
+            cropModal.classList.remove('circle-crop');
+        }
+        
+        if (cropperInstance) {
+            cropperInstance.destroy();
+        }
+        
+        // Khởi tạo Cropper
+        cropperInstance = new Cropper(cropImage, {
+            aspectRatio: isAvatar ? 1 : (896 / 256), // Ratio 1:1 cho avatar, cover tỷ lệ khung hiển thị
+            viewMode: 1, 
+            dragMode: 'move', 
+            autoCropArea: 0.9,
+            restore: false,
+            guides: false,
+            center: true,
+            highlight: false,
+            cropBoxMovable: true,
+            cropBoxResizable: !isAvatar,
+            toggleDragModeOnDblclick: false,
+            ready: function() {
+                const zoomSlider = document.getElementById('crop-zoom');
+                zoomSlider.value = 0;
+            }
+        });
+
+        // Thiết lập sự kiện thanh trượt Zoom
+        const zoomSlider = document.getElementById('crop-zoom');
+        zoomSlider.oninput = function() {
+            const zoomValue = 1 + (parseFloat(this.value) / 50);
+            cropperInstance.zoomTo(zoomValue);
+        };
+    }
+
+    function rotateImage(deg) {
+        if (cropperInstance) {
+            cropperInstance.rotate(deg);
+        }
+    }
+
+    function closeCropModal() {
+        const cropModal = document.getElementById('crop-modal');
+        cropModal.classList.add('hidden');
+        
+        if (activeInputId && !document.getElementById(activeInputId).getAttribute('data-saved')) {
+            document.getElementById(activeInputId).value = '';
+        }
+        
+        if (cropperInstance) {
+            cropperInstance.destroy();
+            cropperInstance = null;
+        }
+    }
+
+    function saveCroppedImage() {
+        if (!cropperInstance) return;
+        
+        const isAvatar = activeInputId === 'anh_dai_dien';
+        const options = isAvatar 
+            ? { width: 500, height: 500, imageSmoothingEnabled: true, imageSmoothingQuality: 'high' }
+            : { width: 1200, height: 342, imageSmoothingEnabled: true, imageSmoothingQuality: 'high' };
+            
+        const canvas = cropperInstance.getCroppedCanvas(options);
+        
+        canvas.toBlob(function(blob) {
+            const fileInput = document.getElementById(activeInputId);
+            fileInput.setAttribute('data-saved', 'true');
+            
+            // Gán file đã cắt trực tiếp vào Input file bằng DataTransfer API
+            const file = new File([blob], isAvatar ? "cropped_avatar.png" : "cropped_cover.png", { type: "image/png" });
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            fileInput.files = dataTransfer.files;
+            
+            // Cập nhật ảnh Preview lên giao diện
+            const previewId = isAvatar ? 'avatar-preview' : 'cover-preview';
+            const preview = document.getElementById(previewId);
+            preview.src = canvas.toDataURL('image/png');
+            
+            preview.style.opacity = '1';
+            preview.animate([
+                { opacity: 0, transform: 'scale(0.95)' },
+                { opacity: 1, transform: 'scale(1)' }
+            ], { duration: 300, easing: 'ease-out' });
+            
+            if (isAvatar) {
+                const removeAvatarInput = document.getElementById('remove_avatar');
+                if (removeAvatarInput) removeAvatarInput.value = '0';
+                const btn = document.getElementById('btn-remove-avatar');
+                if (btn) btn.classList.remove('hidden');
+            } else {
+                const removeCoverInput = document.getElementById('remove_cover');
+                if (removeCoverInput) removeCoverInput.value = '0';
+                const btn = document.getElementById('btn-remove-cover');
+                if (btn) btn.classList.remove('hidden');
+            }
+            
+            // Đóng Modal
+            const cropModal = document.getElementById('crop-modal');
+            cropModal.classList.add('hidden');
+            
+            if (window.showToast) {
+                window.showToast('Cắt và căn chỉnh ảnh thành công!', 'success');
+            }
+            
+            fileInput.removeAttribute('data-saved');
+        }, 'image/png');
+    }
 </script>
 
-
 <style>
+    /* Styling cho khung cắt hình tròn (Avatar) */
+    .circle-crop .cropper-view-box,
+    .circle-crop .cropper-face {
+        border-radius: 50%;
+    }
+
+    /* Tối ưu hóa giao diện Cropper theo phong cách Dark Mode */
+    .cropper-bg {
+        background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.02) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.02) 75%, rgba(255,255,255,0.02)) !important;
+        background-color: #020617 !important;
+    }
+    
+    .cropper-line, .cropper-point {
+        background-color: #38bdf8 !important;
+    }
+    
+    .cropper-view-box {
+        outline: 2px solid #38bdf8 !important;
+        outline-color: #38bdf8 !important;
+    }
+
     @keyframes fade-in {
         from {
             opacity: 0;
