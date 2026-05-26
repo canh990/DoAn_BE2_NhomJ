@@ -108,4 +108,36 @@ class User extends Authenticatable
         return $this->belongsToMany(BaiViet::class, 'bai_viet_da_luu', 'nguoi_dung_id', 'bai_viet_id')
                     ->withPivot('ngay_tao');
     }
+
+    // Danh sách những người tôi đã chặn
+    public function blockedUsers()
+    {
+        return $this->belongsToMany(User::class, 'chan', 'nguoi_chan_id', 'nguoi_bi_chan_id')
+                    ->withPivot('ngay_tao');
+    }
+
+    // Danh sách những người đã chặn tôi
+    public function blockedByUsers()
+    {
+        return $this->belongsToMany(User::class, 'chan', 'nguoi_bi_chan_id', 'nguoi_chan_id')
+                    ->withPivot('ngay_tao');
+    }
+
+    // Kiểm tra tôi có chặn ai đó không
+    public function hasBlocked($userId)
+    {
+        return $this->blockedUsers()->where('nguoi_bi_chan_id', $userId)->exists();
+    }
+
+    // Kiểm tra ai đó có chặn tôi không
+    public function isBlockedBy($userId)
+    {
+        return $this->blockedByUsers()->where('nguoi_chan_id', $userId)->exists();
+    }
+
+    // Kiểm tra giữa 2 người có bất kỳ mối quan hệ chặn nào không
+    public function hasAnyBlockRelationship($userId)
+    {
+        return $this->hasBlocked($userId) || $this->isBlockedBy($userId);
+    }
 }

@@ -24,6 +24,10 @@ class ReactionController extends Controller
         ]);
 
         $user = $request->user();
+        if ($user->hasAnyBlockRelationship($post->nguoi_dung_id)) {
+            abort(403, 'Bạn không thể tương tác với bài viết này.');
+        }
+
         $currentReaction = CamXuc::where('nguoi_dung_id', $user->id)
             ->where('bai_viet_id', $post->id)
             ->first();

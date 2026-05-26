@@ -90,7 +90,8 @@
             const response = await fetch(`/user/${followerId}/accept-follow`, {
                 method: 'POST',
                 headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'X-Requested-With': 'XMLHttpRequest',
                     'Content-Type': 'application/json',
                     'Accept': 'application/json'
                 }
@@ -116,7 +117,8 @@
             const response = await fetch(`/user/${followerId}/decline-follow`, {
                 method: 'POST',
                 headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'X-Requested-With': 'XMLHttpRequest',
                     'Content-Type': 'application/json',
                     'Accept': 'application/json'
                 }
