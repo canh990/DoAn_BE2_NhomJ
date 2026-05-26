@@ -130,9 +130,10 @@ $profileUrl = route('profile.public', ['username' => $user->ten_dang_nhap]);
     <div class="sticky top-16 z-30 mt-8 border-b border-sky-400/10 bg-[#0a0e1a]/80 backdrop-blur-md">
         <div class="no-scrollbar flex overflow-x-auto px-2">
             <button id="btn-tab-bai-dang" data-tab="bai-dang" class="tab-btn whitespace-nowrap border-b-2 border-sky-400 px-6 py-4 font-bold text-sky-300 transition-all">Bài đăng</button>
-            <button id="btn-tab-phan-hoi" data-tab="phan-hoi" class="tab-btn whitespace-nowrap px-6 py-4 font-medium text-slate-400 transition-all hover:bg-white/5 hover:text-sky-200">Phản hồi</button>
+            @if($isOwnProfile)
+            <button id="btn-tab-nhat-ky" data-tab="nhat-ky" class="tab-btn whitespace-nowrap px-6 py-4 font-medium text-slate-400 transition-all hover:bg-white/5 hover:text-sky-200">Nhật ký hoạt động</button>
+            @endif
             <button id="btn-tab-phuong-tien" data-tab="phuong-tien" class="tab-btn whitespace-nowrap px-6 py-4 font-medium text-slate-400 transition-all hover:bg-white/5 hover:text-sky-200">Phương tiện</button>
-            <button id="btn-tab-thich" data-tab="thich" class="tab-btn whitespace-nowrap px-6 py-4 font-medium text-slate-400 transition-all hover:bg-white/5 hover:text-sky-200">Thích</button>
         </div>
     </div>
 
@@ -148,7 +149,7 @@ $profileUrl = route('profile.public', ['username' => $user->ten_dang_nhap]);
             </div>
         @else
             <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
-            <div class="space-y-6 md:col-span-1">
+            <div id="profile-sidebar" class="space-y-6 md:col-span-1 transition-all duration-300">
                 <div class="glass-panel space-y-4 rounded-2xl p-5">
                     <h3 class="text-lg font-bold text-sky-300">Giới thiệu</h3>
                     <div class="space-y-3">
@@ -216,7 +217,7 @@ $profileUrl = route('profile.public', ['username' => $user->ten_dang_nhap]);
                 </div>
             </div>
 
-            <div class="space-y-6 md:col-span-2">
+            <div id="profile-main-content" class="space-y-6 md:col-span-2 transition-all duration-300">
                 {{-- Tab Bài đăng --}}
                     <div id="tab-content-bai-dang" class="tab-content space-y-6">
                         @include('components.stories-bar', ['stories' => $stories ?? collect()])
@@ -287,19 +288,130 @@ $profileUrl = route('profile.public', ['username' => $user->ten_dang_nhap]);
                         </div>
                     </div>
 
-                    {{-- Các tab khác (Placeholder) --}}
-                    <div id="tab-content-phan-hoi" class="tab-content hidden">
-                        <div class="glass-panel rounded-3xl p-12 text-center">
-                            <span class="material-symbols-outlined text-5xl text-slate-600 mb-4">forum</span>
-                            <p class="text-slate-400 text-lg font-medium">Chức năng xem phản hồi đang được phát triển.</p>
+                    @if($isOwnProfile)
+                    {{-- Tab Nhật ký hoạt động --}}
+                    <div id="tab-content-nhat-ky" class="tab-content hidden animate-fade-in">
+                        <div class="glass-panel rounded-3xl p-6 space-y-6">
+                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-white/5 pb-5">
+                                <div>
+                                    <h3 class="text-xl font-bold text-sky-300 flex items-center gap-2">
+                                        <span class="material-symbols-outlined">history</span>
+                                        Nhật ký hoạt động của bạn
+                                    </h3>
+                                    <p class="text-slate-400 text-xs mt-1">Lịch sử các hoạt động cá nhân được bảo mật hoàn toàn.</p>
+                                </div>
+                                {{-- Sub tabs switcher with premium design, overflow scrolling and flex --}}
+                                <div class="flex p-1.5 rounded-2xl bg-slate-900/50 border border-white/5 overflow-x-auto no-scrollbar w-full sm:w-auto">
+                                    <button type="button" onclick="switchActivitySubTab('liked')" id="btn-sub-liked" class="sub-tab-btn flex-1 sm:flex-none whitespace-nowrap px-5 py-2.5 rounded-xl text-sm font-bold transition-all text-sky-400 bg-sky-400/10 shadow-sm">
+                                        Đã thích ({{ $likedPosts->count() }})
+                                    </button>
+                                    <button type="button" onclick="switchActivitySubTab('commented')" id="btn-sub-commented" class="sub-tab-btn flex-1 sm:flex-none whitespace-nowrap px-5 py-2.5 rounded-xl text-sm font-bold transition-all text-slate-400 hover:text-slate-200 hover:bg-white/5 ml-1">
+                                        Bình luận ({{ $myComments->count() }})
+                                    </button>
+                                    <button type="button" onclick="switchActivitySubTab('saved')" id="btn-sub-saved" class="sub-tab-btn flex-1 sm:flex-none whitespace-nowrap px-5 py-2.5 rounded-xl text-sm font-bold transition-all text-slate-400 hover:text-slate-200 hover:bg-white/5 ml-1">
+                                        Đã lưu ({{ $savedPosts->count() }})
+                                    </button>
+                                </div>
+                            </div>
+
+                            {{-- Sub Tab: Liked Posts --}}
+                            <div id="sub-content-liked" class="sub-activity-content space-y-4">
+                                @forelse($likedPosts as $post)
+                                    @php
+                                        $firstMedia = $post->media->first();
+                                        $mediaUrl = $firstMedia ? (\Illuminate\Support\Str::startsWith($firstMedia->duong_dan, ['http://', 'https://']) ? $firstMedia->duong_dan : asset('storage/' . ltrim($firstMedia->duong_dan, '/'))) : null;
+                                        $isVideo = $firstMedia && ($firstMedia->loai === 'video' || \Illuminate\Support\Str::endsWith($firstMedia->duong_dan, ['.mp4', '.webm', '.mov']));
+                                    @endphp
+                                    <a href="{{ route('posts.show', $post->id) }}" class="flex items-center gap-4 p-4 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/5 transition-all group">
+                                        <div class="w-10 h-10 rounded-full bg-rose-500/10 text-rose-500 flex items-center justify-center shrink-0">
+                                            <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">favorite</span>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm font-semibold text-white truncate">Bạn đã thích bài viết của {{ $post->user->name }}</p>
+                                            <p class="text-xs text-slate-400 mt-1 line-clamp-1 italic">"{{ $post->noi_dung }}"</p>
+                                        </div>
+                                        @if($firstMedia)
+                                            <div class="w-12 h-12 rounded-xl overflow-hidden shrink-0 border border-white/10">
+                                                @if($isVideo)
+                                                    <video src="{{ $mediaUrl }}" class="w-full h-full object-cover" muted></video>
+                                                @else
+                                                    <img src="{{ $mediaUrl }}" class="w-full h-full object-cover">
+                                                @endif
+                                            </div>
+                                        @endif
+                                    </a>
+                                @empty
+                                    <div class="text-center py-12 text-slate-500">
+                                        <span class="material-symbols-outlined text-4xl mb-2">favorite</span>
+                                        <p class="text-sm">Bạn chưa thích bài viết nào.</p>
+                                    </div>
+                                @endforelse
+                            </div>
+
+                            {{-- Sub Tab: Comment History --}}
+                            <div id="sub-content-commented" class="sub-activity-content space-y-4 hidden">
+                                @forelse($myComments as $comment)
+                                    @if($comment->post)
+                                    <a href="{{ route('posts.show', $comment->bai_viet_id) }}#comment-{{ $comment->id }}" class="flex items-start gap-4 p-4 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/5 transition-all group">
+                                        <div class="w-10 h-10 rounded-full bg-sky-500/10 text-sky-400 flex items-center justify-center shrink-0">
+                                            <span class="material-symbols-outlined text-[20px]">chat_bubble</span>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm font-semibold text-white">Bạn đã bình luận trên bài viết của {{ $comment->post->user->name ?? 'Người dùng' }}</p>
+                                            <div class="mt-2 p-3 rounded-xl bg-slate-950/40 text-xs text-slate-300 border border-white/5 italic">
+                                                "{{ $comment->noi_dung }}"
+                                            </div>
+                                            <span class="text-[10px] text-slate-500 block mt-2">{{ $comment->ngay_tao ? \Carbon\Carbon::parse($comment->ngay_tao)->diffForHumans() : '' }}</span>
+                                        </div>
+                                    </a>
+                                    @endif
+                                @empty
+                                    <div class="text-center py-12 text-slate-500">
+                                        <span class="material-symbols-outlined text-4xl mb-2">chat_bubble</span>
+                                        <p class="text-sm">Bạn chưa có bình luận nào.</p>
+                                    </div>
+                                @endforelse
+                            </div>
+
+                            {{-- Sub Tab: Saved Posts --}}
+                            <div id="sub-content-saved" class="sub-activity-content space-y-4 hidden">
+                                @forelse($savedPosts as $saved)
+                                    @if($saved->post)
+                                    @php
+                                        $firstMedia = $saved->post->media->first();
+                                        $mediaUrl = $firstMedia ? (\Illuminate\Support\Str::startsWith($firstMedia->duong_dan, ['http://', 'https://']) ? $firstMedia->duong_dan : asset('storage/' . ltrim($firstMedia->duong_dan, '/'))) : null;
+                                        $isVideo = $firstMedia && ($firstMedia->loai === 'video' || \Illuminate\Support\Str::endsWith($firstMedia->duong_dan, ['.mp4', '.webm', '.mov']));
+                                    @endphp
+                                    <a href="{{ route('posts.show', $saved->bai_viet_id) }}" class="flex items-center gap-4 p-4 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/5 transition-all group">
+                                        <div class="w-10 h-10 rounded-full bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0">
+                                            <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">bookmark</span>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm font-semibold text-white truncate">Bài viết đã lưu của {{ $saved->post->user->name ?? 'Người dùng' }}</p>
+                                            <p class="text-xs text-slate-400 mt-1 line-clamp-1 italic">"{{ $saved->post->noi_dung }}"</p>
+                                        </div>
+                                        @if($firstMedia)
+                                            <div class="w-12 h-12 rounded-xl overflow-hidden shrink-0 border border-white/10">
+                                                @if($isVideo)
+                                                    <video src="{{ $mediaUrl }}" class="w-full h-full object-cover" muted></video>
+                                                @else
+                                                    <img src="{{ $mediaUrl }}" class="w-full h-full object-cover">
+                                                @endif
+                                            </div>
+                                        @endif
+                                    </a>
+                                    @endif
+                                @empty
+                                    <div class="text-center py-12 text-slate-500">
+                                        <span class="material-symbols-outlined text-4xl mb-2">bookmark</span>
+                                        <p class="text-sm">Bạn chưa lưu bài viết nào.</p>
+                                    </div>
+                                @endforelse
+                            </div>
                         </div>
                     </div>
-                    <div id="tab-content-thich" class="tab-content hidden">
-                        <div class="glass-panel rounded-3xl p-12 text-center">
-                            <span class="material-symbols-outlined text-5xl text-slate-600 mb-4">favorite</span>
-                            <p class="text-slate-400 text-lg font-medium">Chức năng xem bài viết đã thích đang được phát triển.</p>
-                        </div>
-                    </div>
+                    @endif
+
             </div>
         </div>
         @endif
@@ -424,9 +536,29 @@ $profileUrl = route('profile.public', ['username' => $user->ten_dang_nhap]);
                 tabContents.forEach(content => {
                     content.classList.add('hidden');
                 });
-        const targetContent = document.getElementById(`tab-content-${tabId}`);
+                const targetContent = document.getElementById(`tab-content-${tabId}`);
                 if (targetContent) {
                     targetContent.classList.remove('hidden');
+                }
+
+                // Dynamic layout adjustments to hide sidebar and expand main content when selecting "Nhật ký hoạt động" or "Phương tiện"
+                const sidebar = document.getElementById('profile-sidebar');
+                const mainContent = document.getElementById('profile-main-content');
+                if (sidebar && mainContent) {
+                    if (tabId === 'nhat-ky' || tabId === 'phuong-tien') {
+                        sidebar.classList.add('hidden');
+                        mainContent.classList.remove('md:col-span-2');
+                        mainContent.classList.add('md:col-span-3');
+                        
+                        // Tự động lướt mượt mà đến phần nội dung tương ứng
+                        setTimeout(() => {
+                            targetContent.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }, 100);
+                    } else {
+                        sidebar.classList.remove('hidden');
+                        mainContent.classList.remove('md:col-span-3');
+                        mainContent.classList.add('md:col-span-2');
+                    }
                 }
             });
         });
@@ -484,6 +616,28 @@ $profileUrl = route('profile.public', ['username' => $user->ten_dang_nhap]);
             });
         }
     });
+
+    window.switchActivitySubTab = function(subtab) {
+        // Toggle active states on buttons
+        document.querySelectorAll('.sub-tab-btn').forEach(btn => {
+            btn.classList.remove('text-sky-400', 'bg-sky-400/10', 'shadow-sm', 'bg-white/5');
+            btn.classList.add('text-slate-400');
+        });
+        const activeBtn = document.getElementById(`btn-sub-${subtab}`);
+        if (activeBtn) {
+            activeBtn.classList.remove('text-slate-400');
+            activeBtn.classList.add('text-sky-400', 'bg-sky-400/10', 'shadow-sm');
+        }
+
+        // Toggle active content divs
+        document.querySelectorAll('.sub-activity-content').forEach(div => {
+            div.classList.add('hidden');
+        });
+        const activeDiv = document.getElementById(`sub-content-${subtab}`);
+        if (activeDiv) {
+            activeDiv.classList.remove('hidden');
+        }
+    }
 </script>
 
 @endsection

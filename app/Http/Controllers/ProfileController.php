@@ -41,12 +41,46 @@ class ProfileController extends Controller
         $userMedia = \App\Models\MediaBaiViet::whereIn('bai_viet_id', $user->posts()->pluck('id'))
             ->latest('ngay_tao')
             ->get();
+
+        $likedPosts = auth()->check()
+            ? BaiViet::query()
+                ->whereHas('reactions', function ($query) {
+                    $query->where('nguoi_dung_id', auth()->id());
+                })
+                ->where('da_xoa', false)
+                ->with(['user', 'media'])
+                ->latest()
+                ->take(20)
+                ->get()
+            : collect();
+
+        $myComments = auth()->check()
+            ? \App\Models\BinhLuan::query()
+                ->where('nguoi_dung_id', auth()->id())
+                ->where('da_xoa', false)
+                ->with(['post.user'])
+                ->latest('ngay_tao')
+                ->take(20)
+                ->get()
+            : collect();
+
+        $savedPosts = auth()->check()
+            ? \App\Models\BaiVietDaLuu::query()
+                ->where('nguoi_dung_id', auth()->id())
+                ->with(['post.user', 'post.media'])
+                ->latest('ngay_tao')
+                ->take(20)
+                ->get()
+            : collect();
             
         return view('profile.profile', [
             'user' => $user,
             'posts' => $posts,
             'stories' => $stories,
             'userMedia' => $userMedia,
+            'likedPosts' => $likedPosts,
+            'myComments' => $myComments,
+            'savedPosts' => $savedPosts,
         ]);
     }
 
@@ -93,11 +127,47 @@ class ProfileController extends Controller
             ->latest('ngay_tao')
             ->get();
 
+        $isOwnProfile = auth()->check() && auth()->id() === $user->id;
+        
+        $likedPosts = $isOwnProfile
+            ? BaiViet::query()
+                ->whereHas('reactions', function ($query) {
+                    $query->where('nguoi_dung_id', auth()->id());
+                })
+                ->where('da_xoa', false)
+                ->with(['user', 'media'])
+                ->latest()
+                ->take(20)
+                ->get()
+            : collect();
+
+        $myComments = $isOwnProfile
+            ? \App\Models\BinhLuan::query()
+                ->where('nguoi_dung_id', auth()->id())
+                ->where('da_xoa', false)
+                ->with(['post.user'])
+                ->latest('ngay_tao')
+                ->take(20)
+                ->get()
+            : collect();
+
+        $savedPosts = $isOwnProfile
+            ? \App\Models\BaiVietDaLuu::query()
+                ->where('nguoi_dung_id', auth()->id())
+                ->with(['post.user', 'post.media'])
+                ->latest('ngay_tao')
+                ->take(20)
+                ->get()
+            : collect();
+
         return view('profile.profile', [
             'user' => $user,
             'posts' => $posts,
             'stories' => $stories,
             'userMedia' => $userMedia,
+            'likedPosts' => $likedPosts,
+            'myComments' => $myComments,
+            'savedPosts' => $savedPosts,
         ]);
     }
 
