@@ -10,7 +10,7 @@
         <section class="glass-panel rounded-2xl p-4 shadow-sm relative z-40">
             <div class="flex gap-4">
                 <a href="{{ route('profile') }}" class="shrink-0 hover:opacity-80 transition-opacity" title="Xem trang cá nhân">
-                    <img class="w-12 h-12 rounded-full border border-sky-400/20 object-cover" alt="Avatar" src="{{ Auth::user()->anh_dai_dien ? asset('storage/' . Auth::user()->anh_dai_dien) : 'https://ui-avatars.com/api/?name=' . urlencode(Auth::user()->name) . '&background=random' }}">
+                    <img class="w-12 h-12 rounded-full border border-sky-400/20 object-cover" alt="Avatar" src="{{ Auth::user()->avatar_url }}">
                 </a>
                 <div class="w-full">
                     <form action="{{ route('posts.store') }}" method="POST" enctype="multipart/form-data">

@@ -54,7 +54,7 @@ class BinhLuanSeeder extends Seeder
 
         // ── 1. Bình luận gốc (không có cha) ──────────────────────────────────
         $recordsGoc = [];
-        foreach (range(1, 30) as $i) {
+        foreach (range(1, 50) as $i) {
             $recordsGoc[] = [
                 'bai_viet_id'      => $baiVietIds[array_rand($baiVietIds)],
                 'nguoi_dung_id'    => $nguoiDungIds[array_rand($nguoiDungIds)],
@@ -76,7 +76,7 @@ class BinhLuanSeeder extends Seeder
         $binhLuanGocIds = DB::table('binh_luan')->pluck('id')->toArray();
         $replies        = [];
 
-        foreach (range(1, 40) as $i) {
+        foreach (range(1, 50) as $i) {
             $chaId = $binhLuanGocIds[array_rand($binhLuanGocIds)];
             $cha   = DB::table('binh_luan')->where('id', $chaId)->first();
 

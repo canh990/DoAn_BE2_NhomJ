@@ -25,15 +25,29 @@
         ?? data_get($post, 'user.ten_dang_nhap')
         ?? data_get($post, 'author.ten_dang_nhap');
 
-    $avatarPath = data_get($author, 'anh_dai_dien')
-        ?? data_get($author, 'avatar')
-        ?? data_get($author, 'avatar_url');
+    $avatar = 'https://ui-avatars.com/api/?name=' . urlencode($authorName) . '&background=random';
+    if ($author) {
+        if ($author instanceof \App\Models\User) {
+            $avatar = $author->avatar_url;
+        } else {
+            $avatarPath = data_get($author, 'anh_dai_dien')
+                ?? data_get($author, 'avatar')
+                ?? data_get($author, 'avatar_url');
+            $authorUsername = data_get($author, 'ten_dang_nhap')
+                ?? data_get($author, 'username')
+                ?? 'NguoiDung';
 
-    $avatar = $avatarPath
-        ? (\Illuminate\Support\Str::startsWith($avatarPath, ['http://', 'https://'])
-            ? $avatarPath
-            : asset('storage/' . ltrim($avatarPath, '/')))
-        : 'https://ui-avatars.com/api/?name=' . urlencode($authorName) . '&background=random';
+            if ($avatarPath) {
+                if (\Illuminate\Support\Str::startsWith($avatarPath, ['http://', 'https://'])) {
+                    $avatar = $avatarPath;
+                } else {
+                    $avatar = asset('storage/' . ltrim($avatarPath, '/'));
+                }
+            } else {
+                $avatar = 'https://ui-avatars.com/api/?name=' . urlencode($authorUsername) . '&background=random';
+            }
+        }
+    }
 
     $body = $content
         ?? data_get($post, 'noi_dung')

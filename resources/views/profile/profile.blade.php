@@ -43,11 +43,7 @@ $profileUrl = route('profile.public', ['username' => $user->ten_dang_nhap]);
                         <img
                             class="h-full w-full object-cover"
                             alt="{{ $user->name }}"
-                            <img
-                            id="avatar-preview"
-                            alt="{{ $user->name }}"
-                            class="w-full h-full object-cover"
-                            src="{{ $user->anh_dai_dien ? asset('storage/' . $user->anh_dai_dien) : 'https://ui-avatars.com/api/?name='.urlencode($user->name).'&background=random' }}" />
+                            src="{{ $user->avatar_url }}" />
                     </div>
                     <!-- @if($isOwnProfile)
                     <div class="absolute bottom-2 right-2 hidden cursor-pointer rounded-full bg-sky-400 p-2 text-on-primary shadow-lg transition-transform hover:scale-110 group-hover:block">

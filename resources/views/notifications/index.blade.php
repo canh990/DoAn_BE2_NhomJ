@@ -66,7 +66,7 @@
                     {{-- Actor Avatar --}}
                     <div class="shrink-0 relative">
                         <a href="{{ route('profile.public', $notification->nguoiThucHien->ten_dang_nhap) }}" class="block" onclick="event.stopPropagation()">
-                            <img src="{{ $notification->nguoiThucHien->anh_dai_dien ? asset('storage/' . $notification->nguoiThucHien->anh_dai_dien) : 'https://ui-avatars.com/api/?name='.urlencode($notification->nguoiThucHien->name).'&background=random' }}" 
+                            <img src="{{ $notification->nguoiThucHien->avatar_url }}" 
                                  alt="{{ $notification->nguoiThucHien->name }}"
                                  class="w-12 h-12 rounded-full object-cover border border-sky-400/20 shadow-sm">
                         </a>

@@ -58,7 +58,7 @@
                         <!-- Avatar -->
                         <div class="absolute bottom-3 left-3 flex items-center gap-2 pointer-events-none">
                             <img class="w-7 h-7 rounded-full border-2 border-sky-400 object-cover"
-                                 src="{{ Auth::user()->anh_dai_dien ? asset('storage/'.Auth::user()->anh_dai_dien) : 'https://ui-avatars.com/api/?name=' . urlencode(Auth::user()->name) . '&background=random' }}" alt="">
+                                 src="{{ Auth::user()->avatar_url }}" alt="">
                             <span class="text-white text-[11px] font-medium drop-shadow">{{ Auth::user()->ten_dang_nhap }}</span>
                         </div>
                     </div>
@@ -132,7 +132,7 @@
                 <div class="glass-panel rounded-2xl p-6 flex flex-col gap-5">
                     <div class="flex items-center gap-3">
                         <img class="w-11 h-11 rounded-full border border-sky-400/20 object-cover"
-                             src="{{ Auth::user()->anh_dai_dien ? asset('storage/'.Auth::user()->anh_dai_dien) : 'https://ui-avatars.com/api/?name=' . urlencode(Auth::user()->name) . '&background=random' }}" alt="">
+                             src="{{ Auth::user()->avatar_url }}" alt="">
                         <div>
                             <p class="font-semibold text-sm text-on-surface">{{ Auth::user()->name }}</p>
                             <p class="text-xs text-slate-400">@{{ Auth::user()->ten_dang_nhap }}</p>

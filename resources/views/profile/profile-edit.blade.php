@@ -69,7 +69,7 @@
                             id="avatar-preview"
                             class="w-full h-full object-cover"
                             alt="{{ $user->name }}"
-                            src="{{ $user->anh_dai_dien ? asset('storage/' . $user->anh_dai_dien) : 'https://ui-avatars.com/api/?name='.urlencode($user->name).'&background=random' }}" />
+                            src="{{ $user->avatar_url }}" />
                     </div>
                     <label for="anh_dai_dien" class="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
                         <span class="material-symbols-outlined text-white text-3xl">photo_camera</span>
@@ -243,7 +243,7 @@
                 <div class="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/10 transition-all block-user-item duration-300" data-user-id="{{ $blockedUser->id }}">
                     <div class="flex items-center gap-3">
                         <img 
-                            src="{{ $blockedUser->anh_dai_dien ? asset('storage/' . $blockedUser->anh_dai_dien) : 'https://ui-avatars.com/api/?name='.urlencode($blockedUser->name).'&background=random' }}" 
+                            src="{{ $blockedUser->avatar_url }}" 
                             alt="{{ $blockedUser->name }}" 
                             class="w-12 h-12 rounded-full object-cover border-2 border-white/10"
                         />

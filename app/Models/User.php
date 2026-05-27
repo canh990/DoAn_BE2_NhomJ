@@ -47,6 +47,10 @@ class User extends Authenticatable
         'mat_khau_hash',
     ];
 
+    protected $appends = [
+        'avatar_url',
+    ];
+
     // ✅ Trỏ đúng cột mật khẩu
     public function getAuthPassword()
     {
@@ -139,5 +143,21 @@ class User extends Authenticatable
     public function hasAnyBlockRelationship($userId)
     {
         return $this->hasBlocked($userId) || $this->isBlockedBy($userId);
+    }
+
+    /**
+     * Lấy URL ảnh đại diện đầy đủ và chính xác (hỗ trợ cả URL ngoại vi và đường dẫn lưu trữ cục bộ).
+     */
+    public function getAvatarUrlAttribute()
+    {
+        if (!$this->anh_dai_dien) {
+            return 'https://ui-avatars.com/api/?name=' . urlencode($this->ten_dang_nhap) . '&background=random';
+        }
+        
+        if (filter_var($this->anh_dai_dien, FILTER_VALIDATE_URL)) {
+            return $this->anh_dai_dien;
+        }
+        
+        return asset('storage/' . $this->anh_dai_dien);
     }
 }
