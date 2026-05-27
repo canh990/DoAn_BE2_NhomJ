@@ -53,6 +53,21 @@ class SharesSeeders extends Seeder
             }
         }
 
+        // 4. Đảm bảo thanh_truc chia sẻ bài viết để kiểm tra tích xanh và tính năng chia sẻ
+        $thanhTruc = User::where('ten_dang_nhap', 'thanh_truc')->first();
+        if ($thanhTruc && !$originalPosts->isEmpty()) {
+            $firstOriginalPost = $originalPosts->first();
+            DB::table('bai_viet')->insert([
+                'nguoi_dung_id' => $thanhTruc->id,
+                'bai_goc_id' => $firstOriginalPost->id,
+                'loai' => 'chia_se',
+                'noi_dung' => 'Bai viet nay rat hay va y nghia, moi nguoi cung doc nhe!',
+                'quyen_rieng_tu' => 'cong_khai',
+                'created_at' => now()->subMinutes(10),
+                'updated_at' => now()->subMinutes(10),
+            ]);
+        }
+
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
         $this->command->info('Đã tạo dữ liệu chia sẻ thành công!');
     }

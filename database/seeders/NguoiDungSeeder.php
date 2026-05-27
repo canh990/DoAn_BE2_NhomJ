@@ -76,7 +76,7 @@ class NguoiDungSeeder extends Seeder
                 'email'             => 'oauth@gmail.com',
                 'so_dien_thoai'     => null,
                 'mat_khau_hash'     => null,
-                'anh_dai_dien'      => 'https://lh3.googleusercontent.com/a/default',
+                'anh_dai_dien'      => null,
                 'anh_bia'           => null,
                 'tieu_su'           => 'Đăng nhập qua Google.',
                 'ngay_sinh'         => null,

@@ -3,8 +3,23 @@
     Cách dùng: @include('components.stories-bar', ['stories' => $stories])
     $stories: Collection<Tin24h> (đã eager-load 'user')
 --}}
-<section class="glass-panel rounded-2xl p-4 shadow-sm">
-    <div class="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide">
+<section class="glass-panel rounded-2xl p-4 shadow-sm relative overflow-hidden group/stories">
+    {{-- Left Scroll Arrow --}}
+    <button id="stories-btn-prev" class="absolute left-2.5 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-slate-900/85 hover:bg-slate-800 text-white flex items-center justify-center transition-all duration-300 shadow-lg border border-white/10 z-20 opacity-0 pointer-events-none hover:scale-105 active:scale-95">
+        <span class="material-symbols-outlined text-[22px] font-bold">chevron_left</span>
+    </button>
+
+    {{-- Right Scroll Arrow --}}
+    <button id="stories-btn-next" class="absolute right-2.5 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-slate-900/85 hover:bg-slate-800 text-white flex items-center justify-center transition-all duration-300 shadow-lg border border-white/10 z-20 hover:scale-105 active:scale-95">
+        <span class="material-symbols-outlined text-[22px] font-bold">chevron_right</span>
+    </button>
+
+    <div id="stories-feed-scroll" class="flex items-center gap-3 overflow-x-auto pb-1 scrollbar-none scroll-smooth" style="scrollbar-width: none; -ms-overflow-style: none;">
+        <style>
+            #stories-feed-scroll::-webkit-scrollbar {
+                display: none !important;
+            }
+        </style>
 
         {{-- Ô "Thêm tin" của chính mình --}}
         <a href="{{ route('stories.create') }}"
@@ -54,7 +69,7 @@
                     <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-black/40 pointer-events-none"></div>
 
                     {{-- Avatar top left --}}
-                    <div class="absolute top-2.5 left-2.5 z-10 w-9 h-9 rounded-full p-[2px] bg-[#001f2e] border-2 border-sky-400 shadow-md">
+                    <div class="absolute top-2.5 left-2.5 z-10 w-10 h-10 rounded-full p-[2.5px] bg-[#0b121f] border-[3px] border-blue-500 shadow-[0_4px_12px_rgba(0,0,0,0.5)] flex items-center justify-center">
                         <img class="w-full h-full rounded-full object-cover" src="{{ $avatarSrc }}" alt="">
                     </div>
 
@@ -101,7 +116,9 @@
 
         {{-- User info --}}
         <div class="absolute top-7 left-4 right-4 z-20 flex items-center gap-3">
-            <img id="story-viewer-avatar" class="w-9 h-9 rounded-full border-2 border-sky-400 object-cover shadow" src="" alt="">
+            <div class="w-10 h-10 rounded-full p-[2px] bg-[#0b121f] border-[2.5px] border-blue-500 shadow flex items-center justify-center shrink-0">
+                <img id="story-viewer-avatar" class="w-full h-full rounded-full object-cover" src="" alt="">
+            </div>
             <div class="flex flex-col">
                 <span id="story-viewer-username" class="text-white text-xs font-bold drop-shadow-md"></span>
                 <span class="text-white/60 text-[9px] drop-shadow-md font-medium tracking-wide">Tin 24h</span>
@@ -270,5 +287,47 @@
         if (e.key === 'ArrowLeft' && currentIndex > 0) openStoryByIndex(currentIndex - 1);
         if (e.key === 'ArrowRight' && currentIndex < thumbs.length - 1) openStoryByIndex(currentIndex + 1);
     });
+
+    // Scroll logic for the stories feed list
+    const feedScroll = document.getElementById('stories-feed-scroll');
+    const btnPrev = document.getElementById('stories-btn-prev');
+    const btnNext = document.getElementById('stories-btn-next');
+
+    if (feedScroll && btnPrev && btnNext) {
+        function updateArrows() {
+            const scrollLeft = feedScroll.scrollLeft;
+            const scrollWidth = feedScroll.scrollWidth;
+            const clientWidth = feedScroll.clientWidth;
+
+            if (scrollLeft <= 5) {
+                btnPrev.classList.add('opacity-0', 'pointer-events-none');
+                btnPrev.classList.remove('opacity-100', 'pointer-events-auto');
+            } else {
+                btnPrev.classList.remove('opacity-0', 'pointer-events-none');
+                btnPrev.classList.add('opacity-100', 'pointer-events-auto');
+            }
+
+            if (scrollLeft + clientWidth >= scrollWidth - 5) {
+                btnNext.classList.add('opacity-0', 'pointer-events-none');
+                btnNext.classList.remove('opacity-100', 'pointer-events-auto');
+            } else {
+                btnNext.classList.remove('opacity-0', 'pointer-events-none');
+                btnNext.classList.add('opacity-100', 'pointer-events-auto');
+            }
+        }
+
+        feedScroll.addEventListener('scroll', updateArrows);
+        window.addEventListener('resize', updateArrows);
+        // Run once on load to establish correct state
+        setTimeout(updateArrows, 300);
+
+        btnPrev.addEventListener('click', () => {
+            feedScroll.scrollBy({ left: -280, behavior: 'smooth' });
+        });
+
+        btnNext.addEventListener('click', () => {
+            feedScroll.scrollBy({ left: 280, behavior: 'smooth' });
+        });
+    }
 })();
 </script>
