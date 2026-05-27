@@ -29,7 +29,7 @@
                     @foreach($connections as $connection)
                         <div class="flex items-center justify-between p-4 rounded-xl border border-sky-400/10 hover:bg-white/5 transition-colors">
                             <a href="{{ route('profile.public', ['username' => $connection->ten_dang_nhap]) }}" class="flex items-center gap-3">
-                                <img src="{{ $connection->anh_dai_dien ? asset('storage/' . $connection->anh_dai_dien) : 'https://ui-avatars.com/api/?name='.urlencode($connection->name).'&background=random' }}" 
+                                <img src="{{ $connection->avatar_url }}" 
                                      alt="{{ $connection->name }}" 
                                      class="h-12 w-12 rounded-full object-cover">
                                 <div>

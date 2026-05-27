@@ -32,7 +32,7 @@
         <div class="flex flex-col gap-2 pointer-events-auto">
             <a href="{{ route('profile.public', $author->ten_dang_nhap ?? $author->id) }}" class="flex items-center gap-2 group/author w-fit">
                 <div class="h-6 w-6 rounded-full overflow-hidden border border-white/30 group-hover/author:border-sky-400 transition-colors">
-                    <img src="{{ $author->anh_dai_dien ? asset('storage/' . $author->anh_dai_dien) : 'https://ui-avatars.com/api/?name='.urlencode($author->name).'&background=random' }}" class="h-full w-full object-cover">
+                    <img src="{{ $author->avatar_url }}" class="h-full w-full object-cover">
                 </div>
                 <span class="text-xs font-bold text-white truncate group-hover/author:text-sky-300 transition-colors">{{ $author->name }}</span>
             </a>

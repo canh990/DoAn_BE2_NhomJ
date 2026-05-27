@@ -138,7 +138,7 @@ class MentionController extends Controller
                     'id' => $user->id,
                     'username' => $user->ten_dang_nhap,
                     'name' => $user->name ?? $user->ten_dang_nhap,
-                    'avatar' => $user->anh_dai_dien ? asset('storage/' . $user->anh_dai_dien) : asset('storage/avatars/avtmacdinh.png'),
+                    'avatar' => $user->anh_dai_dien ? (filter_var($user->anh_dai_dien, FILTER_VALIDATE_URL) ? $user->anh_dai_dien : asset('storage/' . $user->anh_dai_dien)) : 'https://ui-avatars.com/api/?name=' . urlencode($user->ten_dang_nhap) . '&background=random',
                     'relation' => $relation,
                 ];
             })->toArray();
