@@ -16,7 +16,7 @@ class ProfileController extends Controller
         $user = auth()->user()->loadCount(['followers', 'following']);
 
         $posts = $user->posts()
-            ->with(['user', 'media', 'originalPost.user', 'originalPost.media'])
+            ->with(['user', 'media', 'originalPost.user', 'originalPost.media', 'poll.options.votes', 'poll.votes'])
             ->withCount(['reactions', 'comments', 'shares'])
             ->with(['reactions' => function ($query) {
                 $query->where('nguoi_dung_id', auth()->id());
@@ -25,7 +25,7 @@ class ProfileController extends Controller
             }, 'bookmarks' => function ($query) {
                 $query->where('nguoi_dung_id', auth()->id());
             }])
-            ->whereIn('loai', ['van_ban', 'hinh_anh', 'chia_se'])
+            ->whereIn('loai', ['van_ban', 'hinh_anh', 'chia_se', 'binh_chon'])
             ->where('da_xoa', false)
             ->orderBy('da_ghim', 'desc')
             ->latest()
@@ -101,7 +101,7 @@ class ProfileController extends Controller
         }
 
         $posts = $user->posts()
-            ->with(['user', 'media', 'originalPost.user', 'originalPost.media'])
+            ->with(['user', 'media', 'originalPost.user', 'originalPost.media', 'poll.options.votes', 'poll.votes'])
             ->withCount(['reactions', 'comments', 'shares'])
             ->with(['reactions' => function ($query) {
                 $query->where('nguoi_dung_id', auth()->id());
@@ -110,7 +110,7 @@ class ProfileController extends Controller
             }, 'bookmarks' => function ($query) {
                 $query->where('nguoi_dung_id', auth()->id());
             }])
-            ->whereIn('loai', ['van_ban', 'hinh_anh', 'chia_se'])
+            ->whereIn('loai', ['van_ban', 'hinh_anh', 'chia_se', 'binh_chon'])
             ->where('da_xoa', false)
             ->orderBy('da_ghim', 'desc')
             ->latest()

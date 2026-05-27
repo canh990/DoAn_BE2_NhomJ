@@ -84,4 +84,9 @@ class BaiViet extends Model
         return $this->belongsToMany(User::class, 'bai_viet_da_luu', 'bai_viet_id', 'nguoi_dung_id')
                     ->withPivot('ngay_tao');
     }
+
+    public function poll()
+    {
+        return $this->hasOne(BinhChon::class, 'bai_viet_id');
+    }
 }

@@ -59,6 +59,36 @@
                             </button>
                         </div>
 
+                        <div id="poll-creator-container" class="mt-3 hidden p-4 bg-slate-800/80 border border-white/10 rounded-2xl">
+                            <div class="flex items-center justify-between mb-3">
+                                <h4 class="text-sm font-semibold text-slate-200">Tạo cuộc bình chọn</h4>
+                                <button type="button" id="close-poll-creator" class="text-slate-400 hover:text-red-400 transition-colors">
+                                    <span class="material-symbols-outlined text-sm">close</span>
+                                </button>
+                            </div>
+
+                            <input
+                                type="text"
+                                id="poll-question-input"
+                                name="poll_question"
+                                placeholder="Nhập câu hỏi bình chọn..."
+                                class="w-full bg-slate-900/60 border border-white/10 focus:border-sky-400/50 rounded-xl px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:ring-0 transition-colors"
+                            >
+
+                            <div id="poll-options-list" class="mt-3 space-y-2">
+                                <div class="option-item">
+                                    <input type="text" name="poll_options[]" placeholder="Lựa chọn 1" class="w-full bg-slate-900/40 border border-white/5 focus:border-sky-400/30 rounded-xl px-3 py-2 text-xs text-slate-200 placeholder-slate-500 focus:ring-0 transition-colors">
+                                </div>
+                                <div class="option-item">
+                                    <input type="text" name="poll_options[]" placeholder="Lựa chọn 2" class="w-full bg-slate-900/40 border border-white/5 focus:border-sky-400/30 rounded-xl px-3 py-2 text-xs text-slate-200 placeholder-slate-500 focus:ring-0 transition-colors">
+                                </div>
+                            </div>
+
+                            <button type="button" id="btn-add-poll-option" class="mt-3 text-xs font-semibold text-sky-400 hover:text-sky-300 transition-colors">
+                                + Thêm lựa chọn
+                            </button>
+                        </div>
+
                         <!-- Đường kẻ ngang phân cách -->
                         <div class="h-px bg-white/10 my-4"></div>
 
@@ -118,7 +148,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <button type="button" class="p-2 text-sky-300 hover:bg-sky-300/10 rounded-full transition-colors" title="Thăm dò ý kiến">
+                                <button type="button" id="btn-poll" class="p-2 text-sky-300 hover:bg-sky-300/10 rounded-full transition-colors" title="Thăm dò ý kiến">
                                     <span class="material-symbols-outlined" data-icon="poll">poll</span>
                                 </button>
                             </div>
@@ -612,12 +642,101 @@
             });
         }
 
+        const btnPoll = document.getElementById('btn-poll');
+        const pollCreatorContainer = document.getElementById('poll-creator-container');
+        const closePollCreator = document.getElementById('close-poll-creator');
+        const btnAddPollOption = document.getElementById('btn-add-poll-option');
+        const pollOptionsList = document.getElementById('poll-options-list');
+        const pollQuestionInput = document.getElementById('poll-question-input');
+
+        function resetPollFields() {
+            if (!pollQuestionInput || !pollOptionsList) return;
+            pollQuestionInput.value = '';
+            pollOptionsList.innerHTML = `
+                <div class="option-item">
+                    <input type="text" name="poll_options[]" placeholder="Lựa chọn 1" class="w-full bg-slate-900/40 border border-white/5 focus:border-sky-400/30 rounded-xl px-3 py-2 text-xs text-slate-200 placeholder-slate-500 focus:ring-0 transition-colors">
+                </div>
+                <div class="option-item">
+                    <input type="text" name="poll_options[]" placeholder="Lựa chọn 2" class="w-full bg-slate-900/40 border border-white/5 focus:border-sky-400/30 rounded-xl px-3 py-2 text-xs text-slate-200 placeholder-slate-500 focus:ring-0 transition-colors">
+                </div>
+            `;
+        }
+
+        function bindPollInputListeners() {
+            if (!pollOptionsList) return;
+            pollOptionsList.querySelectorAll('input[name="poll_options[]"]').forEach(input => {
+                input.addEventListener('input', updateSubmitButton);
+            });
+        }
+
+        if (btnPoll && pollCreatorContainer) {
+            btnPoll.addEventListener('click', function() {
+                pollCreatorContainer.classList.toggle('hidden');
+                if (!pollCreatorContainer.classList.contains('hidden') && pollQuestionInput) {
+                    pollQuestionInput.focus();
+                }
+                updateSubmitButton();
+            });
+        }
+
+        if (closePollCreator && pollCreatorContainer) {
+            closePollCreator.addEventListener('click', function() {
+                resetPollFields();
+                pollCreatorContainer.classList.add('hidden');
+                bindPollInputListeners();
+                updateSubmitButton();
+            });
+        }
+
+        if (btnAddPollOption && pollOptionsList) {
+            btnAddPollOption.addEventListener('click', function() {
+                const currentCount = pollOptionsList.querySelectorAll('input[name="poll_options[]"]').length;
+                if (currentCount >= 6) {
+                    alert('Poll tối đa 6 lựa chọn.');
+                    return;
+                }
+
+                const wrapper = document.createElement('div');
+                wrapper.className = 'option-item flex items-center gap-2';
+                wrapper.innerHTML = `
+                    <input type="text" name="poll_options[]" placeholder="Lựa chọn ${currentCount + 1}" class="w-full bg-slate-900/40 border border-white/5 focus:border-sky-400/30 rounded-xl px-3 py-2 text-xs text-slate-200 placeholder-slate-500 focus:ring-0 transition-colors">
+                    <button type="button" class="remove-poll-option text-slate-400 hover:text-red-400 transition-colors">
+                        <span class="material-symbols-outlined text-sm">delete</span>
+                    </button>
+                `;
+
+                pollOptionsList.appendChild(wrapper);
+                wrapper.querySelector('input')?.addEventListener('input', updateSubmitButton);
+                wrapper.querySelector('.remove-poll-option')?.addEventListener('click', function() {
+                    wrapper.remove();
+                    updateSubmitButton();
+                });
+                updateSubmitButton();
+            });
+        }
+
+        if (pollQuestionInput) {
+            pollQuestionInput.addEventListener('input', updateSubmitButton);
+        }
+        bindPollInputListeners();
+
         const originalUpdateSubmitButton = updateSubmitButton;
         updateSubmitButton = function() {
             const hasFeeling = inputCamXuc.value || inputHoatDong.value;
             const hasLocation = inputTenDiaDiem.value;
             const textLength = textarea.value.trim().length;
-            if (textLength > 0 || selectedFiles.length > 0 || hasFeeling || hasLocation) {
+            const isPollActive = pollCreatorContainer && !pollCreatorContainer.classList.contains('hidden');
+            let isPollValid = false;
+
+            if (isPollActive) {
+                const question = pollQuestionInput ? pollQuestionInput.value.trim() : '';
+                const options = Array.from(pollOptionsList.querySelectorAll('input[name="poll_options[]"]'))
+                    .map(input => input.value.trim())
+                    .filter(Boolean);
+                isPollValid = question.length > 0 && options.length >= 2 && options.length <= 6;
+            }
+
+            if (textLength > 0 || selectedFiles.length > 0 || hasFeeling || hasLocation || isPollValid) {
                 submitButton.removeAttribute('disabled');
             } else {
                 submitButton.setAttribute('disabled', 'true');

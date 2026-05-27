@@ -341,7 +341,100 @@
             const commentCancel = event.target.closest('[data-comment-cancel]');
             const shareButton = event.target.closest('[data-share-button]');
             const bookmarkButton = event.target.closest('[data-bookmark-button]');
+            const pollOptionBtn = event.target.closest('.poll-option-btn');
             const reactionAreas = document.querySelectorAll('[data-reaction-area]');
+
+            if (pollOptionBtn) {
+                event.preventDefault();
+                const container = pollOptionBtn.closest('.poll-container');
+                if (!container) return;
+
+                const pollId = pollOptionBtn.dataset.pollId;
+                const optionId = pollOptionBtn.dataset.optionId;
+
+                fetch(`/polls/${pollId}/vote`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({ lua_chon_id: optionId }),
+                })
+                    .then(async (response) => {
+                        const data = await response.json().catch(() => null);
+                        if (!response.ok) {
+                            throw new Error(data?.message || 'Có lỗi xảy ra khi bình chọn.');
+                        }
+                        return data;
+                    })
+                    .then((data) => {
+                        if (!data.success) {
+                            if (typeof window.showToast === 'function') window.showToast(data.message || 'Không thể bình chọn.', 'error');
+                            return;
+                        }
+
+                        container.dataset.hasVoted = '1';
+                        const totalVotes = data.total_votes || 0;
+                        const selectedId = String(data.user_voted_option_id || '');
+                        const buttons = container.querySelectorAll('.poll-option-btn');
+
+                        buttons.forEach((btn) => {
+                            btn.classList.remove('bg-slate-800/60', 'hover:bg-slate-700');
+                            btn.classList.add('bg-slate-800/30');
+
+                            const optId = String(btn.dataset.optionId);
+                            const progress = btn.querySelector('.poll-progress');
+                            const optionStat = Array.isArray(data.options) ? data.options.find(o => String(o.id) === optId) : null;
+                            const votes = optionStat ? Number(optionStat.votes_count || 0) : 0;
+                            const percentage = totalVotes > 0 ? Math.round((votes / totalVotes) * 100) : 0;
+                            const isSelected = optId === selectedId;
+
+                            if (progress) {
+                                progress.style.width = `${percentage}%`;
+                                progress.classList.toggle('bg-sky-500/30', isSelected);
+                                progress.classList.toggle('bg-slate-600/40', !isSelected);
+                            }
+
+                            const textSpan = btn.querySelector('span');
+                            if (textSpan) {
+                                textSpan.classList.toggle('text-sky-300', isSelected);
+                                textSpan.classList.toggle('text-slate-200', !isSelected);
+                            }
+
+                            let pct = btn.querySelector('.poll-percentage');
+                            if (!pct) {
+                                pct = document.createElement('span');
+                                pct.className = 'relative z-10 text-sm poll-percentage';
+                                btn.appendChild(pct);
+                            }
+                            pct.textContent = `${percentage}%`;
+                            pct.classList.toggle('text-sky-300', isSelected);
+                            pct.classList.toggle('font-bold', isSelected);
+                            pct.classList.toggle('text-slate-400', !isSelected);
+                        });
+
+                        let totalNode = container.querySelector('.poll-total');
+                        if (!totalNode) {
+                            totalNode = document.createElement('div');
+                            totalNode.className = 'text-sm text-slate-400 mt-2 poll-total';
+                            container.appendChild(totalNode);
+                        }
+                        totalNode.textContent = `${totalVotes} lượt bình chọn`;
+
+                        const hintNode = Array.from(container.querySelectorAll('div')).find(el => el.textContent && el.textContent.includes('Bình chọn để xem kết quả'));
+                        if (hintNode) hintNode.remove();
+                    })
+                    .catch((error) => {
+                        if (typeof window.showToast === 'function') {
+                            window.showToast(error.message || 'Có lỗi xảy ra khi bình chọn.', 'error');
+                        } else {
+                            alert(error.message || 'Có lỗi xảy ra khi bình chọn.');
+                        }
+                    });
+
+                return;
+            }
 
             if (bookmarkButton) {
                 event.preventDefault();

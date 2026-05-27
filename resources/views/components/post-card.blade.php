@@ -114,6 +114,14 @@
     if (auth()->check() && $postId && isset($post->bookmarks)) {
         $isBookmarked = $post->bookmarks->contains('nguoi_dung_id', auth()->id());
     }
+
+    $poll = data_get($post, 'poll');
+    $pollOptions = collect(data_get($poll, 'options', []));
+    $pollVotes = collect(data_get($poll, 'votes', []));
+    $userVote = auth()->check() ? $pollVotes->firstWhere('nguoi_dung_id', auth()->id()) : null;
+    $userVotedOptionId = data_get($userVote, 'lua_chon_id');
+    $hasVotedPoll = filled($userVotedOptionId);
+    $totalPollVotes = $pollVotes->count();
 @endphp
 
 <article {{ $attributes->merge(['class' => 'glass-panel group rounded-2xl p-6 transition-all hover:border-sky-400/30']) }}>
@@ -225,6 +233,40 @@
                 </p>
             @endif
 
+            @if($poll && $pollOptions->isNotEmpty())
+                <div class="poll-container mt-4 border border-white/10 rounded-2xl p-4 bg-slate-900/30" data-has-voted="{{ $hasVotedPoll ? '1' : '0' }}">
+                    <h3 class="text-base font-semibold mb-3 text-slate-100">{{ data_get($poll, 'cau_hoi') }}</h3>
+
+                    @foreach($pollOptions as $option)
+                        @php
+                            $optionVotes = collect(data_get($option, 'votes', []))->count();
+                            $percentage = $totalPollVotes > 0 ? round(($optionVotes / $totalPollVotes) * 100) : 0;
+                            $isSelectedOption = (int) $userVotedOptionId === (int) data_get($option, 'id');
+                        @endphp
+                        <button
+                            type="button"
+                            class="poll-option-btn relative overflow-hidden w-full text-left px-3 py-2 mb-2 rounded-xl transition-colors flex justify-between items-center group {{ $hasVotedPoll ? 'bg-slate-800/30 hover:bg-slate-700/60' : 'bg-slate-800/60 hover:bg-slate-700' }}"
+                            data-poll-id="{{ data_get($poll, 'id') }}"
+                            data-option-id="{{ data_get($option, 'id') }}"
+                        >
+                            <div class="poll-progress absolute left-0 top-0 bottom-0 {{ $isSelectedOption ? 'bg-sky-500/30' : 'bg-slate-600/40' }} transition-all duration-500 ease-out" style="width: {{ $hasVotedPoll ? $percentage : 0 }}%;"></div>
+                            <span class="relative z-10 font-medium {{ $isSelectedOption ? 'text-sky-300' : 'text-slate-200' }}">{{ data_get($option, 'noi_dung') }}</span>
+                            @if($hasVotedPoll)
+                                <span class="relative z-10 text-sm {{ $isSelectedOption ? 'text-sky-300 font-bold' : 'text-slate-400' }} poll-percentage">{{ $percentage }}%</span>
+                            @else
+                                <span class="relative z-10 text-xs text-slate-400">Vote</span>
+                            @endif
+                        </button>
+                    @endforeach
+
+                    @if($hasVotedPoll)
+                        <div class="text-sm text-slate-400 mt-2 poll-total">{{ $totalPollVotes }} lượt bình chọn</div>
+                    @else
+                        <div class="text-xs text-slate-500 mt-2">Bình chọn để xem kết quả chi tiết.</div>
+                    @endif
+                </div>
+            @endif
+
             @php
                 $mediaItems = data_get($post, 'media', collect());
                 if (!($mediaItems instanceof \Illuminate\Support\Collection)) {
@@ -312,13 +354,15 @@
                                 <span class="text-[13px] sm:text-sm font-bold text-slate-500 group-hover:text-sky-400/80" data-comment-count>{{ $commentCount > 0 ? '('.$commentCount.')' : '' }}</span>
                             </button>
 
-                            <button type="button" data-share-button data-share-url="{{ route('posts.share', ['post' => $postId]) }}" class="group flex items-center gap-1.5 rounded-full px-3 py-1.5 sm:px-4 sm:py-2 text-slate-400 transition-all duration-300 hover:bg-slate-800/60 hover:text-emerald-400">
-                                <div class="relative flex items-center justify-center transition-transform group-hover:scale-110 group-active:scale-95">
-                                    <span class="material-symbols-outlined text-[20px] sm:text-[22px]" data-icon="share">share</span>
-                                </div>
-                                <span class="text-[13px] sm:text-sm font-semibold tracking-wide hidden sm:block">Chia sẻ</span>
-                                <span class="text-[13px] sm:text-sm font-bold text-slate-500 group-hover:text-emerald-400/80" data-share-count>{{ $shareCount > 0 ? '('.$shareCount.')' : '' }}</span>
-                            </button>
+                            @if($hasPersistedPost)
+                                <button type="button" data-share-button data-share-url="{{ route('posts.share', ['post' => $postId]) }}" class="group flex items-center gap-1.5 rounded-full px-3 py-1.5 sm:px-4 sm:py-2 text-slate-400 transition-all duration-300 hover:bg-slate-800/60 hover:text-emerald-400">
+                                    <div class="relative flex items-center justify-center transition-transform group-hover:scale-110 group-active:scale-95">
+                                        <span class="material-symbols-outlined text-[20px] sm:text-[22px]" data-icon="share">share</span>
+                                    </div>
+                                    <span class="text-[13px] sm:text-sm font-semibold tracking-wide hidden sm:block">Chia sẻ</span>
+                                    <span class="text-[13px] sm:text-sm font-bold text-slate-500 group-hover:text-emerald-400/80" data-share-count>{{ $shareCount > 0 ? '('.$shareCount.')' : '' }}</span>
+                                </button>
+                            @endif
 
                             <button type="button" data-bookmark-button data-post-id="{{ $postId }}" class="group flex items-center gap-1.5 rounded-full px-3 py-1.5 sm:px-4 sm:py-2 text-slate-400 transition-all duration-300 hover:bg-slate-800/60 hover:text-yellow-400">
                                 <div class="relative flex items-center justify-center transition-transform group-hover:scale-110 group-active:scale-95">
