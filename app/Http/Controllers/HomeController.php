@@ -18,7 +18,7 @@ class HomeController extends Controller
             $blockedUserIds = array_unique(array_merge($blockedByMe, $blockedMe));
         }
 
-        $posts = BaiViet::with(['user', 'media', 'originalPost.user', 'originalPost.media'])
+        $posts = BaiViet::with(['user', 'media', 'originalPost.user', 'originalPost.media', 'poll.options.votes', 'poll.votes'])
             ->withCount(['reactions', 'comments', 'shares'])
             ->with(['reactions' => function ($query) {
                 $query->where('nguoi_dung_id', auth()->id());
@@ -28,7 +28,7 @@ class HomeController extends Controller
                 $query->where('nguoi_dung_id', auth()->id());
             }])
             ->where('da_xoa', false)
-            ->whereIn('loai', ['van_ban', 'hinh_anh', 'chia_se'])
+            ->whereIn('loai', ['van_ban', 'hinh_anh', 'chia_se', 'binh_chon'])
             ->when(!empty($blockedUserIds), function ($query) use ($blockedUserIds) {
                 $query->whereNotIn('nguoi_dung_id', $blockedUserIds);
             })

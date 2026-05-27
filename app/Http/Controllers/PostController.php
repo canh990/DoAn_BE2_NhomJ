@@ -12,7 +12,7 @@ class PostController extends Controller
 
     public function index()
     {
-        $posts = BaiViet::with(['user', 'media', 'originalPost.user', 'originalPost.media'])
+        $posts = BaiViet::with(['user', 'media', 'originalPost.user', 'originalPost.media', 'poll.options.votes', 'poll.votes'])
             ->withCount(['reactions', 'comments', 'shares'])
             ->with(['reactions' => function ($query) {
                 $query->where('nguoi_dung_id', auth()->id());
@@ -21,7 +21,7 @@ class PostController extends Controller
             }, 'bookmarks' => function ($query) {
                 $query->where('nguoi_dung_id', auth()->id());
             }])
-            ->whereIn('loai', ['van_ban', 'hinh_anh', 'chia_se'])
+            ->whereIn('loai', ['van_ban', 'hinh_anh', 'chia_se', 'binh_chon'])
             ->where('da_xoa', false)
             ->latest()
             ->take(20)
@@ -55,7 +55,7 @@ class PostController extends Controller
             return redirect()->route('home')->with('error', 'Bài viết đã bị xóa.');
         }
 
-        $post->load(['user', 'media', 'originalPost.user', 'originalPost.media'])
+        $post->load(['user', 'media', 'originalPost.user', 'originalPost.media', 'poll.options.votes', 'poll.votes'])
             ->loadCount(['reactions', 'comments', 'shares'])
             ->load(['reactions' => function ($query) {
                 $query->where('nguoi_dung_id', auth()->id());
@@ -83,16 +83,58 @@ class PostController extends Controller
             'ten_dia_diem' => ['nullable', 'string', 'max:255'],
             'vi_do' => ['nullable', 'numeric'],
             'kinh_do' => ['nullable', 'numeric'],
+            'poll_question' => ['nullable', 'string', 'max:500'],
+            'poll_options' => ['nullable', 'array', 'min:2', 'max:6'],
+            'poll_options.*' => ['nullable', 'string', 'max:255'],
         ]);
 
-        // Kiểm tra ít nhất có nội dung, file hoặc vị trí
-        if (empty($validated['noi_dung']) && !$request->hasFile('anh') && empty($validated['cam_xuc']) && empty($validated['hoat_dong']) && empty($validated['ten_dia_diem'])) {
-            return back()->withErrors(['noi_dung' => 'Bài viết phải có nội dung, cảm xúc, địa điểm check-in, hoặc hình ảnh/video.']);
+        $pollOptions = collect($request->input('poll_options', []))
+            ->map(fn ($opt) => trim((string) $opt))
+            ->filter(fn ($opt) => $opt !== '')
+            ->values();
+        $hasPollQuestion = filled(trim((string) $request->input('poll_question', '')));
+        $isPoll = $hasPollQuestion || $pollOptions->count() > 0;
+
+        if ($isPoll) {
+            $request->validate([
+                'poll_question' => ['required', 'string', 'max:500'],
+                'poll_options' => ['required', 'array', 'min:2', 'max:6'],
+                'poll_options.*' => ['required', 'string', 'max:255'],
+            ], [
+                'poll_options.min' => 'Cuộc bình chọn cần ít nhất 2 lựa chọn.',
+                'poll_options.max' => 'Cuộc bình chọn tối đa 6 lựa chọn.',
+            ]);
+
+            $pollOptions = collect($request->input('poll_options', []))
+                ->map(fn ($opt) => trim((string) $opt))
+                ->filter(fn ($opt) => $opt !== '')
+                ->values();
+
+            if ($pollOptions->count() < 2 || $pollOptions->count() > 6) {
+                return back()->withErrors(['poll_options' => 'Cuộc bình chọn phải có từ 2 đến 6 lựa chọn.'])->withInput();
+            }
+        }
+
+        // Kiểm tra ít nhất có nội dung, file, vị trí hoặc poll
+        if (
+            empty($validated['noi_dung']) &&
+            !$request->hasFile('anh') &&
+            empty($validated['cam_xuc']) &&
+            empty($validated['hoat_dong']) &&
+            empty($validated['ten_dia_diem']) &&
+            !$isPoll
+        ) {
+            return back()->withErrors(['noi_dung' => 'Bài viết phải có nội dung, cảm xúc, địa điểm check-in, hình ảnh/video hoặc cuộc bình chọn.']);
+        }
+
+        $postType = $request->hasFile('anh') ? 'hinh_anh' : 'van_ban';
+        if ($isPoll) {
+            $postType = 'binh_chon';
         }
 
         $post = BaiViet::create([
             'nguoi_dung_id' => auth()->id(),
-            'loai' => $request->hasFile('anh') ? 'hinh_anh' : 'van_ban',
+            'loai' => $postType,
             'noi_dung' => $validated['noi_dung'] ?? null,
             'cam_xuc' => $validated['cam_xuc'] ?? null,
             'hoat_dong' => $validated['hoat_dong'] ?? null,
@@ -101,6 +143,20 @@ class PostController extends Controller
             'kinh_do' => $validated['kinh_do'] ?? null,
             'quyen_rieng_tu' => 'cong_khai',
         ]);
+
+        if ($isPoll) {
+            $poll = \App\Models\BinhChon::create([
+                'bai_viet_id' => $post->id,
+                'cau_hoi' => trim((string) $request->input('poll_question')),
+            ]);
+
+            foreach ($pollOptions as $optionText) {
+                \App\Models\LuaChonBinhChon::create([
+                    'binh_chon_id' => $poll->id,
+                    'noi_dung' => $optionText,
+                ]);
+            }
+        }
 
         // Xử lý upload ảnh/video
         if ($request->hasFile('anh')) {
@@ -247,6 +303,56 @@ class PostController extends Controller
             'message' => 'Chia sẻ thành công',
             'shares_count' => $sharesCount,
             'html' => $html,
+        ]);
+    }
+
+    public function vote(Request $request, \App\Models\BinhChon $poll)
+    {
+        $validated = $request->validate([
+            'lua_chon_id' => ['required', 'integer', 'exists:lua_chon_binh_chon,id'],
+        ]);
+
+        $userId = auth()->id();
+
+        $option = \App\Models\LuaChonBinhChon::where('id', $validated['lua_chon_id'])
+            ->where('binh_chon_id', $poll->id)
+            ->first();
+
+        if (!$option) {
+            return response()->json(['success' => false, 'message' => 'Lựa chọn không hợp lệ.'], 422);
+        }
+
+        $existingVote = \App\Models\PhieuBau::where('binh_chon_id', $poll->id)
+            ->where('nguoi_dung_id', $userId)
+            ->first();
+
+        if ($existingVote) {
+            $existingVote->lua_chon_id = $option->id;
+            $existingVote->save();
+        } else {
+            \App\Models\PhieuBau::create([
+                'binh_chon_id' => $poll->id,
+                'nguoi_dung_id' => $userId,
+                'lua_chon_id' => $option->id,
+            ]);
+        }
+
+        $optionsStats = $poll->options()->withCount('votes')->get()->map(function ($opt) {
+            return [
+                'id' => $opt->id,
+                'noi_dung' => $opt->noi_dung,
+                'votes_count' => $opt->votes_count,
+            ];
+        })->values();
+
+        $totalVotes = $poll->votes()->count();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Đã cập nhật bình chọn.',
+            'options' => $optionsStats,
+            'total_votes' => $totalVotes,
+            'user_voted_option_id' => $option->id,
         ]);
     }
 }
