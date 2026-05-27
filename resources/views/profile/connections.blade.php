@@ -27,30 +27,30 @@
             @if($connections->count() > 0)
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     @foreach($connections as $connection)
-                        <div class="flex items-center justify-between p-4 rounded-xl border border-sky-400/10 hover:bg-white/5 transition-colors">
-                            <a href="{{ route('profile.public', ['username' => $connection->ten_dang_nhap]) }}" class="flex items-center gap-3">
+                        <div class="flex items-center justify-between p-4 rounded-xl border border-sky-400/10 hover:bg-white/5 transition-colors gap-4">
+                            <a href="{{ route('profile.public', ['username' => $connection->ten_dang_nhap]) }}" class="flex items-center gap-3 min-w-0">
                                 <img src="{{ $connection->avatar_url }}" 
                                      alt="{{ $connection->name }}" 
-                                     class="h-12 w-12 rounded-full object-cover">
-                                <div>
-                                    <h4 class="font-bold text-on-surface flex items-center gap-1">
+                                     class="h-12 w-12 rounded-full object-cover shrink-0">
+                                <div class="min-w-0">
+                                    <h4 class="font-bold text-on-surface flex items-center gap-1 truncate">
                                         {{ $connection->name }}
                                         @if($connection->da_xac_thuc)
-                                            <span class="material-symbols-outlined text-sm text-sky-400" data-icon="verified" style="font-variation-settings: 'FILL' 1;">verified</span>
+                                            <span class="material-symbols-outlined text-sm text-sky-400 shrink-0" data-icon="verified" style="font-variation-settings: 'FILL' 1;">verified</span>
                                         @endif
                                     </h4>
-                                    <p class="text-sm text-slate-400">{{ '@' . $connection->ten_dang_nhap }}</p>
+                                    <p class="text-sm text-slate-400 truncate">{{ '@' . $connection->ten_dang_nhap }}</p>
                                 </div>
                             </a>
                             
                             @if(auth()->check())
                                 @if(auth()->id() === $user->id && $type === 'followers' && isset($connection->pivot) && $connection->pivot->trang_thai === 'cho_chap_nhan')
-                                    <div class="flex items-center gap-2" id="action-container-{{ $connection->id }}">
-                                        <button onclick="approveFollower({{ $connection->id }}, this)" class="px-3.5 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-xl shadow-lg shadow-emerald-500/20 transition-all hover:scale-[1.03] active:scale-95 flex items-center gap-1">
+                                    <div class="flex items-center gap-2 shrink-0" id="action-container-{{ $connection->id }}">
+                                        <button onclick="approveFollower({{ $connection->id }}, this)" class="px-3.5 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-xl shadow-lg shadow-emerald-500/20 transition-all hover:scale-[1.03] active:scale-95 flex items-center gap-1 whitespace-nowrap shrink-0">
                                             <span class="material-symbols-outlined text-[14px]">done</span>
                                             Chấp nhận
                                         </button>
-                                        <button onclick="declineFollower({{ $connection->id }}, this)" class="px-3.5 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-xs font-bold rounded-xl border border-rose-500/20 transition-all hover:scale-[1.03] active:scale-95 flex items-center gap-1">
+                                        <button onclick="declineFollower({{ $connection->id }}, this)" class="px-3.5 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-xs font-bold rounded-xl border border-rose-500/20 transition-all hover:scale-[1.03] active:scale-95 flex items-center gap-1 whitespace-nowrap shrink-0">
                                             <span class="material-symbols-outlined text-[14px]">close</span>
                                             Từ chối
                                         </button>
@@ -59,7 +59,7 @@
                                     @php
                                         $isFollowingConnection = auth()->user()->following()->where('nguoi_duoc_theo_doi_id', $connection->id)->exists();
                                     @endphp
-                                    <button class="follow-btn rounded-xl border border-sky-400/20 px-4 py-1.5 text-sm font-semibold transition-all hover:bg-white/10 {{ $isFollowingConnection ? 'text-slate-300' : 'text-sky-300' }}" 
+                                    <button class="follow-btn rounded-xl border border-sky-400/20 px-4 py-1.5 text-sm font-semibold transition-all hover:bg-white/10 whitespace-nowrap shrink-0 {{ $isFollowingConnection ? 'text-slate-300' : 'text-sky-300' }}" 
                                             data-user-id="{{ $connection->id }}">
                                         {{ $isFollowingConnection ? 'Bỏ theo dõi' : 'Theo dõi' }}
                                     </button>
