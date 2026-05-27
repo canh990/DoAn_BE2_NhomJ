@@ -228,9 +228,32 @@
             </div>
 
             @if (filled($body) && data_get($post, 'loai') !== 'chia_se' && !$isProfileUpdate)
-                <p class="whitespace-pre-line leading-relaxed text-on-surface-variant">
-                    {!! data_get($post, 'formatted_content') ?? $body !!}
-                </p>
+                @php
+                    $formattedContent = data_get($post, 'formatted_content') ?? $body;
+                    $plainContent = trim(strip_tags((string) $formattedContent));
+                    $plainContentLength = mb_strlen($plainContent);
+                    $shouldCollapseContent = $plainContentLength > 60;
+                    $contentElementId = 'post-content-' . ($postId ?? uniqid());
+                    $previewContent = \Illuminate\Support\Str::limit($plainContent, 60, '...');
+                @endphp
+                @if($shouldCollapseContent)
+                    <p id="{{ $contentElementId }}-preview" class="whitespace-pre-line break-words leading-relaxed text-on-surface-variant">{{ $previewContent }}</p>
+                    <p id="{{ $contentElementId }}-full" class="hidden whitespace-pre-line break-words leading-relaxed text-on-surface-variant">{!! $formattedContent !!}</p>
+                @else
+                    <p id="{{ $contentElementId }}" class="whitespace-pre-line break-words leading-relaxed text-on-surface-variant">{!! $formattedContent !!}</p>
+                @endif
+                @if($shouldCollapseContent)
+                    <button
+                        type="button"
+                        class="mt-1 text-sm font-semibold text-sky-300 hover:text-sky-200 transition-colors"
+                        data-read-more-toggle="1"
+                        data-preview-id="{{ $contentElementId }}-preview"
+                        data-full-id="{{ $contentElementId }}-full"
+                        data-expanded="0"
+                    >
+                        Xem thêm
+                    </button>
+                @endif
             @endif
 
             @if($poll && $pollOptions->isNotEmpty())

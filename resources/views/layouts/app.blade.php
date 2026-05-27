@@ -342,7 +342,53 @@
             const shareButton = event.target.closest('[data-share-button]');
             const bookmarkButton = event.target.closest('[data-bookmark-button]');
             const pollOptionBtn = event.target.closest('.poll-option-btn');
+            const readMoreToggleBtn = event.target.closest('[data-read-more-toggle]');
             const reactionAreas = document.querySelectorAll('[data-reaction-area]');
+
+            if (readMoreToggleBtn) {
+                event.preventDefault();
+                const previewId = readMoreToggleBtn.dataset.previewId;
+                const fullId = readMoreToggleBtn.dataset.fullId;
+
+                const isExpanded = readMoreToggleBtn.dataset.expanded === '1';
+
+                if (previewId && fullId) {
+                    const previewContent = document.getElementById(previewId);
+                    const fullContent = document.getElementById(fullId);
+                    if (!previewContent || !fullContent) return;
+
+                    if (isExpanded) {
+                        fullContent.classList.add('hidden');
+                        previewContent.classList.remove('hidden');
+                        readMoreToggleBtn.dataset.expanded = '0';
+                        readMoreToggleBtn.textContent = 'Xem thêm';
+                    } else {
+                        previewContent.classList.add('hidden');
+                        fullContent.classList.remove('hidden');
+                        readMoreToggleBtn.dataset.expanded = '1';
+                        readMoreToggleBtn.textContent = 'Thu gọn';
+                    }
+                } else {
+                    const targetId = readMoreToggleBtn.dataset.targetId;
+                    const targetContent = targetId ? document.getElementById(targetId) : null;
+                    if (!targetContent) return;
+                    const collapsedMaxHeight = targetContent.dataset.collapsedMaxHeight || '7.5rem';
+
+                    if (isExpanded) {
+                        targetContent.style.maxHeight = collapsedMaxHeight;
+                        targetContent.style.overflow = 'hidden';
+                        readMoreToggleBtn.dataset.expanded = '0';
+                        readMoreToggleBtn.textContent = 'Xem thêm';
+                    } else {
+                        targetContent.style.maxHeight = 'none';
+                        targetContent.style.overflow = 'visible';
+                        readMoreToggleBtn.dataset.expanded = '1';
+                        readMoreToggleBtn.textContent = 'Thu gọn';
+                    }
+                }
+
+                return;
+            }
 
             if (pollOptionBtn) {
                 event.preventDefault();
