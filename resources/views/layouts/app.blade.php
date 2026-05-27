@@ -114,6 +114,15 @@
         .notification-item {
             animation: notificationIn 0.3s ease-out forwards;
         }
+
+        /* Modal Animations */
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .animate-modal-in {
+            animation: modalIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
         .notification-item.removing {
             opacity: 0;
             transform: translateX(20px);
@@ -634,16 +643,30 @@
 
                         const triggerIcon = area.querySelector('[data-reaction-trigger-icon]');
                         const triggerLabel = area.querySelector('[data-reaction-trigger-label]');
+                        const triggerBtn = area.querySelector('[data-reaction-trigger]');
                         const countNode = area.querySelector('[data-reaction-count]');
                         const picker = area.querySelector('[data-reaction-picker]');
                         const isRemoved = data.removed;
                         const newIconName = isRemoved ? 'thumb_up' : iconName;
                         const newLabel = isRemoved ? 'Thích' : label;
-                        const newColor = isRemoved ? 'text-sky-400' : color;
+                        const newColor = isRemoved ? '' : color;
 
                         if (triggerIcon) {
                             triggerIcon.textContent = newIconName;
                             triggerIcon.className = 'material-symbols-outlined ' + newColor;
+                            if (isRemoved) {
+                                triggerIcon.style.fontVariationSettings = '';
+                            } else {
+                                triggerIcon.style.fontVariationSettings = "'FILL' 1";
+                            }
+                        }
+
+                        if (triggerBtn) {
+                            if (isRemoved) {
+                                triggerBtn.className = 'group flex items-center gap-1.5 rounded-full px-3 py-1.5 sm:px-4 sm:py-2 transition-all duration-300 text-slate-400 hover:bg-slate-800/60 hover:text-sky-300';
+                            } else {
+                                triggerBtn.className = 'group flex items-center gap-1.5 rounded-full px-3 py-1.5 sm:px-4 sm:py-2 transition-all duration-300 bg-sky-400/10 text-sky-400';
+                            }
                         }
 
                         if (triggerLabel) {
@@ -651,7 +674,7 @@
                         }
 
                         if (countNode) {
-                            countNode.textContent = data.reactions_count + ' cảm xúc';
+                            countNode.textContent = data.reactions_count;
                         }
 
                         if (picker) {
@@ -1834,8 +1857,125 @@
                     hideSuggestions();
                 }
             });
+
+            // Modal danh sách cảm xúc
+            const reactionsModal = document.getElementById('reactions-list-modal');
+            const reactionsModalLoading = document.getElementById('reactions-modal-loading');
+            const reactionsModalList = document.getElementById('reactions-modal-list');
+
+            window.openReactionsModal = function(postId) {
+                if (!reactionsModal) return;
+                reactionsModal.classList.remove('hidden');
+                reactionsModal.classList.add('flex');
+                
+                reactionsModalLoading.classList.remove('hidden');
+                reactionsModalList.classList.add('hidden');
+                reactionsModalList.innerHTML = '';
+                
+                fetch(`/posts/${postId}/reactors`)
+                    .then(res => res.json())
+                    .then(data => {
+                        reactionsModalLoading.classList.add('hidden');
+                        reactionsModalList.classList.remove('hidden');
+                        
+                        if (data.success && data.reactors && data.reactors.length > 0) {
+                            reactionsModalList.innerHTML = data.reactors.map(user => {
+                                const verifyBadge = user.is_verified ? `
+                                    <span class="material-symbols-outlined text-base text-sky-400 shrink-0" data-icon="verified" style="font-variation-settings: 'FILL' 1;">
+                                        verified
+                                    </span>
+                                ` : '';
+                                
+                                return `
+                                    <div class="flex items-center justify-between p-2 rounded-xl hover:bg-white/5 transition-colors">
+                                        <div class="flex items-center gap-3">
+                                            <a href="/profile/${user.username}">
+                                                <img class="w-10 h-10 rounded-full object-cover border border-white/10" src="${user.avatar}" alt="${user.name}">
+                                            </a>
+                                            <div>
+                                                <div class="flex items-center gap-1">
+                                                    <a href="/profile/${user.username}" class="font-bold text-on-surface hover:text-sky-300 transition-colors text-sm">${user.name}</a>
+                                                    ${verifyBadge}
+                                                </div>
+                                                <div class="text-xs text-slate-500">@${user.username}</div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Loại cảm xúc -->
+                                        <div class="flex items-center justify-center w-8 h-8 rounded-full ${user.reaction_bg}">
+                                            <span class="material-symbols-outlined text-[18px] ${user.reaction_color}" style="font-variation-settings: 'FILL' 1;">${user.reaction_icon}</span>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('');
+                        } else {
+                            reactionsModalList.innerHTML = `
+                                <div class="text-center py-8 text-slate-500">
+                                    <span class="material-symbols-outlined text-4xl mb-2 text-slate-600">mood_bad</span>
+                                    <p class="text-sm">Chưa có ai thả cảm xúc cho bài viết này.</p>
+                                </div>
+                            `;
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        reactionsModalLoading.classList.add('hidden');
+                        reactionsModalList.classList.remove('hidden');
+                        reactionsModalList.innerHTML = `
+                            <div class="text-center py-8 text-red-400">
+                                <span class="material-symbols-outlined text-4xl mb-2">error</span>
+                                <p class="text-sm">Có lỗi xảy ra khi tải danh sách. Vui lòng thử lại.</p>
+                            </div>
+                        `;
+                    });
+            }
+
+            window.closeReactionsModal = function() {
+                if (!reactionsModal) return;
+                reactionsModal.classList.add('hidden');
+                reactionsModal.classList.remove('flex');
+            }
+
+            // Click outside to close
+            if (reactionsModal) {
+                reactionsModal.addEventListener('click', function(e) {
+                    if (e.target === reactionsModal) {
+                        closeReactionsModal();
+                    }
+                });
+            }
         });
     </script>
+
+    <!-- MODAL HIỂN THỊ CÁC USER ĐÃ THẢ CẢM XÚC -->
+    <div id="reactions-list-modal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+        <div class="glass-panel-elevated w-full max-w-md rounded-2xl overflow-hidden shadow-2xl animate-modal-in flex flex-col max-h-[500px]">
+            <!-- Header Modal -->
+            <div class="flex items-center justify-between px-6 py-4 border-b border-white/10">
+                <h3 class="text-lg font-bold text-on-surface flex items-center gap-2">
+                    <span class="material-symbols-outlined text-sky-400">favorite</span>
+                    Người đã bày tỏ cảm xúc
+                </h3>
+                <button type="button" onclick="closeReactionsModal()" class="text-slate-400 hover:text-white p-1 rounded-full hover:bg-white/5 transition-colors">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            
+            <!-- List -->
+            <div id="reactions-list-container" class="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-4">
+                <!-- Loading State -->
+                <div class="text-center py-8 text-slate-500" id="reactions-modal-loading">
+                    <div class="inline-block animate-spin w-6 h-6 border-2 border-sky-400 border-t-transparent rounded-full mb-2"></div>
+                    <p class="text-sm">Đang tải danh sách...</p>
+                </div>
+                
+                <!-- Content Area -->
+                <div id="reactions-modal-list" class="space-y-3.5 hidden">
+                    <!-- User elements will be injected here -->
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>

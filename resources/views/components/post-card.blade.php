@@ -120,7 +120,7 @@
     $selected = $userReaction ? ($reactionButtons[$userReaction] ?? null) : null;
     $selectedIcon = $selected['icon'] ?? 'thumb_up';
     $selectedLabel = $selected['label'] ?? 'Thích';
-    $selectedColor = $selected['color'] ?? 'text-sky-400';
+    $selectedColor = $selected ? ($selected['color'] ?? 'text-sky-400') : '';
 
     $isProfileUpdate = \Illuminate\Support\Str::startsWith($body, 'vừa cập nhật ảnh');
 
@@ -138,7 +138,7 @@
     $totalPollVotes = $pollVotes->count();
 @endphp
 
-<article {{ $attributes->merge(['class' => 'glass-panel group rounded-2xl p-6 transition-all hover:border-sky-400/30']) }}>
+<article {{ $attributes->merge(['class' => ($isShared ? 'bg-slate-900/40 p-4 border border-white/5 rounded-xl' : 'glass-panel p-6') . ' group rounded-2xl transition-all hover:border-sky-400/30']) }}>
     <div class="flex gap-4">
         <a href="{{ $authorUsername ? route('profile.public', $authorUsername) : '#' }}" class="shrink-0 hover:opacity-80 transition-opacity" title="Xem trang cá nhân của {{ $authorName }}">
             <img
@@ -150,94 +150,106 @@
 
         <div class="min-w-0 flex-1 space-y-3">
             <div class="flex items-start justify-between gap-4">
-                <div class="min-w-0">
-                    <div class="flex flex-wrap items-center gap-2">
+                <div class="min-w-0 flex-1">
+                    <!-- Dòng 1: Tên hiển thị + Tích xanh -->
+                    <div class="flex items-center gap-1">
                         <a href="{{ $authorUsername ? route('profile.public', $authorUsername) : '#' }}" class="truncate font-bold text-on-surface hover:text-sky-300 transition-colors">
                             {{ $authorName }}
                         </a>
-
-                        @if($isProfileUpdate)
-                            <span class="text-sm text-slate-400">{{ $body }}</span>
-                        @endif
-
-                        @if (data_get($post, 'cam_xuc') || data_get($post, 'hoat_dong'))
-                            @php
-                            $camXucLabels = [
-                                'vui_ve' => 'vui vẻ',
-                                'phan_no' => 'phẫn nộ',
-                                'buon' => 'buồn',
-                                'wow' => 'wow',
-                            ];
-                            @endphp
-                            <span class="text-sm text-slate-400 flex items-center gap-1">
-                                @if (data_get($post, 'cam_xuc'))
-                                    đang cảm thấy <span class="font-medium text-slate-300">{{ $camXucLabels[data_get($post, 'cam_xuc')] ?? strtolower(data_get($post, 'cam_xuc')) }}</span>
-                                @endif
-                                @if (data_get($post, 'hoat_dong'))
-                                    {{ strtolower(data_get($post, 'hoat_dong')) }}
-                                @endif
-                            </span>
-                        @endif
-
-                        @if (data_get($post, 'ten_dia_diem'))
-                            <span class="text-sm text-slate-400 flex items-center gap-1">
-                                đang ở <a href="https://www.google.com/maps/search/?api=1&query={{ urlencode(data_get($post, 'ten_dia_diem')) }}{{ data_get($post, 'vi_do') && data_get($post, 'kinh_do') ? ',' . data_get($post, 'vi_do') . ',' . data_get($post, 'kinh_do') : '' }}" target="_blank" rel="noopener noreferrer" class="font-medium text-red-400 hover:text-red-300 hover:underline inline-flex items-center gap-0.5 transition-colors">
-                                    <span class="material-symbols-outlined text-[16px] text-red-400" style="font-variation-settings: 'FILL' 1;">location_on</span>
-                                    {{ data_get($post, 'ten_dia_diem') }}
-                                </a>
-                            </span>
-                        @endif
-
-                        @if (data_get($post, 'loai') === 'chia_se')
-                            <span class="text-sm text-slate-400 flex items-center gap-1">
-                                đã chia sẻ một bài viết
-                            </span>
-                        @endif
-
                         @if ($isVerified)
-                            <span class="material-symbols-outlined text-base text-sky-400" data-icon="verified" style="font-variation-settings: 'FILL' 1;">
+                            <span class="material-symbols-outlined text-base text-sky-400 shrink-0" data-icon="verified" style="font-variation-settings: 'FILL' 1;" title="Tài khoản đã xác thực">
                                 verified
                             </span>
                         @endif
-
-                        <span class="text-sm text-slate-500">
-                            @if ($authorUsername)
-                                {{ '@' . $authorUsername }} ·
-                            @endif
-                            {{ $displayTime }}
-                            @if (data_get($post, 'da_chinh_sua'))
-                                <span class="text-[12px] text-slate-500/70 ml-1">· Đã chỉnh sửa</span>
-                            @endif
-                        </span>
                     </div>
-                </div>
 
-                @if(auth()->id() === data_get($post, 'nguoi_dung_id') || (isset($user) && auth()->id() === data_get($user, 'id')))
-                    <div class="relative shrink-0">
-                        <button type="button" class="post-dropdown-trigger text-slate-500 transition-colors hover:text-sky-300 p-2 rounded-full hover:bg-white/5" aria-label="Tùy chọn bài viết">
-                            <span class="material-symbols-outlined" data-icon="more_horiz">more_horiz</span>
-                        </button>
-                        <div class="post-dropdown-menu hidden absolute right-0 top-full mt-1 w-40 bg-slate-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden z-20">
-                            @if($postId)
-                            <button type="button" class="w-full text-left px-4 py-3 text-sm text-sky-400 hover:bg-white/5 flex items-center gap-2 transition-colors border-b border-white/5" onclick="window.openEditModal('{{ $postId }}', this.getAttribute('data-post-content'))" data-post-content="{{ data_get($post, 'noi_dung') }}">
-                                <span class="material-symbols-outlined text-[18px]">edit</span>
-                                Chỉnh sửa bài viết
-                            </button>
-                            <form action="{{ route('posts.destroy', $postId) }}" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn xóa bài viết này? Các ảnh/video đính kèm cũng sẽ bị xóa vĩnh viễn.');">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="w-full text-left px-4 py-3 text-sm text-red-400 hover:bg-white/5 flex items-center gap-2 transition-colors">
-                                    <span class="material-symbols-outlined text-[18px]">delete</span>
-                                    Xóa bài viết
-                                </button>
-                            </form>
+                    <!-- Dòng 2: Username + Thời gian (Nằm trực tiếp dưới Tên hiển thị) -->
+                    <div class="flex items-center gap-1.5 mt-0.5 text-xs text-slate-500">
+                        @if ($authorUsername)
+                            <a href="{{ route('profile.public', $authorUsername) }}" class="hover:underline text-slate-400 font-medium">
+                                {{ '@' . $authorUsername }}
+                            </a>
+                            <span>·</span>
+                        @endif
+                        <span>{{ $displayTime }}</span>
+                        @if (data_get($post, 'da_chinh_sua'))
+                            <span>·</span>
+                            <span class="text-slate-500/70">Đã chỉnh sửa</span>
+                        @endif
+                    </div>
+
+                    <!-- Dòng 3 (Nếu có): Trạng thái cảm xúc, hoạt động, địa điểm, hành động chia sẻ -->
+                    @if($isProfileUpdate || data_get($post, 'cam_xuc') || data_get($post, 'hoat_dong') || data_get($post, 'ten_dia_diem') || data_get($post, 'loai') === 'chia_se')
+                        <div class="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1.5 text-sm text-slate-400">
+                            @if($isProfileUpdate)
+                                <span>{{ $body }}</span>
+                            @endif
+
+                            @if (data_get($post, 'cam_xuc') || data_get($post, 'hoat_dong'))
+                                @php
+                                $camXucLabels = [
+                                    'vui_ve' => 'vui vẻ',
+                                    'phan_no' => 'phẫn nộ',
+                                    'buon' => 'buồn',
+                                    'wow' => 'wow',
+                                ];
+                                @endphp
+                                <span>
+                                    @if (data_get($post, 'cam_xuc'))
+                                        đang cảm thấy <span class="font-medium text-slate-300">{{ $camXucLabels[data_get($post, 'cam_xuc')] ?? strtolower(data_get($post, 'cam_xuc')) }}</span>
+                                    @endif
+                                    @if (data_get($post, 'hoat_dong'))
+                                        {{ strtolower(data_get($post, 'hoat_dong')) }}
+                                    @endif
+                                </span>
+                            @endif
+
+                            @if (data_get($post, 'ten_dia_diem'))
+                                <span class="inline-flex items-center gap-0.5">
+                                    đang ở <a href="https://www.google.com/maps/search/?api=1&query={{ urlencode(data_get($post, 'ten_dia_diem')) }}{{ data_get($post, 'vi_do') && data_get($post, 'kinh_do') ? ',' . data_get($post, 'vi_do') . ',' . data_get($post, 'kinh_do') : '' }}" target="_blank" rel="noopener noreferrer" class="font-medium text-red-400 hover:text-red-300 hover:underline inline-flex items-center gap-0.5 transition-colors">
+                                        <span class="material-symbols-outlined text-[16px] text-red-400" style="font-variation-settings: 'FILL' 1;">location_on</span>
+                                        {{ data_get($post, 'ten_dia_diem') }}
+                                    </a>
+                                </span>
+                            @endif
+
+                            @if (data_get($post, 'loai') === 'chia_se')
+                                <span>
+                                    đã chia sẻ một bài viết
+                                </span>
                             @endif
                         </div>
-                    </div>
-                @else
-                    <button class="shrink-0 text-slate-500 transition-colors hover:text-sky-300 p-2 rounded-full hover:bg-white/5" type="button" aria-label="Tùy chọn bài viết">
-                        <span class="material-symbols-outlined" data-icon="more_horiz">more_horiz</span>
-                    </button>
+                    @endif
+                </div>
+
+                @if (!$isShared)
+                    @if(auth()->id() === data_get($post, 'nguoi_dung_id') || (isset($user) && auth()->id() === data_get($user, 'id')))
+                        <div class="relative shrink-0">
+                            <button type="button" class="post-dropdown-trigger text-slate-500 transition-colors hover:text-sky-300 p-2 rounded-full hover:bg-white/5" aria-label="Tùy chọn bài viết">
+                                <span class="material-symbols-outlined" data-icon="more_horiz">more_horiz</span>
+                            </button>
+                            <div class="post-dropdown-menu hidden absolute right-0 top-full mt-1 w-40 bg-slate-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden z-20">
+                                @if($postId)
+                                <button type="button" class="w-full text-left px-4 py-3 text-sm text-sky-400 hover:bg-white/5 flex items-center gap-2 transition-colors border-b border-white/5" onclick="window.openEditModal('{{ $postId }}', this.getAttribute('data-post-content'))" data-post-content="{{ data_get($post, 'noi_dung') }}">
+                                    <span class="material-symbols-outlined text-[18px]">edit</span>
+                                    Chỉnh sửa bài viết
+                                </button>
+                                <form action="{{ route('posts.destroy', $postId) }}" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn xóa bài viết này? Các ảnh/video đính kèm cũng sẽ bị xóa vĩnh viễn.');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="w-full text-left px-4 py-3 text-sm text-red-400 hover:bg-white/5 flex items-center gap-2 transition-colors">
+                                        <span class="material-symbols-outlined text-[18px]">delete</span>
+                                        Xóa bài viết
+                                    </button>
+                                </form>
+                                @endif
+                            </div>
+                        </div>
+                    @else
+                        <button class="shrink-0 text-slate-500 transition-colors hover:text-sky-300 p-2 rounded-full hover:bg-white/5" type="button" aria-label="Tùy chọn bài viết">
+                            <span class="material-symbols-outlined" data-icon="more_horiz">more_horiz</span>
+                        </button>
+                    @endif
                 @endif
             </div>
 
@@ -372,8 +384,32 @@
             @endif
 
             @if (!$isShared)
-            <div class="flex flex-col gap-3 pt-4 border-t border-white/5 mt-4 text-slate-400">
-                <div class="relative" data-reaction-area>
+            <div data-reaction-area>
+                <!-- Dòng số liệu tương tác (Reactions, Comments, Shares) kiểu Facebook nằm phía TRÊN thanh nút bấm -->
+                <div class="flex items-center justify-between mt-4 pb-3 border-b border-white/5 text-xs sm:text-sm text-slate-400 select-none">
+                    <button type="button" onclick="window.openReactionsModal('{{ $postId }}')" class="flex items-center gap-1.5 hover:underline cursor-pointer group">
+                        <div class="flex -space-x-1 items-center">
+                            <span class="material-symbols-outlined text-[15px] sm:text-[16px] text-sky-400 bg-sky-500/20 rounded-full p-0.5" style="font-variation-settings: 'FILL' 1;">thumb_up</span>
+                            <span class="material-symbols-outlined text-[15px] sm:text-[16px] text-rose-400 bg-rose-500/20 rounded-full p-0.5" style="font-variation-settings: 'FILL' 1;">favorite</span>
+                            <span class="material-symbols-outlined text-[15px] sm:text-[16px] text-yellow-300 bg-yellow-500/20 rounded-full p-0.5" style="font-variation-settings: 'FILL' 1;">mood</span>
+                        </div>
+                        <span class="font-semibold text-slate-300 group-hover:text-sky-400 transition-colors" data-reaction-count-display="{{ $postId }}"><span data-reaction-count>{{ $reactionCount }}</span> cảm xúc</span>
+                    </button>
+
+                    <div class="flex items-center gap-2 text-slate-500">
+                        <button type="button" data-comment-toggle class="hover:underline hover:text-sky-300 font-medium text-slate-400 transition-colors">
+                            <span data-comment-count-text>{{ $commentCount }}</span> bình luận
+                        </button>
+                        @if($shareCount > 0)
+                            <span>·</span>
+                            <span class="font-medium text-slate-400"><span data-share-count-text>{{ $shareCount }}</span> lượt chia sẻ</span>
+                        @endif
+                    </div>
+                </div>
+
+                <!-- Thanh nút bấm hành động (Like, Comment, Share, Bookmark) -->
+                <div class="flex flex-col gap-3 pt-3 mt-1 text-slate-400">
+                    <div class="relative">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-1 sm:gap-2">
                             <button type="button" data-reaction-trigger class="group flex items-center gap-1.5 rounded-full px-3 py-1.5 sm:px-4 sm:py-2 transition-all duration-300 {{ $selected ? 'bg-sky-400/10 text-sky-400' : 'text-slate-400 hover:bg-slate-800/60 hover:text-sky-300' }}">
@@ -388,7 +424,6 @@
                                     <span class="material-symbols-outlined text-[20px] sm:text-[22px]" data-icon="chat_bubble_outline">chat_bubble</span>
                                 </div>
                                 <span class="text-[13px] sm:text-sm font-semibold tracking-wide hidden sm:block">Bình luận</span>
-                                <span class="text-[13px] sm:text-sm font-bold text-slate-500 group-hover:text-sky-400/80" data-comment-count>{{ $commentCount > 0 ? '('.$commentCount.')' : '' }}</span>
                             </button>
 
                             @if($hasPersistedPost)
@@ -397,7 +432,6 @@
                                         <span class="material-symbols-outlined text-[20px] sm:text-[22px]" data-icon="share">share</span>
                                     </div>
                                     <span class="text-[13px] sm:text-sm font-semibold tracking-wide hidden sm:block">Chia sẻ</span>
-                                    <span class="text-[13px] sm:text-sm font-bold text-slate-500 group-hover:text-emerald-400/80" data-share-count>{{ $shareCount > 0 ? '('.$shareCount.')' : '' }}</span>
                                 </button>
                             @endif
 
@@ -407,10 +441,6 @@
                                 </div>
                                 <span class="text-[13px] sm:text-sm font-semibold tracking-wide hidden sm:block" data-bookmark-text>{{ $isBookmarked ? 'Đã lưu' : 'Lưu' }}</span>
                             </button>
-                        </div>
-
-                        <div class="flex items-center gap-1.5 pl-2">
-                            <span class="text-[13px] sm:text-sm text-slate-400 font-medium" data-reaction-count>{{ $reactionCount }} cảm xúc</span>
                         </div>
                     </div>
 
