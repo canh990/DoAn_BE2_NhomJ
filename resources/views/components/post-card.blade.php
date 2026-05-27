@@ -157,6 +157,15 @@
                             </span>
                         @endif
 
+                        @if (data_get($post, 'ten_dia_diem'))
+                            <span class="text-sm text-slate-400 flex items-center gap-1">
+                                đang ở <a href="https://www.google.com/maps/search/?api=1&query={{ urlencode(data_get($post, 'ten_dia_diem')) }}{{ data_get($post, 'vi_do') && data_get($post, 'kinh_do') ? ',' . data_get($post, 'vi_do') . ',' . data_get($post, 'kinh_do') : '' }}" target="_blank" rel="noopener noreferrer" class="font-medium text-red-400 hover:text-red-300 hover:underline inline-flex items-center gap-0.5 transition-colors">
+                                    <span class="material-symbols-outlined text-[16px] text-red-400" style="font-variation-settings: 'FILL' 1;">location_on</span>
+                                    {{ data_get($post, 'ten_dia_diem') }}
+                                </a>
+                            </span>
+                        @endif
+
                         @if (data_get($post, 'loai') === 'chia_se')
                             <span class="text-sm text-slate-400 flex items-center gap-1">
                                 đã chia sẻ một bài viết

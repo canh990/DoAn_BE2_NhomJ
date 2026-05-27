@@ -80,11 +80,14 @@ class PostController extends Controller
             'hoat_dong' => ['nullable', 'string', 'max:100'],
             'anh' => ['nullable', 'array', 'max:10'], // Tối đa 10 tệp
             'anh.*' => ['file', 'mimes:jpeg,png,jpg,gif,webp,bmp,svg,heic,heif,mp4,mov,webm,avi,mkv,wmv', 'max:51200'], 
+            'ten_dia_diem' => ['nullable', 'string', 'max:255'],
+            'vi_do' => ['nullable', 'numeric'],
+            'kinh_do' => ['nullable', 'numeric'],
         ]);
 
-        // Kiểm tra ít nhất có nội dung hoặc file
-        if (empty($validated['noi_dung']) && !$request->hasFile('anh') && empty($validated['cam_xuc']) && empty($validated['hoat_dong'])) {
-            return back()->withErrors(['noi_dung' => 'Bài viết phải có nội dung, cảm xúc, hoặc hình ảnh/video.']);
+        // Kiểm tra ít nhất có nội dung, file hoặc vị trí
+        if (empty($validated['noi_dung']) && !$request->hasFile('anh') && empty($validated['cam_xuc']) && empty($validated['hoat_dong']) && empty($validated['ten_dia_diem'])) {
+            return back()->withErrors(['noi_dung' => 'Bài viết phải có nội dung, cảm xúc, địa điểm check-in, hoặc hình ảnh/video.']);
         }
 
         $post = BaiViet::create([
@@ -93,6 +96,9 @@ class PostController extends Controller
             'noi_dung' => $validated['noi_dung'] ?? null,
             'cam_xuc' => $validated['cam_xuc'] ?? null,
             'hoat_dong' => $validated['hoat_dong'] ?? null,
+            'ten_dia_diem' => $validated['ten_dia_diem'] ?? null,
+            'vi_do' => $validated['vi_do'] ?? null,
+            'kinh_do' => $validated['kinh_do'] ?? null,
             'quyen_rieng_tu' => 'cong_khai',
         ]);
 
