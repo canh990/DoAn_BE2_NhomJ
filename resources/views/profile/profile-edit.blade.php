@@ -18,11 +18,7 @@
         </div>
     </div>
 
-    @if(session('success'))
-    <div class="mb-6 rounded-2xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-200 animate-fade-in">
-        {{ session('success') }}
-    </div>
-    @endif
+
 
     <form action="{{ route('profile.update') }}" method="POST" enctype="multipart/form-data" class="space-y-8">
         @csrf
@@ -122,14 +118,52 @@
 
                 <div class="space-y-2 md:col-span-2">
                     <label class="text-xs font-bold uppercase tracking-wider text-slate-500 ml-1">Địa chỉ Email</label>
-                    <div class="relative opacity-60">
-                        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">mail</span>
-                        <input
-                            type="email"
-                            value="{{ $user->email }}"
-                            disabled
-                            class="w-full bg-slate-900/50 border border-white/5 rounded-2xl py-3.5 pl-12 pr-4 text-slate-400 cursor-not-allowed">
+                    <div class="relative flex items-center gap-3">
+                        {{-- Email field (readonly) --}}
+                        <div class="relative flex-1">
+                            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">mail</span>
+                            <input
+                                type="email"
+                                value="{{ $user->email }}"
+                                disabled
+                                id="current-email-display"
+                                class="w-full bg-slate-900/50 border border-white/5 rounded-2xl py-3.5 pl-12 pr-4 text-slate-400 cursor-not-allowed">
+                        </div>
+
+                        {{-- Action buttons: Verify + Change Email --}}
+                        <div class="flex items-center gap-2 shrink-0">
+                            {{-- Verified badge OR verify button --}}
+                            @if($user->da_xac_thuc)
+                                <div class="flex items-center gap-1.5 px-3 py-3 rounded-2xl bg-sky-500/10 border border-sky-500/20 text-sky-300 text-sm font-bold whitespace-nowrap">
+                                    <span class="material-symbols-outlined text-[18px]" style="font-variation-settings:'FILL' 1;">verified</span>
+                                    Đã xác minh
+                                </div>
+                            @else
+                                <button type="button" id="btn-open-verify-email"
+                                    class="flex items-center gap-1.5 px-3 py-3 rounded-2xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 text-amber-300 text-sm font-bold whitespace-nowrap transition-all hover:scale-[1.02] active:scale-95">
+                                    <span class="material-symbols-outlined text-[18px]">verified_user</span>
+                                    Xác minh
+                                </button>
+                            @endif
+
+                            {{-- Change Email button: chỉ hiện với tài khoản thường --}}
+                            @if(!$user->nha_cung_cap_oauth)
+                                <button type="button" id="btn-open-change-email"
+                                    class="flex items-center gap-1.5 px-3 py-3 rounded-2xl bg-slate-700/50 hover:bg-slate-700 border border-white/10 text-slate-300 text-sm font-bold whitespace-nowrap transition-all hover:scale-[1.02] active:scale-95">
+                                    <span class="material-symbols-outlined text-[18px]">edit</span>
+                                    Đổi email
+                                </button>
+                            @endif
+                        </div>
                     </div>
+                    @if($user->nha_cung_cap_oauth)
+                        <p class="text-xs text-slate-500 ml-1 flex items-center gap-1">
+                            <span class="material-symbols-outlined text-[14px] text-slate-600">info</span>
+                            Email được quản lý bởi <span class="text-sky-500 font-semibold">{{ ucfirst($user->nha_cung_cap_oauth) }}</span> và không thể thay đổi tại đây.
+                        </p>
+                    @elseif(!$user->da_xac_thuc)
+                        <p class="text-xs text-slate-500 ml-1">Xác minh email để nhận <span class="text-sky-400 font-bold">tích xanh ✓</span> trên hồ sơ của bạn.</p>
+                    @endif
                 </div>
             </div>
 
@@ -904,4 +938,514 @@
         animation: fade-in 0.3s ease-out forwards;
     }
 </style>
+
+{{-- ===== MODAL XÁC MINH EMAIL QUA OTP ===== --}}
+@if(!$user->da_xac_thuc)
+<div id="modal-verify-email" class="fixed inset-0 z-[300] hidden items-center justify-center bg-black/80 backdrop-blur-md px-4">
+    <div class="w-full max-w-md glass-panel rounded-3xl p-8 shadow-2xl border border-white/10 animate-fade-in">
+        {{-- Header --}}
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h2 class="text-xl font-bold text-on-surface flex items-center gap-2">
+                    <span class="material-symbols-outlined text-amber-400" style="font-variation-settings:'FILL' 1;">verified_user</span>
+                    Xác minh Email
+                </h2>
+                <p class="text-sm text-slate-400 mt-1">Nhận <span class="text-sky-400 font-bold">tích xanh ✓</span> cho hồ sơ của bạn</p>
+            </div>
+            <button type="button" id="btn-close-verify-modal"
+                class="w-9 h-9 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 flex items-center justify-center transition-all">
+                <span class="material-symbols-outlined text-[20px]">close</span>
+            </button>
+        </div>
+
+        {{-- Step 1: Send OTP --}}
+        <div id="verify-step-1">
+            <div class="p-4 rounded-2xl bg-slate-900/50 border border-white/5 mb-6">
+                <p class="text-sm text-slate-300">Mã OTP sẽ được gửi đến:</p>
+                <p class="text-base font-bold text-sky-300 mt-1">{{ $user->email }}</p>
+            </div>
+            <button type="button" id="btn-send-verify-otp"
+                class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-bold text-sm shadow-lg shadow-sky-500/20 transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined text-[20px]">send</span>
+                <span id="btn-send-text">Gửi mã OTP</span>
+            </button>
+            <p id="send-countdown" class="text-center text-xs text-slate-500 mt-3 hidden">
+                Gửi lại sau <span id="countdown-seconds" class="text-sky-400 font-bold">60</span>s
+            </p>
+        </div>
+
+        {{-- Step 2: Enter OTP --}}
+        <div id="verify-step-2" class="hidden mt-4">
+            <p class="text-sm text-slate-400 mb-4 text-center">Nhập mã 6 chữ số đã được gửi đến email của bạn</p>
+            <div class="flex justify-center gap-2 mb-6">
+                @for($i = 0; $i < 6; $i++)
+                <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]"
+                    class="verify-otp-input w-12 h-14 text-center text-xl font-bold rounded-xl bg-slate-900/50 border border-white/10 focus:border-sky-400 focus:ring-2 focus:ring-sky-400/20 text-on-surface outline-none transition-all"
+                    id="verify-otp-{{ $i }}">
+                @endfor
+            </div>
+            <p id="verify-error" class="text-center text-xs text-red-400 mb-3 hidden"></p>
+            <button type="button" id="btn-confirm-otp"
+                class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold text-sm shadow-lg shadow-emerald-500/20 transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined text-[20px]">check_circle</span>
+                Xác nhận & Nhận tích xanh
+            </button>
+        </div>
+
+        {{-- Step 3: Success --}}
+        <div id="verify-step-3" class="hidden text-center py-4">
+            <div class="w-20 h-20 rounded-full bg-sky-500/10 border border-sky-500/20 flex items-center justify-center mx-auto mb-4">
+                <span class="material-symbols-outlined text-5xl text-sky-400" style="font-variation-settings:'FILL' 1;">verified</span>
+            </div>
+            <h3 class="text-xl font-bold text-on-surface">Xác minh thành công!</h3>
+            <p class="text-sm text-slate-400 mt-2">Hồ sơ của bạn đã được cấp tích xanh ✓</p>
+            <button type="button" onclick="window.location.reload()"
+                class="mt-6 px-8 py-3 rounded-2xl bg-sky-500/10 border border-sky-500/20 text-sky-300 font-bold text-sm transition-all hover:bg-sky-500/20">
+                Làm mới trang
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    const modal      = document.getElementById('modal-verify-email');
+    const openBtn    = document.getElementById('btn-open-verify-email');
+    const closeBtn   = document.getElementById('btn-close-verify-modal');
+    const sendBtn    = document.getElementById('btn-send-verify-otp');
+    const confirmBtn = document.getElementById('btn-confirm-otp');
+    const step1      = document.getElementById('verify-step-1');
+    const step2      = document.getElementById('verify-step-2');
+    const step3      = document.getElementById('verify-step-3');
+    const errorEl    = document.getElementById('verify-error');
+    const countdown  = document.getElementById('send-countdown');
+    const countdownSec = document.getElementById('countdown-seconds');
+
+    function openModal() {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        document.body.style.overflow = 'hidden';
+    }
+    function closeModal() {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        document.body.style.overflow = '';
+    }
+
+    if (openBtn) openBtn.addEventListener('click', openModal);
+    if (closeBtn) closeBtn.addEventListener('click', closeModal);
+    modal?.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+
+    // OTP input: auto-advance
+    const otpInputs = document.querySelectorAll('.verify-otp-input');
+    otpInputs.forEach((inp, idx) => {
+        inp.addEventListener('input', () => {
+            inp.value = inp.value.replace(/\D/g, '');
+            if (inp.value && idx < otpInputs.length - 1) otpInputs[idx + 1].focus();
+        });
+        inp.addEventListener('keydown', e => {
+            if (e.key === 'Backspace' && !inp.value && idx > 0) otpInputs[idx - 1].focus();
+        });
+    });
+
+    let countdownTimer = null;
+    function startCountdown() {
+        let secs = 60;
+        countdown.classList.remove('hidden');
+        sendBtn.disabled = true;
+        sendBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        countdownSec.textContent = secs;
+        countdownTimer = setInterval(() => {
+            secs--;
+            countdownSec.textContent = secs;
+            if (secs <= 0) {
+                clearInterval(countdownTimer);
+                countdown.classList.add('hidden');
+                sendBtn.disabled = false;
+                sendBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                document.getElementById('btn-send-text').textContent = 'Gửi lại OTP';
+            }
+        }, 1000);
+    }
+
+    // Send OTP
+    sendBtn?.addEventListener('click', async () => {
+        sendBtn.disabled = true;
+        document.getElementById('btn-send-text').textContent = 'Đang gửi...';
+        try {
+            const res = await fetch('{{ route("profile.send-verify-otp") }}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                }
+            });
+            const data = await res.json();
+            if (data.success) {
+                step2.classList.remove('hidden');
+                startCountdown();
+                otpInputs[0]?.focus();
+                if (window.showToast) window.showToast(data.message, 'success');
+            } else {
+                if (window.showToast) window.showToast(data.message, 'error');
+                sendBtn.disabled = false;
+                document.getElementById('btn-send-text').textContent = 'Gửi mã OTP';
+            }
+        } catch (err) {
+            sendBtn.disabled = false;
+            document.getElementById('btn-send-text').textContent = 'Gửi mã OTP';
+            if (window.showToast) window.showToast('Có lỗi xảy ra. Vui lòng thử lại.', 'error');
+        }
+    });
+
+    // Confirm OTP
+    confirmBtn?.addEventListener('click', async () => {
+        const otp = Array.from(otpInputs).map(i => i.value).join('');
+        if (otp.length < 6) {
+            errorEl.textContent = 'Vui lòng nhập đủ 6 chữ số.';
+            errorEl.classList.remove('hidden');
+            return;
+        }
+        errorEl.classList.add('hidden');
+        confirmBtn.disabled = true;
+        confirmBtn.innerHTML = '<span class="material-symbols-outlined text-[20px] animate-spin">progress_activity</span> Đang xác minh...';
+        try {
+            const res = await fetch('{{ route("profile.verify-email-otp") }}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ otp })
+            });
+            const data = await res.json();
+            if (data.success) {
+                step1.classList.add('hidden');
+                step2.classList.add('hidden');
+                step3.classList.remove('hidden');
+            } else {
+                errorEl.textContent = data.message;
+                errorEl.classList.remove('hidden');
+                confirmBtn.disabled = false;
+                confirmBtn.innerHTML = '<span class="material-symbols-outlined text-[20px]">check_circle</span> Xác nhận & Nhận tích xanh';
+            }
+        } catch (err) {
+            errorEl.textContent = 'Có lỗi xảy ra. Vui lòng thử lại.';
+            errorEl.classList.remove('hidden');
+            confirmBtn.disabled = false;
+            confirmBtn.innerHTML = '<span class="material-symbols-outlined text-[20px]">check_circle</span> Xác nhận & Nhận tích xanh';
+        }
+    });
+})();
+</script>
+@endif
+
+{{-- ===== MODAL ĐỔI EMAIL (chỉ hiện với tài khoản thường, không phải OAuth) ===== --}}
+@if(!$user->nha_cung_cap_oauth)
+<div id="modal-change-email" class="fixed inset-0 z-[300] hidden items-center justify-center bg-black/80 backdrop-blur-md px-4">
+    <div class="w-full max-w-md glass-panel rounded-3xl p-8 shadow-2xl border border-white/10 animate-fade-in">
+        {{-- Header --}}
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h2 class="text-xl font-bold text-on-surface flex items-center gap-2">
+                    <span class="material-symbols-outlined text-sky-400">edit</span>
+                    Đổi địa chỉ Email
+                </h2>
+                <p class="text-sm text-slate-400 mt-1">
+                    @if($user->nha_cung_cap_oauth)
+                        Nhập mã OTP gửi đến email hiện tại để xác nhận
+                    @else
+                        Nhập mật khẩu để xác nhận danh tính
+                    @endif
+                </p>
+            </div>
+            <button type="button" id="btn-close-change-email"
+                class="w-9 h-9 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 flex items-center justify-center transition-all">
+                <span class="material-symbols-outlined text-[20px]">close</span>
+            </button>
+        </div>
+
+        {{-- Step 1: Verify identity --}}
+        <div id="change-step-1" class="space-y-4">
+            {{-- New email input --}}
+            <div class="space-y-1.5">
+                <label class="text-xs font-bold uppercase tracking-wider text-slate-500">Email mới</label>
+                <div class="relative">
+                    <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">mail</span>
+                    <input type="email" id="change-new-email" placeholder="Nhập địa chỉ email mới..."
+                        class="w-full bg-slate-900/50 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-on-surface focus:border-sky-400/50 focus:ring-2 focus:ring-sky-400/10 outline-none transition-all">
+                </div>
+            </div>
+
+            {{-- Password OR OTP send button --}}
+            @if($user->nha_cung_cap_oauth)
+                {{-- OAuth users: send OTP to current email --}}
+                <div class="p-3.5 rounded-2xl bg-slate-900/50 border border-white/5 text-sm text-slate-400">
+                    Mã OTP sẽ được gửi đến email hiện tại:
+                    <span class="text-sky-300 font-bold ml-1">{{ $user->email }}</span>
+                </div>
+                <button type="button" id="btn-send-change-otp"
+                    class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-bold text-sm shadow-lg shadow-sky-500/20 transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2">
+                    <span class="material-symbols-outlined text-[20px]">send</span>
+                    <span id="btn-change-send-text">Gửi mã OTP xác nhận</span>
+                </button>
+                <p id="change-send-countdown" class="text-center text-xs text-slate-500 hidden">
+                    Gửi lại sau <span id="change-countdown-sec" class="text-sky-400 font-bold">60</span>s
+                </p>
+            @else
+                {{-- Normal users: enter current password --}}
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold uppercase tracking-wider text-slate-500">Mật khẩu hiện tại</label>
+                    <div class="relative group">
+                        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-sky-400 transition-colors">lock</span>
+                        <input type="password" id="change-password" placeholder="Nhập mật khẩu của bạn..."
+                            class="w-full bg-slate-900/50 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-on-surface focus:border-sky-400/50 focus:ring-2 focus:ring-sky-400/10 outline-none transition-all">
+                    </div>
+                </div>
+                <p id="change-error-pass" class="text-xs text-red-400 hidden"></p>
+                <button type="button" id="btn-confirm-change-email"
+                    class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-bold text-sm shadow-lg shadow-sky-500/20 transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2">
+                    <span class="material-symbols-outlined text-[20px]">check_circle</span>
+                    Xác nhận đổi email
+                </button>
+            @endif
+        </div>
+
+        {{-- Step 2 (OAuth only): enter OTP --}}
+        @if($user->nha_cung_cap_oauth)
+        <div id="change-step-2" class="hidden mt-4 space-y-4">
+            <p class="text-sm text-slate-400 text-center">Nhập mã 6 chữ số đã gửi đến email hiện tại</p>
+            <div class="flex justify-center gap-2">
+                @for($i = 0; $i < 6; $i++)
+                <input type="text" maxlength="1" inputmode="numeric"
+                    class="change-otp-input w-12 h-14 text-center text-xl font-bold rounded-xl bg-slate-900/50 border border-white/10 focus:border-sky-400 focus:ring-2 focus:ring-sky-400/20 text-on-surface outline-none transition-all"
+                    id="change-otp-{{ $i }}">
+                @endfor
+            </div>
+            <p id="change-otp-error" class="text-center text-xs text-red-400 hidden"></p>
+            <button type="button" id="btn-confirm-change-email-otp"
+                class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold text-sm shadow-lg shadow-emerald-500/20 transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined text-[20px]">check_circle</span>
+                Xác nhận & Đổi email
+            </button>
+        </div>
+        @endif
+
+        {{-- Step 3: Success --}}
+        <div id="change-step-3" class="hidden text-center py-4">
+            <div class="w-20 h-20 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-4">
+                <span class="material-symbols-outlined text-5xl text-emerald-400" style="font-variation-settings:'FILL' 1;">mark_email_read</span>
+            </div>
+            <h3 class="text-xl font-bold text-on-surface">Đổi email thành công!</h3>
+            <p id="change-success-msg" class="text-sm text-slate-400 mt-2"></p>
+            <button type="button" onclick="window.location.reload()"
+                class="mt-6 px-8 py-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 font-bold text-sm transition-all hover:bg-emerald-500/20">
+                Làm mới trang
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    const modal    = document.getElementById('modal-change-email');
+    const openBtn  = document.getElementById('btn-open-change-email');
+    const closeBtn = document.getElementById('btn-close-change-email');
+    const step1    = document.getElementById('change-step-1');
+    const step2    = document.getElementById('change-step-2');
+    const step3    = document.getElementById('change-step-3');
+    const isOauth  = {{ $user->nha_cung_cap_oauth ? 'true' : 'false' }};
+
+    function openModal() {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        document.body.style.overflow = 'hidden';
+    }
+    function closeModal() {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        document.body.style.overflow = '';
+    }
+
+    openBtn?.addEventListener('click', openModal);
+    closeBtn?.addEventListener('click', closeModal);
+    modal?.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+
+    function showSuccess(msg) {
+        step1?.classList.add('hidden');
+        step2?.classList.add('hidden');
+        step3.classList.remove('hidden');
+        const msgEl = document.getElementById('change-success-msg');
+        if (msgEl) msgEl.textContent = msg;
+        // Update displayed email in the page
+        const emailDisplay = document.getElementById('current-email-display');
+        const newEmail = document.getElementById('change-new-email')?.value;
+        if (emailDisplay && newEmail) emailDisplay.value = newEmail;
+    }
+
+    // ============================
+    // NORMAL LOGIN: password flow
+    // ============================
+    const confirmPassBtn = document.getElementById('btn-confirm-change-email');
+    const passError      = document.getElementById('change-error-pass');
+
+    confirmPassBtn?.addEventListener('click', async () => {
+        const newEmail   = document.getElementById('change-new-email')?.value?.trim();
+        const password   = document.getElementById('change-password')?.value;
+        passError?.classList.add('hidden');
+
+        if (!newEmail) { passError.textContent = 'Vui lòng nhập email mới.'; passError.classList.remove('hidden'); return; }
+        if (!password) { passError.textContent = 'Vui lòng nhập mật khẩu.'; passError.classList.remove('hidden'); return; }
+
+        confirmPassBtn.disabled = true;
+        confirmPassBtn.innerHTML = '<span class="material-symbols-outlined text-[20px] animate-spin">progress_activity</span> Đang xử lý...';
+
+        try {
+            const res  = await fetch('{{ route("profile.change-email") }}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ new_email: newEmail, password })
+            });
+            const data = await res.json();
+            if (data.success) {
+                showSuccess(data.message);
+                if (window.showToast) window.showToast(data.message, 'success');
+            } else {
+                passError.textContent = data.message;
+                passError.classList.remove('hidden');
+                confirmPassBtn.disabled = false;
+                confirmPassBtn.innerHTML = '<span class="material-symbols-outlined text-[20px]">check_circle</span> Xác nhận đổi email';
+            }
+        } catch (err) {
+            passError.textContent = 'Có lỗi xảy ra. Vui lòng thử lại.';
+            passError.classList.remove('hidden');
+            confirmPassBtn.disabled = false;
+            confirmPassBtn.innerHTML = '<span class="material-symbols-outlined text-[20px]">check_circle</span> Xác nhận đổi email';
+        }
+    });
+
+    // ============================
+    // OAUTH LOGIN: OTP flow
+    // ============================
+    if (isOauth) {
+        const sendOtpBtn      = document.getElementById('btn-send-change-otp');
+        const countdownEl     = document.getElementById('change-send-countdown');
+        const countdownSecEl  = document.getElementById('change-countdown-sec');
+        const otpInputs       = document.querySelectorAll('.change-otp-input');
+        const confirmOtpBtn   = document.getElementById('btn-confirm-change-email-otp');
+        const otpError        = document.getElementById('change-otp-error');
+
+        // OTP auto advance
+        otpInputs.forEach((inp, idx) => {
+            inp.addEventListener('input', () => {
+                inp.value = inp.value.replace(/\D/g, '');
+                if (inp.value && idx < otpInputs.length - 1) otpInputs[idx + 1].focus();
+            });
+            inp.addEventListener('keydown', e => {
+                if (e.key === 'Backspace' && !inp.value && idx > 0) otpInputs[idx - 1].focus();
+            });
+        });
+
+        let cdTimer = null;
+        function startCd() {
+            let secs = 60;
+            countdownEl.classList.remove('hidden');
+            sendOtpBtn.disabled = true;
+            sendOtpBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            countdownSecEl.textContent = secs;
+            cdTimer = setInterval(() => {
+                secs--;
+                countdownSecEl.textContent = secs;
+                if (secs <= 0) {
+                    clearInterval(cdTimer);
+                    countdownEl.classList.add('hidden');
+                    sendOtpBtn.disabled = false;
+                    sendOtpBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    document.getElementById('btn-change-send-text').textContent = 'Gửi lại OTP';
+                }
+            }, 1000);
+        }
+
+        sendOtpBtn?.addEventListener('click', async () => {
+            const newEmail = document.getElementById('change-new-email')?.value?.trim();
+            if (!newEmail) {
+                if (window.showToast) window.showToast('Vui lòng nhập email mới trước.', 'error');
+                return;
+            }
+            sendOtpBtn.disabled = true;
+            document.getElementById('btn-change-send-text').textContent = 'Đang gửi...';
+            try {
+                const res  = await fetch('{{ route("profile.send-change-email-otp") }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ new_email: newEmail })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    step2.classList.remove('hidden');
+                    startCd();
+                    otpInputs[0]?.focus();
+                    if (window.showToast) window.showToast(data.message, 'success');
+                } else {
+                    if (window.showToast) window.showToast(data.message, 'error');
+                    sendOtpBtn.disabled = false;
+                    document.getElementById('btn-change-send-text').textContent = 'Gửi mã OTP xác nhận';
+                }
+            } catch (err) {
+                sendOtpBtn.disabled = false;
+                document.getElementById('btn-change-send-text').textContent = 'Gửi mã OTP xác nhận';
+                if (window.showToast) window.showToast('Có lỗi xảy ra.', 'error');
+            }
+        });
+
+        confirmOtpBtn?.addEventListener('click', async () => {
+            const otp      = Array.from(otpInputs).map(i => i.value).join('');
+            const newEmail = document.getElementById('change-new-email')?.value?.trim();
+            otpError?.classList.add('hidden');
+            if (otp.length < 6) { otpError.textContent = 'Vui lòng nhập đủ 6 chữ số.'; otpError.classList.remove('hidden'); return; }
+
+            confirmOtpBtn.disabled = true;
+            confirmOtpBtn.innerHTML = '<span class="material-symbols-outlined text-[20px] animate-spin">progress_activity</span> Đang xác minh...';
+            try {
+                const res  = await fetch('{{ route("profile.change-email") }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ new_email: newEmail, otp })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showSuccess(data.message);
+                    if (window.showToast) window.showToast(data.message, 'success');
+                } else {
+                    otpError.textContent = data.message;
+                    otpError.classList.remove('hidden');
+                    confirmOtpBtn.disabled = false;
+                    confirmOtpBtn.innerHTML = '<span class="material-symbols-outlined text-[20px]">check_circle</span> Xác nhận & Đổi email';
+                }
+            } catch (err) {
+                otpError.textContent = 'Có lỗi xảy ra.';
+                otpError.classList.remove('hidden');
+                confirmOtpBtn.disabled = false;
+                confirmOtpBtn.innerHTML = '<span class="material-symbols-outlined text-[20px]">check_circle</span> Xác nhận & Đổi email';
+            }
+        });
+    }
+})();
+</script>
+@endif
+
 @endsection

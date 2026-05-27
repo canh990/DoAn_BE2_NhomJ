@@ -22,11 +22,7 @@ $profileUrl = route('profile.public', ['username' => $user->ten_dang_nhap]);
 @endphp
 
 <div class="max-w-4xl mx-auto pb-20">
-    @if(session('success'))
-    <div class="mx-6 mt-6 rounded-2xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-200">
-        {{ session('success') }}
-    </div>
-    @endif
+
 
     <div class="relative">
         <div class="h-64 w-full overflow-hidden bg-slate-900">
@@ -130,6 +126,7 @@ $profileUrl = route('profile.public', ['username' => $user->ten_dang_nhap]);
             <button id="btn-tab-nhat-ky" data-tab="nhat-ky" class="tab-btn whitespace-nowrap px-6 py-4 font-medium text-slate-400 transition-all hover:bg-white/5 hover:text-sky-200">Nhật ký hoạt động</button>
             @endif
             <button id="btn-tab-phuong-tien" data-tab="phuong-tien" class="tab-btn whitespace-nowrap px-6 py-4 font-medium text-slate-400 transition-all hover:bg-white/5 hover:text-sky-200">Phương tiện</button>
+            <button id="btn-tab-ban-be" data-tab="ban-be" class="tab-btn whitespace-nowrap px-6 py-4 font-medium text-slate-400 transition-all hover:bg-white/5 hover:text-sky-200">Bạn bè ({{ $mutualFriends->count() }})</button>
         </div>
     </div>
 
@@ -279,6 +276,50 @@ $profileUrl = route('profile.public', ['username' => $user->ten_dang_nhap]);
                                     </div>
                                     <h3 class="text-lg font-bold text-on-surface">Không tìm thấy phương tiện</h3>
                                     <p class="mt-2 text-slate-400">Người dùng này chưa đăng tải hình ảnh hoặc video nào.</p>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+
+                    {{-- Tab Bạn bè --}}
+                    <div id="tab-content-ban-be" class="tab-content hidden">
+                        <div class="glass-panel rounded-3xl p-4 sm:p-6">
+                            <h3 class="text-xl font-bold text-sky-300 mb-6 flex items-center gap-2">
+                                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">group</span>
+                                Bạn bè
+                                <span class="ml-1 text-sm font-normal text-slate-400">({{ $mutualFriends->count() }})</span>
+                            </h3>
+
+                            @if($mutualFriends->count() > 0)
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    @foreach($mutualFriends as $friend)
+                                        <a href="{{ route('profile.public', ['username' => $friend->ten_dang_nhap]) }}"
+                                           class="flex items-center gap-3 p-3.5 rounded-2xl border border-sky-400/10 bg-white/[0.02] hover:bg-white/5 transition-all group">
+                                            <div class="relative shrink-0">
+                                                <img src="{{ $friend->avatar_url }}" alt="{{ $friend->name }}"
+                                                     class="h-12 w-12 rounded-full object-cover border-2 border-blue-500/40 group-hover:border-blue-500/80 transition-all">
+                                                <span class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-400 border-2 border-[#0f1524]"></span>
+                                            </div>
+                                            <div class="min-w-0 flex-1">
+                                                <h4 class="font-bold text-on-surface truncate flex items-center gap-1">
+                                                    {{ $friend->name }}
+                                                    @if($friend->da_xac_thuc)
+                                                        <span class="material-symbols-outlined text-sm text-sky-400 shrink-0" style="font-variation-settings: 'FILL' 1;">verified</span>
+                                                    @endif
+                                                </h4>
+                                                <p class="text-xs text-slate-400 truncate">{{ '@' . $friend->ten_dang_nhap }}</p>
+                                            </div>
+                                            <span class="material-symbols-outlined text-slate-500 group-hover:text-sky-400 group-hover:translate-x-0.5 transition-all text-[20px] shrink-0">chevron_right</span>
+                                        </a>
+                                    @endforeach
+                                </div>
+                            @else
+                                <div class="flex flex-col items-center justify-center py-20 text-center">
+                                    <div class="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-slate-800/50 text-slate-500 border border-dashed border-slate-700">
+                                        <span class="material-symbols-outlined text-4xl">group_off</span>
+                                    </div>
+                                    <h3 class="text-lg font-bold text-on-surface">Chưa có bạn bè chung</h3>
+                                    <p class="mt-2 text-slate-400 text-sm max-w-xs">Bạn bè là những người cả hai cùng theo dõi lẫn nhau.</p>
                                 </div>
                             @endif
                         </div>
@@ -541,7 +582,7 @@ $profileUrl = route('profile.public', ['username' => $user->ten_dang_nhap]);
                 const sidebar = document.getElementById('profile-sidebar');
                 const mainContent = document.getElementById('profile-main-content');
                 if (sidebar && mainContent) {
-                    if (tabId === 'nhat-ky' || tabId === 'phuong-tien') {
+                    if (tabId === 'nhat-ky' || tabId === 'phuong-tien' || tabId === 'ban-be') {
                         sidebar.classList.add('hidden');
                         mainContent.classList.remove('md:col-span-2');
                         mainContent.classList.add('md:col-span-3');

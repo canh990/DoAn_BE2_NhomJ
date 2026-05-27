@@ -42,6 +42,12 @@ class ProfileController extends Controller
             ->latest('ngay_tao')
             ->get();
 
+        // Bạn bè = những người theo dõi lẫn nhau (mutual follow)
+        $followerIds = $user->followers()->wherePivot('trang_thai', 'da_chap_nhan')->pluck('nguoi_dung.id');
+        $followingIds = $user->following()->wherePivot('trang_thai', 'da_chap_nhan')->pluck('nguoi_dung.id');
+        $mutualFriendIds = $followerIds->intersect($followingIds);
+        $mutualFriends = User::whereIn('id', $mutualFriendIds)->get();
+
         $likedPosts = auth()->check()
             ? BaiViet::query()
                 ->whereHas('reactions', function ($query) {
@@ -78,6 +84,7 @@ class ProfileController extends Controller
             'posts' => $posts,
             'stories' => $stories,
             'userMedia' => $userMedia,
+            'mutualFriends' => $mutualFriends,
             'likedPosts' => $likedPosts,
             'myComments' => $myComments,
             'savedPosts' => $savedPosts,
@@ -128,6 +135,12 @@ class ProfileController extends Controller
             ->get();
 
         $isOwnProfile = auth()->check() && auth()->id() === $user->id;
+
+        // Bạn bè = những người theo dõi lẫn nhau (mutual follow)
+        $followerIds = $user->followers()->wherePivot('trang_thai', 'da_chap_nhan')->pluck('nguoi_dung.id');
+        $followingIds = $user->following()->wherePivot('trang_thai', 'da_chap_nhan')->pluck('nguoi_dung.id');
+        $mutualFriendIds = $followerIds->intersect($followingIds);
+        $mutualFriends = User::whereIn('id', $mutualFriendIds)->get();
         
         $likedPosts = $isOwnProfile
             ? BaiViet::query()
@@ -165,6 +178,7 @@ class ProfileController extends Controller
             'posts' => $posts,
             'stories' => $stories,
             'userMedia' => $userMedia,
+            'mutualFriends' => $mutualFriends,
             'likedPosts' => $likedPosts,
             'myComments' => $myComments,
             'savedPosts' => $savedPosts,
@@ -339,6 +353,184 @@ class ProfileController extends Controller
             return response()->json(['success' => true, 'message' => 'Đã xóa ảnh bìa.']);
         }
         return response()->json(['success' => false, 'message' => 'Không tìm thấy ảnh bìa để xóa.']);
+    }
+
+    /**
+     * Gửi OTP đến email để xác minh tài khoản (lấy tích xanh).
+     */
+    public function sendVerifyEmailOtp()
+    {
+        $user = auth()->user();
+
+        if ($user->da_xac_thuc) {
+            return response()->json(['success' => false, 'message' => 'Email của bạn đã được xác minh.']);
+        }
+
+        $otpCode = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+
+        $user->update([
+            'otp_code'    => $otpCode,
+            'otp_het_han' => \Carbon\Carbon::now()->addMinutes(10),
+        ]);
+
+        \Illuminate\Support\Facades\Mail::to($user->email)
+            ->send(new \App\Mail\OtpMail($otpCode, $user->ten_dang_nhap, 'verify_email'));
+
+        return response()->json(['success' => true, 'message' => 'Mã OTP đã được gửi đến ' . $user->email]);
+    }
+
+    /**
+     * Xác minh OTP để cấp tích xanh.
+     */
+    public function verifyEmailOtp(\Illuminate\Http\Request $request)
+    {
+        $request->validate([
+            'otp' => ['required', 'string', 'size:6'],
+        ], [
+            'otp.required' => 'Vui lòng nhập mã OTP.',
+            'otp.size'     => 'Mã OTP phải có đúng 6 chữ số.',
+        ]);
+
+        $user = auth()->user();
+
+        if ($user->da_xac_thuc) {
+            return response()->json(['success' => false, 'message' => 'Email đã được xác minh trước đó.']);
+        }
+
+        if (!$user->otp_het_han || \Carbon\Carbon::now()->greaterThan($user->otp_het_han)) {
+            return response()->json(['success' => false, 'message' => 'Mã OTP đã hết hạn. Vui lòng gửi lại.']);
+        }
+
+        if ($request->otp !== $user->otp_code) {
+            return response()->json(['success' => false, 'message' => 'Mã OTP không chính xác.']);
+        }
+
+        $user->update([
+            'da_xac_thuc' => true,
+            'otp_code'    => null,
+            'otp_het_han' => null,
+        ]);
+
+        return response()->json(['success' => true, 'message' => 'Email đã được xác minh! Bạn nhận được tích xanh ✓']);
+    }
+
+    /**
+     * (OAuth users only) Gửi OTP đến email hiện tại để xác nhận trước khi đổi sang email mới.
+     */
+    public function sendChangeEmailOtp(\Illuminate\Http\Request $request)
+    {
+        $user = auth()->user();
+
+        // Chặn tài khoản OAuth (Google/Facebook) đổi email
+        if ($user->nha_cung_cap_oauth) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tài khoản ' . ucfirst($user->nha_cung_cap_oauth) . ' không thể thay đổi địa chỉ email.',
+            ], 403);
+        }
+
+        $request->validate([
+            'new_email' => ['required', 'email', 'unique:nguoi_dung,email'],
+        ], [
+            'new_email.required' => 'Vui lòng nhập email mới.',
+            'new_email.email'    => 'Email không hợp lệ.',
+            'new_email.unique'   => 'Email này đã được sử dụng.',
+        ]);
+
+        $otpCode = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+
+        $user->update([
+            'otp_code'    => $otpCode,
+            'otp_het_han' => \Carbon\Carbon::now()->addMinutes(10),
+        ]);
+
+        // Store pending new email in session
+        session(['pending_new_email' => $request->new_email]);
+
+        \Illuminate\Support\Facades\Mail::to($user->email)
+            ->send(new \App\Mail\OtpMail($otpCode, $user->ten_dang_nhap, 'change_email'));
+
+        return response()->json(['success' => true, 'message' => 'Mã OTP đã được gửi đến ' . $user->email]);
+    }
+
+    /**
+     * Đổi email:
+     * - Người dùng thường (email/password): xác thực bằng mật khẩu hiện tại
+     * - Người dùng OAuth (Google/Facebook): xác thực bằng OTP
+     */
+    public function changeEmail(\Illuminate\Http\Request $request)
+    {
+        $user = auth()->user();
+
+        // Chặn tài khoản OAuth (Google/Facebook) đổi email
+        if ($user->nha_cung_cap_oauth) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tài khoản ' . ucfirst($user->nha_cung_cap_oauth) . ' không thể thay đổi địa chỉ email.',
+            ], 403);
+        }
+
+        // Validate new email
+        $request->validate([
+            'new_email' => ['required', 'email', 'unique:nguoi_dung,email,' . $user->id],
+        ], [
+            'new_email.required' => 'Vui lòng nhập email mới.',
+            'new_email.email'    => 'Email không hợp lệ.',
+            'new_email.unique'   => 'Email này đã được sử dụng.',
+        ]);
+
+        if ($user->nha_cung_cap_oauth) {
+            // ── OAuth flow: verify OTP ──
+            $request->validate([
+                'otp' => ['required', 'string', 'size:6'],
+            ], [
+                'otp.required' => 'Vui lòng nhập mã OTP.',
+                'otp.size'     => 'Mã OTP phải có 6 chữ số.',
+            ]);
+
+            if (!$user->otp_het_han || \Carbon\Carbon::now()->greaterThan($user->otp_het_han)) {
+                return response()->json(['success' => false, 'message' => 'Mã OTP đã hết hạn. Vui lòng gửi lại.']);
+            }
+
+            if ($request->otp !== $user->otp_code) {
+                return response()->json(['success' => false, 'message' => 'Mã OTP không chính xác.']);
+            }
+
+            $user->update([
+                'email'       => $request->new_email,
+                'da_xac_thuc' => false, // reset – cần xác minh email mới
+                'otp_code'    => null,
+                'otp_het_han' => null,
+            ]);
+
+            session()->forget('pending_new_email');
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Đổi email thành công! Vui lòng xác minh email mới để nhận lại tích xanh.',
+            ]);
+        } else {
+            // ── Normal flow: verify password ──
+            $request->validate([
+                'password' => ['required', 'string'],
+            ], [
+                'password.required' => 'Vui lòng nhập mật khẩu.',
+            ]);
+
+            if (!\Illuminate\Support\Facades\Hash::check($request->password, $user->mat_khau_hash)) {
+                return response()->json(['success' => false, 'message' => 'Mật khẩu không chính xác.']);
+            }
+
+            $user->update([
+                'email'       => $request->new_email,
+                'da_xac_thuc' => false, // reset – cần xác minh email mới
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Đổi email thành công! Vui lòng xác minh email mới để nhận lại tích xanh.',
+            ]);
+        }
     }
 
     public function toggleFollow(User $user)
