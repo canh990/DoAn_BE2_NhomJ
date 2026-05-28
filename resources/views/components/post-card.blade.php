@@ -469,7 +469,7 @@
                                 <input type="hidden" name="binh_luan_cha_id" value="">
                                 <div class="relative">
                                     <textarea name="noi_dung" rows="2" class="w-full bg-transparent border border-white/10 focus:border-sky-400 focus:ring-0 rounded-3xl p-3 pr-12 text-sm text-slate-100 placeholder:text-slate-500" placeholder="Viết bình luận..."></textarea>
-                                    <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-sky-400 transition-colors" onclick="this.closest('form').querySelector('input[type=file]').click()">
+                                    <button type="button" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-sky-400 transition-colors cursor-pointer z-10" onclick="this.closest('form').querySelector('.comment-media-input').click()">
                                         <span class="material-symbols-outlined">image</span>
                                     </button>
                                 </div>
