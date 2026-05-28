@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\BaiViet;
 use App\Models\MediaBaiViet;
+use App\Models\Hashtag;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage; 
 
@@ -30,17 +31,128 @@ class PostController extends Controller
         return view('components.home', compact('posts'));
     }
 
-    public function explore()
+    public function explore(Request $request)
     {
-        $media = MediaBaiViet::with('baiViet.user')
-            ->whereHas('baiViet', function($query) {
-                $query->where('da_xoa', false);
-            })
-            ->latest('ngay_tao')
-            ->paginate(24);
+        $keyword = trim($request->input('search', ''));
+        $type = $request->input('type', 'all');
+        $time = $request->input('time', 'all');
+        $sort = $request->input('sort', 'popular');
+
+        // 1. Fetch Popular Hashtags (displayed in the left column)
+        $popularHashtags = Hashtag::orderBy('so_bai_viet', 'desc')
+            ->take(8)
+            ->get()
+            ->map(function ($hashtag) {
+                // Find a thumbnail from the posts under this hashtag
+                $latestPostWithMedia = $hashtag->posts()
+                    ->whereHas('media')
+                    ->where('da_xoa', false)
+                    ->latest()
+                    ->first();
+                
+                $thumbnail = null;
+                if ($latestPostWithMedia && $latestPostWithMedia->media->first()) {
+                    $thumbnail = asset('storage/' . $latestPostWithMedia->media->first()->duong_dan);
+                } else {
+                    $thumbnail = 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=150&q=80';
+                }
+
+                return [
+                    'id' => $hashtag->id,
+                    'ten' => $hashtag->ten,
+                    'so_bai_viet' => $hashtag->so_bai_viet,
+                    'thumbnail' => $thumbnail,
+                ];
+            });
+
+        // 2. Query matching posts
+        $postsQuery = BaiViet::with(['user', 'media', 'originalPost.user', 'originalPost.media'])
+            ->withCount(['reactions', 'comments', 'shares'])
+            ->with(['reactions' => function ($query) {
+                $query->where('nguoi_dung_id', auth()->id());
+            }, 'comments' => function ($query) {
+                $query->whereNull('binh_luan_cha_id')->with(['user', 'nestedChildren'])->latest('ngay_tao');
+            }, 'bookmarks' => function ($query) {
+                $query->where('nguoi_dung_id', auth()->id());
+            }])
+            ->where('da_xoa', false);
+
+        // Apply search keyword and content filters
+        if ($keyword !== '') {
+            if (str_starts_with($keyword, '#') || $type === 'hashtag') {
+                $cleanTag = ltrim($keyword, '#');
+                $postsQuery->whereHas('hashtags', function ($query) use ($cleanTag) {
+                    $query->where('ten', 'LIKE', "%{$cleanTag}%");
+                });
+            } else if ($type === 'user') {
+                $postsQuery->whereHas('user', function ($query) use ($keyword) {
+                    $query->where('ten_dang_nhap', 'LIKE', "%{$keyword}%")
+                          ->orWhere('ten_hien_thi', 'LIKE', "%{$keyword}%");
+                });
+            } else if ($type === 'post') {
+                $postsQuery->where('noi_dung', 'LIKE', "%{$keyword}%");
+            } else {
+                // 'all' type: search in post content OR user matches OR hashtag matches
+                $postsQuery->where(function ($q) use ($keyword) {
+                    $q->where('noi_dung', 'LIKE', "%{$keyword}%")
+                      ->orWhereHas('user', function ($uq) use ($keyword) {
+                          $uq->where('ten_dang_nhap', 'LIKE', "%{$keyword}%")
+                             ->orWhere('ten_hien_thi', 'LIKE', "%{$keyword}%");
+                      })
+                      ->orWhereHas('hashtags', function ($hq) use ($keyword) {
+                          $cleanTag = ltrim($keyword, '#');
+                          $hq->where('ten', 'LIKE', "%{$cleanTag}%");
+                      });
+                });
+            }
+        } else {
+            if ($type === 'hashtag') {
+                $postsQuery->has('hashtags');
+            } else if ($type === 'user') {
+                // No keyword and type is user: return empty posts
+                $postsQuery->whereRaw('1 = 0');
+            }
+        }
+
+        // Apply time filters
+        if ($time === 'today') {
+            $postsQuery->whereDate('created_at', \Carbon\Carbon::today());
+        } elseif ($time === 'week') {
+            $postsQuery->whereBetween('created_at', [
+                \Carbon\Carbon::now()->startOfWeek(),
+                \Carbon\Carbon::now()->endOfWeek()
+            ]);
+        }
+
+        // Apply sorting / popularity
+        if ($sort === 'latest') {
+            $postsQuery->orderBy('created_at', 'desc');
+        } else {
+            // 'popular'
+            $postsQuery->orderBy('reactions_count', 'desc')
+                       ->orderBy('comments_count', 'desc')
+                       ->orderBy('created_at', 'desc');
+        }
+
+        $posts = $postsQuery->paginate(10)->withQueryString();
+
+        // 3. Match users if type is 'user' to display along
+        $matchedUsers = collect();
+        if ($type === 'user' && $keyword !== '') {
+            $matchedUsers = \App\Models\User::where('ten_dang_nhap', 'LIKE', "%{$keyword}%")
+                ->orWhere('ten_hien_thi', 'LIKE', "%{$keyword}%")
+                ->take(10)
+                ->get();
+        }
 
         return view('explore', [
-            'media' => $media,
+            'posts' => $posts,
+            'popularHashtags' => $popularHashtags,
+            'matchedUsers' => $matchedUsers,
+            'keyword' => $keyword,
+            'type' => $type,
+            'time' => $time,
+            'sort' => $sort,
             'title' => __('messages.explore_title'),
             'message' => __('messages.explore_subtitle'),
         ]);
@@ -95,6 +207,9 @@ class PostController extends Controller
             'hoat_dong' => $validated['hoat_dong'] ?? null,
             'quyen_rieng_tu' => 'cong_khai',
         ]);
+
+        // Sync hashtags
+        $this->syncHashtags($post);
 
         // Xử lý upload ảnh/video
         if ($request->hasFile('anh')) {
@@ -154,6 +269,9 @@ class PostController extends Controller
             'noi_dung' => $validated['noi_dung'],
             'da_chinh_sua' => true,
         ]);
+
+        // Sync hashtags
+        $this->syncHashtags($post);
 
         return back()->with('success', 'Bài viết đã được chỉnh sửa thành công.');
     }
@@ -242,5 +360,37 @@ class PostController extends Controller
             'shares_count' => $sharesCount,
             'html' => $html,
         ]);
+    }
+
+    protected function syncHashtags($post)
+    {
+        if (empty($post->noi_dung)) {
+            $post->hashtags()->detach();
+            return;
+        }
+
+        // Trích xuất tất cả hashtag dạng Unicode word characters
+        preg_match_all('/#([\p{L}\p{N}_]+)/u', $post->noi_dung, $matches);
+        $tagNames = array_unique($matches[1] ?? []);
+
+        $tagIds = [];
+        foreach ($tagNames as $name) {
+            $hashtag = Hashtag::firstOrCreate(
+                ['ten' => $name]
+            );
+            $tagIds[] = $hashtag->id;
+        }
+
+        $post->hashtags()->sync($tagIds);
+
+        // Cập nhật số lượng bài viết của hashtag
+        $allAffectedIds = array_unique(array_merge($tagIds, $post->hashtags()->pluck('hashtag.id')->toArray()));
+        foreach ($allAffectedIds as $hashtagId) {
+            $ht = Hashtag::find($hashtagId);
+            if ($ht) {
+                $ht->so_bai_viet = $ht->posts()->where('da_xoa', false)->count();
+                $ht->save();
+            }
+        }
     }
 }

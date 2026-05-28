@@ -81,4 +81,12 @@ class BaiViet extends Model
         return $this->belongsToMany(User::class, 'bai_viet_da_luu', 'bai_viet_id', 'nguoi_dung_id')
                     ->withPivot('ngay_tao');
     }
+
+    /**
+     * Thẻ Hashtag của bài viết.
+     */
+    public function hashtags(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Hashtag::class, 'bai_viet_hashtag', 'bai_viet_id', 'hashtag_id');
+    }
 }
