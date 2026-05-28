@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('title', 'Nhóm')
 
@@ -62,7 +62,7 @@
                     <div class="max-h-40 space-y-2 overflow-y-auto rounded-2xl border border-[#24384f] bg-[#0b1220] p-3">
                         @forelse ($users as $user)
                             <label class="flex cursor-pointer items-center gap-3 rounded-xl px-2 py-2 hover:bg-white/[.04]">
-                                <input name="member_ids[]" value="{{ $user->id }}" type="checkbox" class="rounded border-slate-500 bg-[#101827] text-sky-400 focus:ring-sky-400">
+                                <input name="member_ids[]" value="{{ $user->id }}" type="checkbox" class="rounded-full border-slate-500 bg-[#101827] text-sky-400 focus:ring-sky-400">
                                 <span class="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-sky-300 to-emerald-400 text-sm font-black text-[#07111f]">{{ $avatarText($displayName($user)) }}</span>
                                 <span class="min-w-0">
                                     <span class="block truncate text-sm font-bold">{{ $displayName($user) }}</span>
