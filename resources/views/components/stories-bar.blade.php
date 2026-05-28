@@ -22,6 +22,7 @@
         </style>
 
         {{-- Ô "Thêm tin" của chính mình --}}
+        @if(Auth::check())
         <a href="{{ route('stories.create') }}"
            class="shrink-0 relative w-24 h-40 md:w-28 md:h-44 rounded-2xl overflow-hidden bg-slate-800 border border-white/10 shadow-lg group hover:scale-[1.03] active:scale-[0.98] transition-all duration-300">
             {{-- Top half is avatar --}}
@@ -39,6 +40,7 @@
                 <span class="text-[11px] font-bold text-slate-300">Tạo tin</span>
             </div>
         </a>
+        @endif
 
         {{-- Danh sách story của bạn bè / tất cả --}}
         @forelse($stories as $story)
