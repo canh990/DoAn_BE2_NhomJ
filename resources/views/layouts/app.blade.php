@@ -12,80 +12,11 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'NHOMJ')</title>
     
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
     <link rel="stylesheet" href="/css/theme-light.css">
-    
-    <script id="tailwind-config">
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    "colors": {
-                        "tertiary-fixed-dim": "#c8a0f0",
-                        "on-surface": "#e0e8f0",
-                        "error": "#ff6b6b",
-                        "on-tertiary": "#1a002e",
-                        "on-primary": "#001f2e",
-                        "secondary": "#88b4cc",
-                        "primary-container": "#0e4d6e",
-                        "on-primary-fixed": "#001f2e",
-                        "on-tertiary-container": "#e8d0ff",
-                        "on-background": "#e0e8f0",
-                        "on-tertiary-fixed-variant": "#4d2a73",
-                        "on-secondary-fixed-variant": "#2a4a5e",
-                        "primary-fixed-dim": "#7dd3fc",
-                        "surface-tint": "#7dd3fc",
-                        "surface": "#0f1524",
-                        "surface-container-lowest": "#0a0e1a",
-                        "on-error-container": "#ffb3b3",
-                        "secondary-container": "#1a3a4e",
-                        "surface-container-highest": "#202c42",
-                        "surface-dim": "#0f1524",
-                        "inverse-on-surface": "#0a0e1a",
-                        "inverse-primary": "#0a4c6e",
-                        "tertiary-container": "#3d2060",
-                        "outline-variant": "#2a3a48",
-                        "inverse-surface": "#e0e8f0",
-                        "surface-container": "#141c2e",
-                        "on-error": "#1a0000",
-                        "tertiary-fixed": "#e8d0ff",
-                        "primary": "#7dd3fc",
-                        "primary-fixed": "#c8eaff",
-                        "error-container": "#3d1414",
-                        "tertiary": "#c8a0f0",
-                        "on-tertiary-fixed": "#1a002e",
-                        "on-secondary-fixed": "#0d1f2b",
-                        "surface-variant": "#1a2438",
-                        "surface-container-low": "#111828",
-                        "surface-container-high": "#1a2438",
-                        "on-primary-fixed-variant": "#004d73",
-                        "outline": "#4a6070",
-                        "on-secondary-container": "#c0d8e8",
-                        "secondary-fixed": "#c0d8e8",
-                        "on-secondary": "#001f2e",
-                        "background": "#0a0e1a",
-                        "on-surface-variant": "#a0b4c4",
-                        "surface-bright": "#1a2438",
-                        "on-primary-container": "#c8eaff",
-                        "secondary-fixed-dim": "#88b4cc"
-                    },
-                    "borderRadius": {
-                        "DEFAULT": "0.5rem",
-                        "lg": "1rem",
-                        "xl": "1.5rem",
-                        "full": "9999px"
-                    },
-                    "fontFamily": {
-                        "headline": ["Inter"],
-                        "body": ["Inter"],
-                        "label": ["Inter"]
-                    }
-                }
-            }
-        }
-    </script>
+
     <style>
         body {
             background-color: #0a0e1a;
