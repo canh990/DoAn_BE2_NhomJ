@@ -20,7 +20,13 @@ return new class extends Migration
             $tables = DB::table('information_schema.tables')
                 ->where('table_schema', $dbName)
                 ->where('table_type', 'BASE TABLE')
-                ->pluck('table_name');
+                ->get()
+                ->map(function ($row) {
+                    $row = (array) $row;
+                    $key = collect(array_keys($row))->first(fn ($k) => strtolower($k) === 'table_name');
+                    return $row[$key] ?? null;
+                })
+                ->filter();
 
             // 3. Alter all tables and their columns to utf8mb4
             foreach ($tables as $tableName) {
@@ -44,7 +50,13 @@ return new class extends Migration
             $tables = DB::table('information_schema.tables')
                 ->where('table_schema', $dbName)
                 ->where('table_type', 'BASE TABLE')
-                ->pluck('table_name');
+                ->get()
+                ->map(function ($row) {
+                    $row = (array) $row;
+                    $key = collect(array_keys($row))->first(fn ($k) => strtolower($k) === 'table_name');
+                    return $row[$key] ?? null;
+                })
+                ->filter();
 
             // 3. Alter all tables and their columns back to utf8
             foreach ($tables as $tableName) {
