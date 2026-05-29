@@ -88,6 +88,8 @@ class BaiViet extends Model
     public function poll()
     {
         return $this->hasOne(BinhChon::class, 'bai_viet_id');
+    }
+
     /**
      * Thẻ Hashtag của bài viết.
      */
