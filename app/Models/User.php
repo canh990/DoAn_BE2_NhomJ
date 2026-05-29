@@ -47,6 +47,10 @@ class User extends Authenticatable
         'mat_khau_hash',
     ];
 
+    protected $appends = [
+        'avatar_url',
+    ];
+
     // ✅ Trỏ đúng cột mật khẩu
     public function getAuthPassword()
     {
@@ -107,5 +111,53 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(BaiViet::class, 'bai_viet_da_luu', 'nguoi_dung_id', 'bai_viet_id')
                     ->withPivot('ngay_tao');
+    }
+
+    // Danh sách những người tôi đã chặn
+    public function blockedUsers()
+    {
+        return $this->belongsToMany(User::class, 'chan', 'nguoi_chan_id', 'nguoi_bi_chan_id')
+                    ->withPivot('ngay_tao');
+    }
+
+    // Danh sách những người đã chặn tôi
+    public function blockedByUsers()
+    {
+        return $this->belongsToMany(User::class, 'chan', 'nguoi_bi_chan_id', 'nguoi_chan_id')
+                    ->withPivot('ngay_tao');
+    }
+
+    // Kiểm tra tôi có chặn ai đó không
+    public function hasBlocked($userId)
+    {
+        return $this->blockedUsers()->where('nguoi_bi_chan_id', $userId)->exists();
+    }
+
+    // Kiểm tra ai đó có chặn tôi không
+    public function isBlockedBy($userId)
+    {
+        return $this->blockedByUsers()->where('nguoi_chan_id', $userId)->exists();
+    }
+
+    // Kiểm tra giữa 2 người có bất kỳ mối quan hệ chặn nào không
+    public function hasAnyBlockRelationship($userId)
+    {
+        return $this->hasBlocked($userId) || $this->isBlockedBy($userId);
+    }
+
+    /**
+     * Lấy URL ảnh đại diện đầy đủ và chính xác (hỗ trợ cả URL ngoại vi và đường dẫn lưu trữ cục bộ).
+     */
+    public function getAvatarUrlAttribute()
+    {
+        if (!$this->anh_dai_dien) {
+            return 'https://ui-avatars.com/api/?name=' . urlencode($this->ten_dang_nhap) . '&background=random';
+        }
+        
+        if (filter_var($this->anh_dai_dien, FILTER_VALIDATE_URL)) {
+            return $this->anh_dai_dien;
+        }
+        
+        return asset('storage/' . $this->anh_dai_dien);
     }
 }

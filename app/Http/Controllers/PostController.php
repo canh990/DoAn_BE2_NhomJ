@@ -13,7 +13,7 @@ class PostController extends Controller
 
     public function index()
     {
-        $posts = BaiViet::with(['user', 'media', 'originalPost.user', 'originalPost.media'])
+        $posts = BaiViet::with(['user', 'media', 'originalPost.user', 'originalPost.media', 'poll.options.votes', 'poll.votes'])
             ->withCount(['reactions', 'comments', 'shares'])
             ->with(['reactions' => function ($query) {
                 $query->where('nguoi_dung_id', auth()->id());
@@ -22,7 +22,7 @@ class PostController extends Controller
             }, 'bookmarks' => function ($query) {
                 $query->where('nguoi_dung_id', auth()->id());
             }])
-            ->whereIn('loai', ['van_ban', 'hinh_anh', 'chia_se'])
+            ->whereIn('loai', ['van_ban', 'hinh_anh', 'chia_se', 'binh_chon'])
             ->where('da_xoa', false)
             ->latest()
             ->take(20)
@@ -33,117 +33,12 @@ class PostController extends Controller
 
     public function explore(Request $request)
     {
-        $keyword = trim($request->input('search', ''));
-        $type = $request->input('type', 'all');
-        $time = $request->input('time', 'all');
-        $sort = $request->input('sort', 'popular');
-
-        // 1. Fetch Popular Hashtags (displayed in the left column)
-        $popularHashtags = Hashtag::orderBy('so_bai_viet', 'desc')
-            ->take(8)
-            ->get()
-            ->map(function ($hashtag) {
-                // Find a thumbnail from the posts under this hashtag
-                $latestPostWithMedia = $hashtag->posts()
-                    ->whereHas('media')
-                    ->where('da_xoa', false)
-                    ->latest()
-                    ->first();
-                
-                $thumbnail = null;
-                if ($latestPostWithMedia && $latestPostWithMedia->media->first()) {
-                    $thumbnail = asset('storage/' . $latestPostWithMedia->media->first()->duong_dan);
-                } else {
-                    $thumbnail = 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=150&q=80';
-                }
-
-                return [
-                    'id' => $hashtag->id,
-                    'ten' => $hashtag->ten,
-                    'so_bai_viet' => $hashtag->so_bai_viet,
-                    'thumbnail' => $thumbnail,
-                ];
-            });
-
-        // 2. Query matching posts
-        $postsQuery = BaiViet::with(['user', 'media', 'originalPost.user', 'originalPost.media'])
-            ->withCount(['reactions', 'comments', 'shares'])
-            ->with(['reactions' => function ($query) {
-                $query->where('nguoi_dung_id', auth()->id());
-            }, 'comments' => function ($query) {
-                $query->whereNull('binh_luan_cha_id')->with(['user', 'nestedChildren'])->latest('ngay_tao');
-            }, 'bookmarks' => function ($query) {
-                $query->where('nguoi_dung_id', auth()->id());
-            }])
-            ->where('da_xoa', false);
-
-        // Apply search keyword and content filters
-        if ($keyword !== '') {
-            if (str_starts_with($keyword, '#') || $type === 'hashtag') {
-                $cleanTag = ltrim($keyword, '#');
-                $postsQuery->whereHas('hashtags', function ($query) use ($cleanTag) {
-                    $query->where('ten', 'LIKE', "%{$cleanTag}%");
-                });
-            } else if ($type === 'user') {
-                $postsQuery->whereHas('user', function ($query) use ($keyword) {
-                    $query->where('ten_dang_nhap', 'LIKE', "%{$keyword}%")
-                          ->orWhere('ten_hien_thi', 'LIKE', "%{$keyword}%");
-                });
-            } else if ($type === 'post') {
-                $postsQuery->where('noi_dung', 'LIKE', "%{$keyword}%");
-            } else {
-                // 'all' type: search in post content OR user matches OR hashtag matches
-                $postsQuery->where(function ($q) use ($keyword) {
-                    $q->where('noi_dung', 'LIKE', "%{$keyword}%")
-                      ->orWhereHas('user', function ($uq) use ($keyword) {
-                          $uq->where('ten_dang_nhap', 'LIKE', "%{$keyword}%")
-                             ->orWhere('ten_hien_thi', 'LIKE', "%{$keyword}%");
-                      })
-                      ->orWhereHas('hashtags', function ($hq) use ($keyword) {
-                          $cleanTag = ltrim($keyword, '#');
-                          $hq->where('ten', 'LIKE', "%{$cleanTag}%");
-                      });
-                });
-            }
-        } else {
-            if ($type === 'hashtag') {
-                $postsQuery->has('hashtags');
-            } else if ($type === 'user') {
-                // No keyword and type is user: return empty posts
-                $postsQuery->whereRaw('1 = 0');
-            }
-        }
-
-        // Apply time filters
-        if ($time === 'today') {
-            $postsQuery->whereDate('created_at', \Carbon\Carbon::today());
-        } elseif ($time === 'week') {
-            $postsQuery->whereBetween('created_at', [
-                \Carbon\Carbon::now()->startOfWeek(),
-                \Carbon\Carbon::now()->endOfWeek()
-            ]);
-        }
-
-        // Apply sorting / popularity
-        if ($sort === 'latest') {
-            $postsQuery->orderBy('created_at', 'desc');
-        } else {
-            // 'popular'
-            $postsQuery->orderBy('reactions_count', 'desc')
-                       ->orderBy('comments_count', 'desc')
-                       ->orderBy('created_at', 'desc');
-        }
-
-        $posts = $postsQuery->paginate(10)->withQueryString();
-
-        // 3. Match users if type is 'user' to display along
-        $matchedUsers = collect();
-        if ($type === 'user' && $keyword !== '') {
-            $matchedUsers = \App\Models\User::where('ten_dang_nhap', 'LIKE', "%{$keyword}%")
-                ->orWhere('ten_hien_thi', 'LIKE', "%{$keyword}%")
-                ->take(10)
-                ->get();
-        }
+        $media = MediaBaiViet::with('baiViet.user')
+            ->whereHas('baiViet', function($query) {
+                $query->where('da_xoa', false);
+            })
+            ->latest('ngay_tao')
+            ->paginate(24);
 
         return view('explore', [
             'posts' => $posts,
@@ -167,7 +62,7 @@ class PostController extends Controller
             return redirect()->route('home')->with('error', 'Bài viết đã bị xóa.');
         }
 
-        $post->load(['user', 'media', 'originalPost.user', 'originalPost.media'])
+        $post->load(['user', 'media', 'originalPost.user', 'originalPost.media', 'poll.options.votes', 'poll.votes'])
             ->loadCount(['reactions', 'comments', 'shares'])
             ->load(['reactions' => function ($query) {
                 $query->where('nguoi_dung_id', auth()->id());
@@ -192,24 +87,83 @@ class PostController extends Controller
             'hoat_dong' => ['nullable', 'string', 'max:100'],
             'anh' => ['nullable', 'array', 'max:10'], // Tối đa 10 tệp
             'anh.*' => ['file', 'mimes:jpeg,png,jpg,gif,webp,bmp,svg,heic,heif,mp4,mov,webm,avi,mkv,wmv', 'max:51200'], 
+            'ten_dia_diem' => ['nullable', 'string', 'max:255'],
+            'vi_do' => ['nullable', 'numeric'],
+            'kinh_do' => ['nullable', 'numeric'],
+            'poll_question' => ['nullable', 'string', 'max:500'],
+            'poll_options' => ['nullable', 'array', 'min:2', 'max:6'],
+            'poll_options.*' => ['nullable', 'string', 'max:255'],
         ]);
 
-        // Kiểm tra ít nhất có nội dung hoặc file
-        if (empty($validated['noi_dung']) && !$request->hasFile('anh') && empty($validated['cam_xuc']) && empty($validated['hoat_dong'])) {
-            return back()->withErrors(['noi_dung' => 'Bài viết phải có nội dung, cảm xúc, hoặc hình ảnh/video.']);
+        $pollOptions = collect($request->input('poll_options', []))
+            ->map(fn ($opt) => trim((string) $opt))
+            ->filter(fn ($opt) => $opt !== '')
+            ->values();
+        $hasPollQuestion = filled(trim((string) $request->input('poll_question', '')));
+        $isPoll = $hasPollQuestion || $pollOptions->count() > 0;
+
+        if ($isPoll) {
+            $request->validate([
+                'poll_question' => ['required', 'string', 'max:500'],
+                'poll_options' => ['required', 'array', 'min:2', 'max:6'],
+                'poll_options.*' => ['required', 'string', 'max:255'],
+            ], [
+                'poll_options.min' => 'Cuộc bình chọn cần ít nhất 2 lựa chọn.',
+                'poll_options.max' => 'Cuộc bình chọn tối đa 6 lựa chọn.',
+            ]);
+
+            $pollOptions = collect($request->input('poll_options', []))
+                ->map(fn ($opt) => trim((string) $opt))
+                ->filter(fn ($opt) => $opt !== '')
+                ->values();
+
+            if ($pollOptions->count() < 2 || $pollOptions->count() > 6) {
+                return back()->withErrors(['poll_options' => 'Cuộc bình chọn phải có từ 2 đến 6 lựa chọn.'])->withInput();
+            }
+        }
+
+        // Kiểm tra ít nhất có nội dung, file, vị trí hoặc poll
+        if (
+            empty($validated['noi_dung']) &&
+            !$request->hasFile('anh') &&
+            empty($validated['cam_xuc']) &&
+            empty($validated['hoat_dong']) &&
+            empty($validated['ten_dia_diem']) &&
+            !$isPoll
+        ) {
+            return back()->withErrors(['noi_dung' => 'Bài viết phải có nội dung, cảm xúc, địa điểm check-in, hình ảnh/video hoặc cuộc bình chọn.']);
+        }
+
+        $postType = $request->hasFile('anh') ? 'hinh_anh' : 'van_ban';
+        if ($isPoll) {
+            $postType = 'binh_chon';
         }
 
         $post = BaiViet::create([
             'nguoi_dung_id' => auth()->id(),
-            'loai' => $request->hasFile('anh') ? 'hinh_anh' : 'van_ban',
+            'loai' => $postType,
             'noi_dung' => $validated['noi_dung'] ?? null,
             'cam_xuc' => $validated['cam_xuc'] ?? null,
             'hoat_dong' => $validated['hoat_dong'] ?? null,
+            'ten_dia_diem' => $validated['ten_dia_diem'] ?? null,
+            'vi_do' => $validated['vi_do'] ?? null,
+            'kinh_do' => $validated['kinh_do'] ?? null,
             'quyen_rieng_tu' => 'cong_khai',
         ]);
 
-        // Sync hashtags
-        $this->syncHashtags($post);
+        if ($isPoll) {
+            $poll = \App\Models\BinhChon::create([
+                'bai_viet_id' => $post->id,
+                'cau_hoi' => trim((string) $request->input('poll_question')),
+            ]);
+
+            foreach ($pollOptions as $optionText) {
+                \App\Models\LuaChonBinhChon::create([
+                    'binh_chon_id' => $poll->id,
+                    'noi_dung' => $optionText,
+                ]);
+            }
+        }
 
         // Xử lý upload ảnh/video
         if ($request->hasFile('anh')) {
@@ -362,35 +316,53 @@ class PostController extends Controller
         ]);
     }
 
-    protected function syncHashtags($post)
+    public function vote(Request $request, \App\Models\BinhChon $poll)
     {
-        if (empty($post->noi_dung)) {
-            $post->hashtags()->detach();
-            return;
+        $validated = $request->validate([
+            'lua_chon_id' => ['required', 'integer', 'exists:lua_chon_binh_chon,id'],
+        ]);
+
+        $userId = auth()->id();
+
+        $option = \App\Models\LuaChonBinhChon::where('id', $validated['lua_chon_id'])
+            ->where('binh_chon_id', $poll->id)
+            ->first();
+
+        if (!$option) {
+            return response()->json(['success' => false, 'message' => 'Lựa chọn không hợp lệ.'], 422);
         }
 
-        // Trích xuất tất cả hashtag dạng Unicode word characters
-        preg_match_all('/#([\p{L}\p{N}_]+)/u', $post->noi_dung, $matches);
-        $tagNames = array_unique($matches[1] ?? []);
+        $existingVote = \App\Models\PhieuBau::where('binh_chon_id', $poll->id)
+            ->where('nguoi_dung_id', $userId)
+            ->first();
 
-        $tagIds = [];
-        foreach ($tagNames as $name) {
-            $hashtag = Hashtag::firstOrCreate(
-                ['ten' => $name]
-            );
-            $tagIds[] = $hashtag->id;
+        if ($existingVote) {
+            $existingVote->lua_chon_id = $option->id;
+            $existingVote->save();
+        } else {
+            \App\Models\PhieuBau::create([
+                'binh_chon_id' => $poll->id,
+                'nguoi_dung_id' => $userId,
+                'lua_chon_id' => $option->id,
+            ]);
         }
 
-        $post->hashtags()->sync($tagIds);
+        $optionsStats = $poll->options()->withCount('votes')->get()->map(function ($opt) {
+            return [
+                'id' => $opt->id,
+                'noi_dung' => $opt->noi_dung,
+                'votes_count' => $opt->votes_count,
+            ];
+        })->values();
 
-        // Cập nhật số lượng bài viết của hashtag
-        $allAffectedIds = array_unique(array_merge($tagIds, $post->hashtags()->pluck('hashtag.id')->toArray()));
-        foreach ($allAffectedIds as $hashtagId) {
-            $ht = Hashtag::find($hashtagId);
-            if ($ht) {
-                $ht->so_bai_viet = $ht->posts()->where('da_xoa', false)->count();
-                $ht->save();
-            }
-        }
+        $totalVotes = $poll->votes()->count();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Đã cập nhật bình chọn.',
+            'options' => $optionsStats,
+            'total_votes' => $totalVotes,
+            'user_voted_option_id' => $option->id,
+        ]);
     }
 }

@@ -12,80 +12,11 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'NHOMJ')</title>
     
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
     <link rel="stylesheet" href="/css/theme-light.css">
-    
-    <script id="tailwind-config">
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    "colors": {
-                        "tertiary-fixed-dim": "#c8a0f0",
-                        "on-surface": "#e0e8f0",
-                        "error": "#ff6b6b",
-                        "on-tertiary": "#1a002e",
-                        "on-primary": "#001f2e",
-                        "secondary": "#88b4cc",
-                        "primary-container": "#0e4d6e",
-                        "on-primary-fixed": "#001f2e",
-                        "on-tertiary-container": "#e8d0ff",
-                        "on-background": "#e0e8f0",
-                        "on-tertiary-fixed-variant": "#4d2a73",
-                        "on-secondary-fixed-variant": "#2a4a5e",
-                        "primary-fixed-dim": "#7dd3fc",
-                        "surface-tint": "#7dd3fc",
-                        "surface": "#0f1524",
-                        "surface-container-lowest": "#0a0e1a",
-                        "on-error-container": "#ffb3b3",
-                        "secondary-container": "#1a3a4e",
-                        "surface-container-highest": "#202c42",
-                        "surface-dim": "#0f1524",
-                        "inverse-on-surface": "#0a0e1a",
-                        "inverse-primary": "#0a4c6e",
-                        "tertiary-container": "#3d2060",
-                        "outline-variant": "#2a3a48",
-                        "inverse-surface": "#e0e8f0",
-                        "surface-container": "#141c2e",
-                        "on-error": "#1a0000",
-                        "tertiary-fixed": "#e8d0ff",
-                        "primary": "#7dd3fc",
-                        "primary-fixed": "#c8eaff",
-                        "error-container": "#3d1414",
-                        "tertiary": "#c8a0f0",
-                        "on-tertiary-fixed": "#1a002e",
-                        "on-secondary-fixed": "#0d1f2b",
-                        "surface-variant": "#1a2438",
-                        "surface-container-low": "#111828",
-                        "surface-container-high": "#1a2438",
-                        "on-primary-fixed-variant": "#004d73",
-                        "outline": "#4a6070",
-                        "on-secondary-container": "#c0d8e8",
-                        "secondary-fixed": "#c0d8e8",
-                        "on-secondary": "#001f2e",
-                        "background": "#0a0e1a",
-                        "on-surface-variant": "#a0b4c4",
-                        "surface-bright": "#1a2438",
-                        "on-primary-container": "#c8eaff",
-                        "secondary-fixed-dim": "#88b4cc"
-                    },
-                    "borderRadius": {
-                        "DEFAULT": "0.5rem",
-                        "lg": "1rem",
-                        "xl": "1.5rem",
-                        "full": "9999px"
-                    },
-                    "fontFamily": {
-                        "headline": ["Inter"],
-                        "body": ["Inter"],
-                        "label": ["Inter"]
-                    }
-                }
-            }
-        }
-    </script>
+
     <style>
         body {
             background-color: #0a0e1a;
@@ -113,6 +44,15 @@
         }
         .notification-item {
             animation: notificationIn 0.3s ease-out forwards;
+        }
+
+        /* Modal Animations */
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .animate-modal-in {
+            animation: modalIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
         .notification-item.removing {
             opacity: 0;
@@ -208,7 +148,7 @@
                     <img 
                         class="w-full h-full object-cover" 
                         alt="{{ Auth::user()->name }}" 
-                        src="{{ Auth::user()->anh_dai_dien ? asset('storage/' . Auth::user()->anh_dai_dien) : 'https://ui-avatars.com/api/?name='.urlencode(Auth::user()->name).'&background=random' }}" 
+                        src="{{ Auth::user()->avatar_url }}" 
                     />
                 </div>
             </a>
@@ -232,25 +172,26 @@
 
   <a href="{{ route('profile') }}" class="mb-4 px-4 py-2 block hover:bg-white/5 rounded-2xl transition-all group">
     <div class="flex items-center gap-3 mb-1">
-        <div class="w-10 h-10 overflow-hidden rounded-full border border-sky-400/30 group-hover:border-sky-400/60 transition-colors">
+        <div class="w-10 h-10 shrink-0 overflow-hidden rounded-full border border-sky-400/30 group-hover:border-sky-400/60 transition-colors">
             <img 
                 class="w-full h-full object-cover" 
                 alt="{{ $user->name }}" 
-                src="{{ $user->anh_dai_dien ? asset('storage/' . $user->anh_dai_dien) : 'https://ui-avatars.com/api/?name='.urlencode($user->name).'&background=random' }}" 
+                src="{{ $user->avatar_url }}" 
             />
         </div>
         
-        <div>
-            <p class="text-sm font-bold text-sky-300 font-inter leading-tight group-hover:text-sky-200 transition-colors flex items-center gap-1">
-                {{ $user->name }}
+        <div class="min-w-0 flex-1">
+            <div class="flex items-center gap-1">
+                <p class="text-sm font-bold text-sky-300 font-inter leading-tight group-hover:text-sky-200 transition-colors truncate" title="{{ $user->name }}">
+                    {{ $user->name }}
+                </p>
                 @if($user->da_xac_thuc)
-                <span class="material-symbols-outlined text-[14px] text-sky-400" data-icon="verified" style="font-variation-settings: 'FILL' 1;">
+                <span class="material-symbols-outlined text-[14px] text-sky-400 shrink-0" data-icon="verified" style="font-variation-settings: 'FILL' 1;" title="Đã xác thực">
                     verified
                 </span>
                 @endif
-            </p>
-            {{-- Bạn có thể thêm @username ở đây nếu muốn --}}
-            <p class="text-[10px] text-slate-500 font-medium group-hover:text-slate-400 transition-colors">
+            </div>
+            <p class="text-[11px] text-slate-500 font-medium group-hover:text-slate-400 transition-colors truncate" title="{{ '@' . ($user->ten_dang_nhap ?? 'nguoidung') }}">
                 {{ '@' . ($user->ten_dang_nhap ?? 'nguoidung') }}
             </p>
         </div>
@@ -313,7 +254,7 @@
                 <img 
                     class="w-full h-full object-cover" 
                     alt="{{ Auth::user()->name }}" 
-                    src="{{ Auth::user()->anh_dai_dien ? asset('storage/' . Auth::user()->anh_dai_dien) : 'https://ui-avatars.com/api/?name='.urlencode(Auth::user()->name).'&background=random' }}" 
+                    src="{{ Auth::user()->avatar_url }}" 
                 />
             </div>
             @else
@@ -340,7 +281,146 @@
             const commentCancel = event.target.closest('[data-comment-cancel]');
             const shareButton = event.target.closest('[data-share-button]');
             const bookmarkButton = event.target.closest('[data-bookmark-button]');
+            const pollOptionBtn = event.target.closest('.poll-option-btn');
+            const readMoreToggleBtn = event.target.closest('[data-read-more-toggle]');
             const reactionAreas = document.querySelectorAll('[data-reaction-area]');
+
+            if (readMoreToggleBtn) {
+                event.preventDefault();
+                const previewId = readMoreToggleBtn.dataset.previewId;
+                const fullId = readMoreToggleBtn.dataset.fullId;
+
+                const isExpanded = readMoreToggleBtn.dataset.expanded === '1';
+
+                if (previewId && fullId) {
+                    const previewContent = document.getElementById(previewId);
+                    const fullContent = document.getElementById(fullId);
+                    if (!previewContent || !fullContent) return;
+
+                    if (isExpanded) {
+                        fullContent.classList.add('hidden');
+                        previewContent.classList.remove('hidden');
+                        readMoreToggleBtn.dataset.expanded = '0';
+                        readMoreToggleBtn.textContent = 'Xem thêm';
+                    } else {
+                        previewContent.classList.add('hidden');
+                        fullContent.classList.remove('hidden');
+                        readMoreToggleBtn.dataset.expanded = '1';
+                        readMoreToggleBtn.textContent = 'Thu gọn';
+                    }
+                } else {
+                    const targetId = readMoreToggleBtn.dataset.targetId;
+                    const targetContent = targetId ? document.getElementById(targetId) : null;
+                    if (!targetContent) return;
+                    const collapsedMaxHeight = targetContent.dataset.collapsedMaxHeight || '7.5rem';
+
+                    if (isExpanded) {
+                        targetContent.style.maxHeight = collapsedMaxHeight;
+                        targetContent.style.overflow = 'hidden';
+                        readMoreToggleBtn.dataset.expanded = '0';
+                        readMoreToggleBtn.textContent = 'Xem thêm';
+                    } else {
+                        targetContent.style.maxHeight = 'none';
+                        targetContent.style.overflow = 'visible';
+                        readMoreToggleBtn.dataset.expanded = '1';
+                        readMoreToggleBtn.textContent = 'Thu gọn';
+                    }
+                }
+
+                return;
+            }
+
+            if (pollOptionBtn) {
+                event.preventDefault();
+                const container = pollOptionBtn.closest('.poll-container');
+                if (!container) return;
+
+                const pollId = pollOptionBtn.dataset.pollId;
+                const optionId = pollOptionBtn.dataset.optionId;
+
+                fetch(`/polls/${pollId}/vote`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({ lua_chon_id: optionId }),
+                })
+                    .then(async (response) => {
+                        const data = await response.json().catch(() => null);
+                        if (!response.ok) {
+                            throw new Error(data?.message || 'Có lỗi xảy ra khi bình chọn.');
+                        }
+                        return data;
+                    })
+                    .then((data) => {
+                        if (!data.success) {
+                            if (typeof window.showToast === 'function') window.showToast(data.message || 'Không thể bình chọn.', 'error');
+                            return;
+                        }
+
+                        container.dataset.hasVoted = '1';
+                        const totalVotes = data.total_votes || 0;
+                        const selectedId = String(data.user_voted_option_id || '');
+                        const buttons = container.querySelectorAll('.poll-option-btn');
+
+                        buttons.forEach((btn) => {
+                            btn.classList.remove('bg-slate-800/60', 'hover:bg-slate-700');
+                            btn.classList.add('bg-slate-800/30');
+
+                            const optId = String(btn.dataset.optionId);
+                            const progress = btn.querySelector('.poll-progress');
+                            const optionStat = Array.isArray(data.options) ? data.options.find(o => String(o.id) === optId) : null;
+                            const votes = optionStat ? Number(optionStat.votes_count || 0) : 0;
+                            const percentage = totalVotes > 0 ? Math.round((votes / totalVotes) * 100) : 0;
+                            const isSelected = optId === selectedId;
+
+                            if (progress) {
+                                progress.style.width = `${percentage}%`;
+                                progress.classList.toggle('bg-sky-500/30', isSelected);
+                                progress.classList.toggle('bg-slate-600/40', !isSelected);
+                            }
+
+                            const textSpan = btn.querySelector('span');
+                            if (textSpan) {
+                                textSpan.classList.toggle('text-sky-300', isSelected);
+                                textSpan.classList.toggle('text-slate-200', !isSelected);
+                            }
+
+                            let pct = btn.querySelector('.poll-percentage');
+                            if (!pct) {
+                                pct = document.createElement('span');
+                                pct.className = 'relative z-10 text-sm poll-percentage';
+                                btn.appendChild(pct);
+                            }
+                            pct.textContent = `${percentage}%`;
+                            pct.classList.toggle('text-sky-300', isSelected);
+                            pct.classList.toggle('font-bold', isSelected);
+                            pct.classList.toggle('text-slate-400', !isSelected);
+                        });
+
+                        let totalNode = container.querySelector('.poll-total');
+                        if (!totalNode) {
+                            totalNode = document.createElement('div');
+                            totalNode.className = 'text-sm text-slate-400 mt-2 poll-total';
+                            container.appendChild(totalNode);
+                        }
+                        totalNode.textContent = `${totalVotes} lượt bình chọn`;
+
+                        const hintNode = Array.from(container.querySelectorAll('div')).find(el => el.textContent && el.textContent.includes('Bình chọn để xem kết quả'));
+                        if (hintNode) hintNode.remove();
+                    })
+                    .catch((error) => {
+                        if (typeof window.showToast === 'function') {
+                            window.showToast(error.message || 'Có lỗi xảy ra khi bình chọn.', 'error');
+                        } else {
+                            alert(error.message || 'Có lỗi xảy ra khi bình chọn.');
+                        }
+                    });
+
+                return;
+            }
 
             if (bookmarkButton) {
                 event.preventDefault();
@@ -494,16 +574,30 @@
 
                         const triggerIcon = area.querySelector('[data-reaction-trigger-icon]');
                         const triggerLabel = area.querySelector('[data-reaction-trigger-label]');
+                        const triggerBtn = area.querySelector('[data-reaction-trigger]');
                         const countNode = area.querySelector('[data-reaction-count]');
                         const picker = area.querySelector('[data-reaction-picker]');
                         const isRemoved = data.removed;
                         const newIconName = isRemoved ? 'thumb_up' : iconName;
                         const newLabel = isRemoved ? 'Thích' : label;
-                        const newColor = isRemoved ? 'text-sky-400' : color;
+                        const newColor = isRemoved ? '' : color;
 
                         if (triggerIcon) {
                             triggerIcon.textContent = newIconName;
                             triggerIcon.className = 'material-symbols-outlined ' + newColor;
+                            if (isRemoved) {
+                                triggerIcon.style.fontVariationSettings = '';
+                            } else {
+                                triggerIcon.style.fontVariationSettings = "'FILL' 1";
+                            }
+                        }
+
+                        if (triggerBtn) {
+                            if (isRemoved) {
+                                triggerBtn.className = 'group flex items-center gap-1.5 rounded-full px-3 py-1.5 sm:px-4 sm:py-2 transition-all duration-300 text-slate-400 hover:bg-slate-800/60 hover:text-sky-300';
+                            } else {
+                                triggerBtn.className = 'group flex items-center gap-1.5 rounded-full px-3 py-1.5 sm:px-4 sm:py-2 transition-all duration-300 bg-sky-400/10 text-sky-400';
+                            }
                         }
 
                         if (triggerLabel) {
@@ -511,7 +605,7 @@
                         }
 
                         if (countNode) {
-                            countNode.textContent = data.reactions_count + ' cảm xúc';
+                            countNode.textContent = data.reactions_count;
                         }
 
                         if (picker) {
@@ -1330,48 +1424,34 @@
         @endif
     </script>
     <script>
-
         const searchInput = document.getElementById('search-user');
-
         const searchResults = document.getElementById('search-results');
-
         let timeout = null;
 
         searchInput.addEventListener('input', function () {
-
             clearTimeout(timeout);
-
             timeout = setTimeout(async () => {
-
                 const keyword = this.value.trim();
 
                 if (!keyword) {
-
                     searchResults.innerHTML = '';
-
                     searchResults.classList.add('hidden');
-
                     return;
                 }
 
                 try {
-
                     const response = await fetch(
                         `/search/users?q=${encodeURIComponent(keyword)}`
                     );
-
                     const users = await response.json();
 
                     if (users.length === 0) {
-
                         searchResults.innerHTML = `
                             <div class="p-4 text-sm text-slate-400">
                                 Không tìm thấy người dùng
                             </div>
                         `;
-
                         searchResults.classList.remove('hidden');
-
                         return;
                     }
 
@@ -1381,7 +1461,7 @@
                             class="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition cursor-pointer"
                         >
                             <img
-                                src="${user.anh_dai_dien ?? '/default-avatar.png'}"
+                                src="${user.avatar_url}"
                                 class="w-10 h-10 rounded-full object-cover"
                             >
                             <div>
@@ -1400,84 +1480,13 @@
                 }
             }, 300);
         });
+
         // click ngoài -> đóng dropdown
         document.addEventListener('click', function (e) {
             if (!searchInput.contains(e.target) &&
                 !searchResults.contains(e.target)) {
                 searchResults.classList.add('hidden');
             }
-        });
-    </script>
-    <script>
-
-        const searchInput = document.getElementById('search-user');
-
-        const searchResults = document.getElementById('search-results');
-
-        let timeout = null;
-
-        searchInput.addEventListener('input', function () {
-
-            clearTimeout(timeout);
-
-            timeout = setTimeout(async () => {
-
-                const keyword = this.value.trim();
-
-                if (!keyword) {
-
-                    searchResults.innerHTML = '';
-
-                    searchResults.classList.add('hidden');
-
-                    return;
-                }
-
-                try {
-
-                    const response = await fetch(
-                        `/search/users?q=${encodeURIComponent(keyword)}`
-                    );
-
-                    const users = await response.json();
-
-                    if (users.length === 0) {
-
-                        searchResults.innerHTML = `
-                            <div class="p-4 text-sm text-slate-400">
-                                Không tìm thấy người dùng
-                            </div>
-                        `;
-
-                        searchResults.classList.remove('hidden');
-
-                        return;
-                    }
-
-                    searchResults.innerHTML = users.map(user => `
-                        <a
-                            href="/profile/${user.ten_dang_nhap}"
-                            class="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition cursor-pointer"
-                        >
-                            <img
-                                src="${user.anh_dai_dien ?? '/default-avatar.png'}"
-                                class="w-10 h-10 rounded-full object-cover"
-                            >
-                            <div>
-                                <p class="text-sm font-semibold text-white">
-                                    ${user.ten_dang_nhap}
-                                </p>
-                                <p class="text-xs text-slate-400">
-                                    ${user.tieu_su ?? ''}
-                                </p>
-                            </div>
-                        </a>
-                    `).join('');
-                    searchResults.classList.remove('hidden');
-                } catch (error) {
-                    console.error(error);
-                }
-            }, 300);
         });
     </script>
     <!-- Complete Mentions Suggestions Logic -->
@@ -1779,8 +1788,125 @@
                     hideSuggestions();
                 }
             });
+
+            // Modal danh sách cảm xúc
+            const reactionsModal = document.getElementById('reactions-list-modal');
+            const reactionsModalLoading = document.getElementById('reactions-modal-loading');
+            const reactionsModalList = document.getElementById('reactions-modal-list');
+
+            window.openReactionsModal = function(postId) {
+                if (!reactionsModal) return;
+                reactionsModal.classList.remove('hidden');
+                reactionsModal.classList.add('flex');
+                
+                reactionsModalLoading.classList.remove('hidden');
+                reactionsModalList.classList.add('hidden');
+                reactionsModalList.innerHTML = '';
+                
+                fetch(`/posts/${postId}/reactors`)
+                    .then(res => res.json())
+                    .then(data => {
+                        reactionsModalLoading.classList.add('hidden');
+                        reactionsModalList.classList.remove('hidden');
+                        
+                        if (data.success && data.reactors && data.reactors.length > 0) {
+                            reactionsModalList.innerHTML = data.reactors.map(user => {
+                                const verifyBadge = user.is_verified ? `
+                                    <span class="material-symbols-outlined text-base text-sky-400 shrink-0" data-icon="verified" style="font-variation-settings: 'FILL' 1;">
+                                        verified
+                                    </span>
+                                ` : '';
+                                
+                                return `
+                                    <div class="flex items-center justify-between p-2 rounded-xl hover:bg-white/5 transition-colors">
+                                        <div class="flex items-center gap-3">
+                                            <a href="/profile/${user.username}">
+                                                <img class="w-10 h-10 rounded-full object-cover border border-white/10" src="${user.avatar}" alt="${user.name}">
+                                            </a>
+                                            <div>
+                                                <div class="flex items-center gap-1">
+                                                    <a href="/profile/${user.username}" class="font-bold text-on-surface hover:text-sky-300 transition-colors text-sm">${user.name}</a>
+                                                    ${verifyBadge}
+                                                </div>
+                                                <div class="text-xs text-slate-500">@${user.username}</div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Loại cảm xúc -->
+                                        <div class="flex items-center justify-center w-8 h-8 rounded-full ${user.reaction_bg}">
+                                            <span class="material-symbols-outlined text-[18px] ${user.reaction_color}" style="font-variation-settings: 'FILL' 1;">${user.reaction_icon}</span>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('');
+                        } else {
+                            reactionsModalList.innerHTML = `
+                                <div class="text-center py-8 text-slate-500">
+                                    <span class="material-symbols-outlined text-4xl mb-2 text-slate-600">mood_bad</span>
+                                    <p class="text-sm">Chưa có ai thả cảm xúc cho bài viết này.</p>
+                                </div>
+                            `;
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        reactionsModalLoading.classList.add('hidden');
+                        reactionsModalList.classList.remove('hidden');
+                        reactionsModalList.innerHTML = `
+                            <div class="text-center py-8 text-red-400">
+                                <span class="material-symbols-outlined text-4xl mb-2">error</span>
+                                <p class="text-sm">Có lỗi xảy ra khi tải danh sách. Vui lòng thử lại.</p>
+                            </div>
+                        `;
+                    });
+            }
+
+            window.closeReactionsModal = function() {
+                if (!reactionsModal) return;
+                reactionsModal.classList.add('hidden');
+                reactionsModal.classList.remove('flex');
+            }
+
+            // Click outside to close
+            if (reactionsModal) {
+                reactionsModal.addEventListener('click', function(e) {
+                    if (e.target === reactionsModal) {
+                        closeReactionsModal();
+                    }
+                });
+            }
         });
     </script>
+
+    <!-- MODAL HIỂN THỊ CÁC USER ĐÃ THẢ CẢM XÚC -->
+    <div id="reactions-list-modal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+        <div class="glass-panel-elevated w-full max-w-md rounded-2xl overflow-hidden shadow-2xl animate-modal-in flex flex-col max-h-[500px]">
+            <!-- Header Modal -->
+            <div class="flex items-center justify-between px-6 py-4 border-b border-white/10">
+                <h3 class="text-lg font-bold text-on-surface flex items-center gap-2">
+                    <span class="material-symbols-outlined text-sky-400">favorite</span>
+                    Người đã bày tỏ cảm xúc
+                </h3>
+                <button type="button" onclick="closeReactionsModal()" class="text-slate-400 hover:text-white p-1 rounded-full hover:bg-white/5 transition-colors">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            
+            <!-- List -->
+            <div id="reactions-list-container" class="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-4">
+                <!-- Loading State -->
+                <div class="text-center py-8 text-slate-500" id="reactions-modal-loading">
+                    <div class="inline-block animate-spin w-6 h-6 border-2 border-sky-400 border-t-transparent rounded-full mb-2"></div>
+                    <p class="text-sm">Đang tải danh sách...</p>
+                </div>
+                
+                <!-- Content Area -->
+                <div id="reactions-modal-list" class="space-y-3.5 hidden">
+                    <!-- User elements will be injected here -->
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>

@@ -66,7 +66,7 @@
                     {{-- Actor Avatar --}}
                     <div class="shrink-0 relative">
                         <a href="{{ route('profile.public', $notification->nguoiThucHien->ten_dang_nhap) }}" class="block" onclick="event.stopPropagation()">
-                            <img src="{{ $notification->nguoiThucHien->anh_dai_dien ? asset('storage/' . $notification->nguoiThucHien->anh_dai_dien) : 'https://ui-avatars.com/api/?name='.urlencode($notification->nguoiThucHien->name).'&background=random' }}" 
+                            <img src="{{ $notification->nguoiThucHien->avatar_url }}" 
                                  alt="{{ $notification->nguoiThucHien->name }}"
                                  class="w-12 h-12 rounded-full object-cover border border-sky-400/20 shadow-sm">
                         </a>
@@ -120,7 +120,18 @@
                                     @endif
                                     @break
                                 @case('theo_doi')
-                                    đã bắt đầu theo dõi bạn.
+                                    @php
+                                        $isPendingRequest = \DB::table('theo_doi')
+                                            ->where('nguoi_theo_doi_id', $notification->nguoi_thuc_hien_id)
+                                            ->where('nguoi_duoc_theo_doi_id', $notification->nguoi_dung_id)
+                                            ->where('trang_thai', 'cho_chap_nhan')
+                                            ->exists();
+                                    @endphp
+                                    @if($isPendingRequest)
+                                        đã gửi yêu cầu theo dõi bạn.
+                                    @else
+                                        đã bắt đầu theo dõi bạn.
+                                    @endif
                                     @break
                                 @case('ket_ban')
                                     đã trở thành bạn bè với bạn.
@@ -171,6 +182,24 @@
                                 <span class="unread-dot w-1.5 h-1.5 rounded-full bg-sky-400 shadow-[0_0_8px_rgba(125,211,252,0.5)]"></span>
                             @endif
                         </div>
+
+                        {{-- Follow Request Actions --}}
+                        @if($notification->loai === 'theo_doi' && isset($isPendingRequest) && $isPendingRequest)
+                            <div class="mt-3 flex items-center gap-2.5" id="follow-request-actions-{{ $notification->id }}">
+                                <button type="button" 
+                                        onclick="handleFollowRequest(event, {{ $notification->nguoi_thuc_hien_id }}, 'accept', {{ $notification->id }})" 
+                                        class="px-4 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-xs font-bold text-white shadow-lg shadow-emerald-500/20 hover:brightness-110 active:scale-95 transition-all flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-sm">done</span>
+                                    Chấp nhận
+                                </button>
+                                <button type="button" 
+                                        onclick="handleFollowRequest(event, {{ $notification->nguoi_thuc_hien_id }}, 'decline', {{ $notification->id }})" 
+                                        class="px-4 py-1.5 rounded-xl border border-white/10 bg-white/5 hover:bg-red-500/10 hover:border-red-500/20 text-xs font-bold text-slate-300 hover:text-red-400 active:scale-95 transition-all flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-sm">close</span>
+                                    Từ chối
+                                </button>
+                            </div>
+                        @endif
 
                         {{-- Action Preview (if post or comment) --}}
                         @if($notification->loai === 'binh_luan' && $notification->binhLuan)
@@ -227,6 +256,70 @@
 </div>
 
 <script>
+    window.handleFollowRequest = async function(event, followerId, action, notificationId) {
+        event.stopPropagation();
+        
+        const container = document.getElementById(`follow-request-actions-${notificationId}`);
+        if (!container) return;
+        
+        // Find buttons and disable them
+        const buttons = container.querySelectorAll('button');
+        buttons.forEach(btn => btn.disabled = true);
+        
+        const endpoint = action === 'accept' 
+            ? `/user/${followerId}/accept-follow` 
+            : `/user/${followerId}/decline-follow`;
+            
+        try {
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                
+                // Show success toast
+                if (window.showToast) {
+                    window.showToast(data.message || 'Thao tác thành công!', 'success');
+                }
+                
+                // Replace action buttons with a premium badge
+                if (action === 'accept') {
+                    container.innerHTML = `
+                        <span class="inline-flex items-center gap-1 text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-xl">
+                            <span class="material-symbols-outlined text-[14px]">done</span>
+                            Đã chấp nhận
+                        </span>
+                    `;
+                } else {
+                    container.innerHTML = `
+                        <span class="inline-flex items-center gap-1 text-xs font-bold text-rose-400 bg-rose-500/10 border border-rose-500/20 px-3 py-1 rounded-xl">
+                            <span class="material-symbols-outlined text-[14px]">close</span>
+                            Đã từ chối
+                        </span>
+                    `;
+                }
+            } else {
+                buttons.forEach(btn => btn.disabled = false);
+                if (window.showToast) {
+                    window.showToast('Có lỗi xảy ra, vui lòng thử lại.', 'error');
+                }
+            }
+        } catch (error) {
+            buttons.forEach(btn => btn.disabled = false);
+            console.error(error);
+            if (window.showToast) {
+                window.showToast('Lỗi kết nối mạng.', 'error');
+            }
+        }
+    }
+
     // Cập nhật số thông báo chưa đọc realtime trên giao diện
     function decrementBadgeCount(amount = 1) {
         const badges = document.querySelectorAll('.notification-badge');

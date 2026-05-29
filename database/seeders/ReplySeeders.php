@@ -50,9 +50,16 @@ class ReplySeeders extends Seeder
 
         // 3. Tạo các bình luận gốc (parent comments)
         $parentComments = [
-            'Bình luận gốc thứ nhất',
-            'Bình luận gốc thứ hai',
-            'Bình luận gốc thứ ba',
+            'Binh luan goc thu nhat',
+            'Binh luan goc thu hai',
+            'Binh luan goc thu ba',
+            'Binh luan goc thu tu',
+            'Binh luan goc thu nam',
+            'Binh luan goc thu sau',
+            'Binh luan goc thu bay',
+            'Binh luan goc thu tam',
+            'Binh luan goc thu chin',
+            'Binh luan goc thu muoi',
         ];
 
         foreach ($parentComments as $content) {
@@ -67,7 +74,7 @@ class ReplySeeders extends Seeder
             ]);
 
             // 4. Tạo các reply cho mỗi bình luận gốc
-            for ($i = 1; $i <= 2; $i++) {
+            for ($i = 1; $i <= 3; $i++) {
                 \Illuminate\Support\Facades\DB::table('binh_luan')->insert([
                     'bai_viet_id' => $postId,
                     'nguoi_dung_id' => $userId,

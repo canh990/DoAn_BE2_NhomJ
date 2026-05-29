@@ -24,6 +24,9 @@ class BaiViet extends Model
         'quyen_rieng_tu',
         'da_chinh_sua',
         'da_ghim',
+        'ten_dia_diem',
+        'vi_do',
+        'kinh_do',
     ];
 
     public function getFormattedContentAttribute()
@@ -82,6 +85,9 @@ class BaiViet extends Model
                     ->withPivot('ngay_tao');
     }
 
+    public function poll()
+    {
+        return $this->hasOne(BinhChon::class, 'bai_viet_id');
     /**
      * Thẻ Hashtag của bài viết.
      */

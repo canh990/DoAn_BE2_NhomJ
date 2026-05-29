@@ -17,6 +17,13 @@ class CommentController extends Controller
             'media.*' => ['file', 'mimes:jpeg,png,jpg,gif,webp,bmp,svg,heic,heif,mp4,mov,webm,avi,mkv,wmv', 'max:51200'],
         ]);
 
+        if ($request->user()->hasAnyBlockRelationship($post->nguoi_dung_id)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Bạn không thể bình luận trên bài viết này.',
+            ], 403);
+        }
+
         if (!empty($validated['binh_luan_cha_id'])) {
             $parentComment = BinhLuan::find($validated['binh_luan_cha_id']);
             if (!$parentComment || $parentComment->bai_viet_id !== $post->id) {

@@ -10,7 +10,7 @@
         <section class="glass-panel rounded-2xl p-4 shadow-sm relative z-40">
             <div class="flex gap-4">
                 <a href="{{ route('profile') }}" class="shrink-0 hover:opacity-80 transition-opacity" title="Xem trang cá nhân">
-                    <img class="w-12 h-12 rounded-full border border-sky-400/20 object-cover" alt="Avatar" src="{{ Auth::user()->anh_dai_dien ? asset('storage/' . Auth::user()->anh_dai_dien) : asset('storage/avatars/avtmacdinh.png') }}">
+                    <img class="w-12 h-12 rounded-full border border-sky-400/20 object-cover" alt="Avatar" src="{{ Auth::user()->avatar_url }}">
                 </a>
                 <div class="w-full">
                     <form action="{{ route('posts.store') }}" method="POST" enctype="multipart/form-data">
@@ -32,9 +32,21 @@
                             </button>
                         </div>
 
+                        <!-- Hiển thị địa điểm đang chọn -->
+                        <div id="location-display-container" class="mt-2 hidden items-center gap-2 text-sm text-slate-300 bg-white/5 w-fit px-3 py-1.5 rounded-full border border-white/10">
+                            <span class="material-symbols-outlined text-red-400 text-sm">location_on</span>
+                            <span id="location-text">Check-in tại: </span>
+                            <button type="button" id="remove-location-btn" class="hover:text-red-400 transition-colors ml-1 flex items-center" title="Xóa địa điểm">
+                                <span class="material-symbols-outlined text-sm">close</span>
+                            </button>
+                        </div>
+
                         <!-- Input ẩn để lưu dữ liệu -->
                         <input type="hidden" name="cam_xuc" id="input-cam_xuc">
                         <input type="hidden" name="hoat_dong" id="input-hoat_dong">
+                        <input type="hidden" name="ten_dia_diem" id="input-ten_dia_diem">
+                        <input type="hidden" name="vi_do" id="input-vi_do">
+                        <input type="hidden" name="kinh_do" id="input-kinh_do">
 
                         <!-- Nút chọn file ẩn -->
                         <input type="file" id="post-image" name="anh[]" accept="image/*,video/*" multiple class="hidden">
@@ -44,6 +56,36 @@
                             <div id="preview-grid" class="grid gap-2"></div>
                             <button type="button" id="remove-all-images" class="mt-2 text-sm text-red-400 hover:text-red-300 hidden items-center gap-1">
                                 <span class="material-symbols-outlined text-sm">delete</span> Xóa tất cả tệp
+                            </button>
+                        </div>
+
+                        <div id="poll-creator-container" class="mt-3 hidden p-4 bg-slate-800/80 border border-white/10 rounded-2xl">
+                            <div class="flex items-center justify-between mb-3">
+                                <h4 class="text-sm font-semibold text-slate-200">Tạo cuộc bình chọn</h4>
+                                <button type="button" id="close-poll-creator" class="text-slate-400 hover:text-red-400 transition-colors">
+                                    <span class="material-symbols-outlined text-sm">close</span>
+                                </button>
+                            </div>
+
+                            <input
+                                type="text"
+                                id="poll-question-input"
+                                name="poll_question"
+                                placeholder="Nhập câu hỏi bình chọn..."
+                                class="w-full bg-slate-900/60 border border-white/10 focus:border-sky-400/50 rounded-xl px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:ring-0 transition-colors"
+                            >
+
+                            <div id="poll-options-list" class="mt-3 space-y-2">
+                                <div class="option-item">
+                                    <input type="text" name="poll_options[]" placeholder="Lựa chọn 1" class="w-full bg-slate-900/40 border border-white/5 focus:border-sky-400/30 rounded-xl px-3 py-2 text-xs text-slate-200 placeholder-slate-500 focus:ring-0 transition-colors">
+                                </div>
+                                <div class="option-item">
+                                    <input type="text" name="poll_options[]" placeholder="Lựa chọn 2" class="w-full bg-slate-900/40 border border-white/5 focus:border-sky-400/30 rounded-xl px-3 py-2 text-xs text-slate-200 placeholder-slate-500 focus:ring-0 transition-colors">
+                                </div>
+                            </div>
+
+                            <button type="button" id="btn-add-poll-option" class="mt-3 text-xs font-semibold text-sky-400 hover:text-sky-300 transition-colors">
+                                + Thêm lựa chọn
                             </button>
                         </div>
 
@@ -80,10 +122,33 @@
                                         <button type="button" class="feeling-option w-full text-left px-4 py-2 hover:bg-white/5 flex items-center gap-2 transition-colors" data-type="hoat_dong" data-val="Đang đi chơi" data-label="Đang đi chơi"><span class="text-xl">✈️</span> Đang đi chơi</button>
                                     </div>
                                 </div>
-                                <button type="button" class="p-2 text-red-400 hover:bg-red-400/10 rounded-full transition-colors" title="Vị trí">
-                                    <span class="material-symbols-outlined" data-icon="location_on">location_on</span>
-                                </button>
-                                <button type="button" class="p-2 text-sky-300 hover:bg-sky-300/10 rounded-full transition-colors" title="Thăm dò ý kiến">
+                                <div class="relative z-50">
+                                    <button type="button" id="btn-location" class="p-2 text-red-400 hover:bg-red-400/10 rounded-full transition-colors" title="Vị trí">
+                                        <span class="material-symbols-outlined" data-icon="location_on">location_on</span>
+                                    </button>
+                                    <!-- Dropdown tìm kiếm địa điểm check-in -->
+                                    <div id="location-dropdown" class="hidden absolute top-full left-0 mt-2 w-72 bg-slate-800 border border-white/10 rounded-2xl shadow-2xl overflow-hidden flex-col p-3 text-sm text-left">
+                                        <div class="px-1 py-1 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Check-in địa điểm</div>
+                                        
+                                        <!-- Ô tìm kiếm -->
+                                        <div class="flex items-center bg-slate-900/60 border border-white/10 rounded-xl px-3 py-1.5 mb-2 focus-within:border-sky-400/50 transition-all">
+                                            <span class="material-symbols-outlined text-slate-500 text-sm mr-2">search</span>
+                                            <input id="location-search-input" type="text" placeholder="Tìm kiếm địa điểm..." autocomplete="off" class="bg-transparent border-none focus:ring-0 p-0 text-xs text-slate-100 placeholder:text-slate-500 w-full">
+                                        </div>
+                                        
+                                        <!-- Nút GPS vị trí hiện tại -->
+                                        <button type="button" id="btn-gps-location" class="w-full text-left px-3 py-2 rounded-xl hover:bg-white/5 flex items-center gap-2 transition-colors text-xs text-sky-400 font-medium border border-sky-400/10 bg-sky-400/5 mb-2">
+                                            <span class="material-symbols-outlined text-sm">my_location</span>
+                                            <span id="gps-btn-text">Sử dụng vị trí hiện tại</span>
+                                        </button>
+                                        
+                                        <!-- Vùng kết quả tìm kiếm -->
+                                        <div id="location-results-container" class="max-h-40 overflow-y-auto space-y-1 custom-scrollbar">
+                                            <div class="text-[11px] text-slate-500 text-center py-4">Nhập tên để tìm kiếm hoặc dùng GPS...</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button type="button" id="btn-poll" class="p-2 text-sky-300 hover:bg-sky-300/10 rounded-full transition-colors" title="Thăm dò ý kiến">
                                     <span class="material-symbols-outlined" data-icon="poll">poll</span>
                                 </button>
                             </div>
@@ -384,11 +449,294 @@
             });
         }
 
+        // Location check-in dropdown & API logic
+        const btnLocation = document.getElementById('btn-location');
+        const locationDropdown = document.getElementById('location-dropdown');
+        const locationSearchInput = document.getElementById('location-search-input');
+        const btnGpsLocation = document.getElementById('btn-gps-location');
+        const gpsBtnText = document.getElementById('gps-btn-text');
+        const locationResultsContainer = document.getElementById('location-results-container');
+        const locationDisplayContainer = document.getElementById('location-display-container');
+        const locationText = document.getElementById('location-text');
+        const removeLocationBtn = document.getElementById('remove-location-btn');
+        const inputTenDiaDiem = document.getElementById('input-ten_dia_diem');
+        const inputViDo = document.getElementById('input-vi_do');
+        const inputKinhDo = document.getElementById('input-kinh_do');
+
+        if (btnLocation) {
+            btnLocation.addEventListener('click', function(e) {
+                e.stopPropagation();
+                locationDropdown.classList.toggle('hidden');
+                if (!locationDropdown.classList.contains('hidden')) {
+                    locationSearchInput.focus();
+                }
+            });
+        }
+
+        document.addEventListener('click', function(e) {
+            if (btnLocation && locationDropdown && !btnLocation.contains(e.target) && !locationDropdown.contains(e.target)) {
+                locationDropdown.classList.add('hidden');
+            }
+        });
+
+        let searchDebounceTimeout = null;
+
+        if (locationSearchInput) {
+            locationSearchInput.addEventListener('input', function() {
+                clearTimeout(searchDebounceTimeout);
+                const query = this.value.trim();
+                if (!query) {
+                    locationResultsContainer.innerHTML = '<div class="text-[11px] text-slate-500 text-center py-4">Nhập tên để tìm kiếm hoặc dùng GPS...</div>';
+                    return;
+                }
+
+                locationResultsContainer.innerHTML = `
+                    <div class="flex items-center justify-center py-4">
+                        <div class="w-4 h-4 border-2 border-sky-400 border-t-transparent rounded-full animate-spin"></div>
+                        <span class="text-[11px] text-slate-400 ml-2">Đang tìm kiếm...</span>
+                    </div>
+                `;
+
+                searchDebounceTimeout = setTimeout(() => {
+                    fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&addressdetails=1`, {
+                        headers: {
+                            'Accept-Language': 'vi,en;q=0.9'
+                        }
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.length === 0) {
+                            locationResultsContainer.innerHTML = '<div class="text-[11px] text-slate-500 text-center py-4">Không tìm thấy địa điểm nào.</div>';
+                            return;
+                        }
+
+                        locationResultsContainer.innerHTML = '';
+                        data.forEach(item => {
+                            const name = item.display_name;
+                            const lat = item.lat;
+                            const lon = item.lon;
+                            const shortName = name.split(',').slice(0, 3).join(',').trim();
+
+                            const btn = document.createElement('button');
+                            btn.type = 'button';
+                            btn.className = 'w-full text-left px-3 py-2 rounded-xl hover:bg-white/5 flex items-start gap-2 transition-colors text-xs text-slate-300 border border-transparent hover:border-white/5';
+                            btn.innerHTML = `
+                                <span class="material-symbols-outlined text-sm text-red-400 mt-0.5">location_on</span>
+                                <div class="min-w-0 flex-1">
+                                    <div class="font-semibold text-slate-200 truncate">${shortName}</div>
+                                    <div class="text-[10px] text-slate-500 truncate">${name}</div>
+                                </div>
+                            `;
+
+                            btn.addEventListener('click', function() {
+                                selectLocation(shortName, lat, lon);
+                            });
+
+                            locationResultsContainer.appendChild(btn);
+                        });
+                    })
+                    .catch(err => {
+                        console.error('Lỗi tìm kiếm địa điểm:', err);
+                        locationResultsContainer.innerHTML = '<div class="text-[11px] text-rose-400 text-center py-4">Lỗi kết nối bản đồ. Hãy thử lại.</div>';
+                    });
+                }, 500);
+            });
+        }
+
+        if (btnGpsLocation) {
+            btnGpsLocation.addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (!navigator.geolocation) {
+                    alert('Trình duyệt của bạn không hỗ trợ định vị GPS.');
+                    return;
+                }
+
+                gpsBtnText.textContent = 'Đang định vị GPS...';
+                btnGpsLocation.disabled = true;
+
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        const lat = position.coords.latitude;
+                        const lon = position.coords.longitude;
+
+                        gpsBtnText.textContent = 'Đang giải mã tọa độ...';
+
+                        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`, {
+                            headers: {
+                                'Accept-Language': 'vi,en;q=0.9'
+                            }
+                        })
+                        .then(res => res.json())
+                        .then(data => {
+                            let locName = 'Vị trí của bạn';
+                            if (data && data.address) {
+                                const addr = data.address;
+                                const parts = [];
+                                if (addr.road) parts.push(addr.road);
+                                else if (addr.suburb) parts.push(addr.suburb);
+                                else if (addr.neighbourhood) parts.push(addr.neighbourhood);
+
+                                if (addr.district) parts.push(addr.district);
+                                else if (addr.quarter) parts.push(addr.quarter);
+
+                                if (addr.city) parts.push(addr.city);
+                                else if (addr.town) parts.push(addr.town);
+                                else if (addr.province) parts.push(addr.province);
+                                else if (addr.state) parts.push(addr.state);
+
+                                if (parts.length > 0) {
+                                    locName = parts.slice(0, 3).join(', ');
+                                } else if (data.display_name) {
+                                    locName = data.display_name.split(',').slice(0, 2).join(', ').trim();
+                                }
+                            }
+
+                            selectLocation(locName, lat, lon);
+                            gpsBtnText.textContent = 'Sử dụng vị trí hiện tại';
+                            btnGpsLocation.disabled = false;
+                        })
+                        .catch(err => {
+                            console.error('Lỗi giải mã tọa độ:', err);
+                            selectLocation('Vị trí GPS của bạn', lat, lon);
+                            gpsBtnText.textContent = 'Sử dụng vị trí hiện tại';
+                            btnGpsLocation.disabled = false;
+                        });
+                    },
+                    function(error) {
+                        console.error('Lỗi GPS:', error);
+                        let msg = 'Không thể lấy vị trí hiện tại của bạn.';
+                        if (error.code === error.PERMISSION_DENIED) {
+                            msg = 'Vui lòng cho phép quyền truy cập GPS trên trình duyệt.';
+                        }
+                        alert(msg);
+                        gpsBtnText.textContent = 'Sử dụng vị trí hiện tại';
+                        btnGpsLocation.disabled = false;
+                    },
+                    { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+                );
+            });
+        }
+
+        function selectLocation(name, lat, lon) {
+            inputTenDiaDiem.value = name;
+            inputViDo.value = lat;
+            inputKinhDo.value = lon;
+
+            locationText.textContent = `Check-in tại: ${name}`;
+            locationDisplayContainer.classList.remove('hidden');
+            locationDisplayContainer.classList.add('flex');
+
+            locationDropdown.classList.add('hidden');
+            updateSubmitButton();
+        }
+
+        if (removeLocationBtn) {
+            removeLocationBtn.addEventListener('click', function() {
+                inputTenDiaDiem.value = '';
+                inputViDo.value = '';
+                inputKinhDo.value = '';
+
+                locationDisplayContainer.classList.add('hidden');
+                locationDisplayContainer.classList.remove('flex');
+                updateSubmitButton();
+            });
+        }
+
+        const btnPoll = document.getElementById('btn-poll');
+        const pollCreatorContainer = document.getElementById('poll-creator-container');
+        const closePollCreator = document.getElementById('close-poll-creator');
+        const btnAddPollOption = document.getElementById('btn-add-poll-option');
+        const pollOptionsList = document.getElementById('poll-options-list');
+        const pollQuestionInput = document.getElementById('poll-question-input');
+
+        function resetPollFields() {
+            if (!pollQuestionInput || !pollOptionsList) return;
+            pollQuestionInput.value = '';
+            pollOptionsList.innerHTML = `
+                <div class="option-item">
+                    <input type="text" name="poll_options[]" placeholder="Lựa chọn 1" class="w-full bg-slate-900/40 border border-white/5 focus:border-sky-400/30 rounded-xl px-3 py-2 text-xs text-slate-200 placeholder-slate-500 focus:ring-0 transition-colors">
+                </div>
+                <div class="option-item">
+                    <input type="text" name="poll_options[]" placeholder="Lựa chọn 2" class="w-full bg-slate-900/40 border border-white/5 focus:border-sky-400/30 rounded-xl px-3 py-2 text-xs text-slate-200 placeholder-slate-500 focus:ring-0 transition-colors">
+                </div>
+            `;
+        }
+
+        function bindPollInputListeners() {
+            if (!pollOptionsList) return;
+            pollOptionsList.querySelectorAll('input[name="poll_options[]"]').forEach(input => {
+                input.addEventListener('input', updateSubmitButton);
+            });
+        }
+
+        if (btnPoll && pollCreatorContainer) {
+            btnPoll.addEventListener('click', function() {
+                pollCreatorContainer.classList.toggle('hidden');
+                if (!pollCreatorContainer.classList.contains('hidden') && pollQuestionInput) {
+                    pollQuestionInput.focus();
+                }
+                updateSubmitButton();
+            });
+        }
+
+        if (closePollCreator && pollCreatorContainer) {
+            closePollCreator.addEventListener('click', function() {
+                resetPollFields();
+                pollCreatorContainer.classList.add('hidden');
+                bindPollInputListeners();
+                updateSubmitButton();
+            });
+        }
+
+        if (btnAddPollOption && pollOptionsList) {
+            btnAddPollOption.addEventListener('click', function() {
+                const currentCount = pollOptionsList.querySelectorAll('input[name="poll_options[]"]').length;
+                if (currentCount >= 6) {
+                    alert('Poll tối đa 6 lựa chọn.');
+                    return;
+                }
+
+                const wrapper = document.createElement('div');
+                wrapper.className = 'option-item flex items-center gap-2';
+                wrapper.innerHTML = `
+                    <input type="text" name="poll_options[]" placeholder="Lựa chọn ${currentCount + 1}" class="w-full bg-slate-900/40 border border-white/5 focus:border-sky-400/30 rounded-xl px-3 py-2 text-xs text-slate-200 placeholder-slate-500 focus:ring-0 transition-colors">
+                    <button type="button" class="remove-poll-option text-slate-400 hover:text-red-400 transition-colors">
+                        <span class="material-symbols-outlined text-sm">delete</span>
+                    </button>
+                `;
+
+                pollOptionsList.appendChild(wrapper);
+                wrapper.querySelector('input')?.addEventListener('input', updateSubmitButton);
+                wrapper.querySelector('.remove-poll-option')?.addEventListener('click', function() {
+                    wrapper.remove();
+                    updateSubmitButton();
+                });
+                updateSubmitButton();
+            });
+        }
+
+        if (pollQuestionInput) {
+            pollQuestionInput.addEventListener('input', updateSubmitButton);
+        }
+        bindPollInputListeners();
+
         const originalUpdateSubmitButton = updateSubmitButton;
         updateSubmitButton = function() {
             const hasFeeling = inputCamXuc.value || inputHoatDong.value;
-            const textLength = contentTextarea.value.trim().length;
-            if (textLength > 0 || selectedFiles.length > 0 || hasFeeling) {
+            const hasLocation = inputTenDiaDiem.value;
+            const textLength = textarea.value.trim().length;
+            const isPollActive = pollCreatorContainer && !pollCreatorContainer.classList.contains('hidden');
+            let isPollValid = false;
+
+            if (isPollActive) {
+                const question = pollQuestionInput ? pollQuestionInput.value.trim() : '';
+                const options = Array.from(pollOptionsList.querySelectorAll('input[name="poll_options[]"]'))
+                    .map(input => input.value.trim())
+                    .filter(Boolean);
+                isPollValid = question.length > 0 && options.length >= 2 && options.length <= 6;
+            }
+
+            if (textLength > 0 || selectedFiles.length > 0 || hasFeeling || hasLocation || isPollValid) {
                 submitButton.removeAttribute('disabled');
             } else {
                 submitButton.setAttribute('disabled', 'true');

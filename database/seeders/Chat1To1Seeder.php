@@ -103,7 +103,7 @@ class Chat1To1Seeder extends Seeder
             [
                 'cuoc_tro_chuyen_id' => $conversation->id,
                 'nguoi_gui_id' => $user1->id,
-                'noi_dung' => 'Tôi cũng khỏe! 😊',
+                'noi_dung' => 'Tôi cũng khỏe!',
                 'trang_thai' => 'da_gui',
                 'da_thu_hoi' => false,
                 'ngay_tao' => $now,

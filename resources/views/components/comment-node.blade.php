@@ -2,7 +2,7 @@
     <div class="rounded-2xl border border-white/10 bg-slate-950 p-3">
         <div class="flex gap-3 items-start">
             <a href="{{ ($comment->user && $comment->user->ten_dang_nhap) ? route('profile.public', $comment->user->ten_dang_nhap) : '#' }}" class="shrink-0 hover:opacity-80 transition-opacity" title="Xem trang cá nhân của {{ $comment->user?->name ?? 'Người dùng' }}">
-                <img class="w-8 h-8 rounded-full object-cover border border-slate-700" src="{{ $comment->user && $comment->user->anh_dai_dien ? asset('storage/' . $comment->user->anh_dai_dien) : asset('storage/avatars/avtmacdinh.png') }}" alt="{{ $comment->user?->name ?? 'Người dùng' }}">
+                <img class="w-8 h-8 rounded-full object-cover border border-slate-700" src="{{ $comment->user ? $comment->user->avatar_url : 'https://ui-avatars.com/api/?name=NguoiDung&background=random' }}" alt="{{ $comment->user?->name ?? 'Người dùng' }}">
             </a>
             <div class="flex-1">
                 <div class="flex items-center justify-between gap-2 text-sm text-slate-200">

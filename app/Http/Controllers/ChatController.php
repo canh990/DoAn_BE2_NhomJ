@@ -18,8 +18,19 @@ class ChatController extends Controller
     public function index(Request $request)
     {
         $currentUser = Auth::user();
+        
+        $blockedUserIds = [];
+        if ($currentUser) {
+            $blockedByMe = $currentUser->blockedUsers()->pluck('nguoi_bi_chan_id')->toArray();
+            $blockedMe = $currentUser->blockedByUsers()->pluck('nguoi_chan_id')->toArray();
+            $blockedUserIds = array_unique(array_merge($blockedByMe, $blockedMe));
+        }
+
         $users = User::query()
             ->whereKeyNot($currentUser->id)
+            ->when(!empty($blockedUserIds), function ($query) use ($blockedUserIds) {
+                $query->whereNotIn('id', $blockedUserIds);
+            })
             ->orderBy('ten_dang_nhap')
             ->get();
 
@@ -59,6 +70,7 @@ class ChatController extends Controller
 
         $currentUser = Auth::user();
         abort_if((int) $data['user_id'] === $currentUser->id, 422);
+        abort_if($currentUser->hasAnyBlockRelationship((int) $data['user_id']), 403, 'Bạn không thể nhắn tin với người dùng này.');
 
         $conversation = $this->findPrivateConversation($currentUser->id, (int) $data['user_id'])
             ?? $this->createPrivateConversation($currentUser->id, (int) $data['user_id']);
@@ -82,11 +94,14 @@ class ChatController extends Controller
         $currentUser = Auth::user();
         abort_unless($conversation->loai === 'ca_nhan' && $conversation->members()->whereKey($currentUser->id)->exists(), 403);
 
-        $message = $this->createMessage($conversation, $currentUser->id, $data['noi_dung'] ?? null, $request);
-
         $otherUserId = $conversation->members()
-            ->whereKeyNot($currentUser->id)
+            ->where('nguoi_dung.id', '!=', $currentUser->id)
             ->value('nguoi_dung.id');
+        if ($otherUserId) {
+            abort_if($currentUser->hasAnyBlockRelationship($otherUserId), 403, 'Bạn không thể nhắn tin với người dùng này.');
+        }
+
+        $message = $this->createMessage($conversation, $currentUser->id, $data['noi_dung'] ?? null, $request);
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -102,6 +117,7 @@ class ChatController extends Controller
     {
         $currentUser = Auth::user();
         abort_if($user->id === $currentUser->id, 422);
+        abort_if($currentUser->hasAnyBlockRelationship($user->id), 403, 'Bạn không thể nhắn tin với người dùng này.');
 
         $conversation = $this->findPrivateConversation($currentUser->id, $user->id);
         $messages = $conversation
@@ -120,6 +136,7 @@ class ChatController extends Controller
 
         $currentUser = Auth::user();
         abort_if($user->id === $currentUser->id, 422);
+        abort_if($currentUser->hasAnyBlockRelationship($user->id), 403, 'Bạn không thể nhắn tin với người dùng này.');
 
         $conversation = $this->findPrivateConversation($currentUser->id, $user->id)
             ?? $this->createPrivateConversation($currentUser->id, $user->id);

@@ -23,8 +23,24 @@ Route::middleware('auth')->group(function () {
         ->name('profile.remove-avatar');
     Route::post('/profile/remove-cover', [ProfileController::class, 'removeCover'])
         ->name('profile.remove-cover');
+    Route::post('/profile/send-verify-otp', [ProfileController::class, 'sendVerifyEmailOtp'])
+        ->name('profile.send-verify-otp');
+    Route::post('/profile/verify-email-otp', [ProfileController::class, 'verifyEmailOtp'])
+        ->name('profile.verify-email-otp');
+    Route::post('/profile/send-change-email-otp', [ProfileController::class, 'sendChangeEmailOtp'])
+        ->name('profile.send-change-email-otp');
+    Route::post('/profile/change-email', [ProfileController::class, 'changeEmail'])
+        ->name('profile.change-email');
     Route::post('/user/{user}/toggle-follow', [ProfileController::class, 'toggleFollow'])
         ->name('user.toggle-follow');
+    Route::post('/user/{follower}/accept-follow', [ProfileController::class, 'acceptFollow'])
+        ->name('user.accept-follow');
+    Route::post('/user/{follower}/decline-follow', [ProfileController::class, 'declineFollow'])
+        ->name('user.decline-follow');
+    Route::post('/user/{user}/block', [ProfileController::class, 'blockUser'])
+        ->name('user.block');
+    Route::post('/user/{user}/unblock', [ProfileController::class, 'unblockUser'])
+        ->name('user.unblock');
 });
 
 Route::get('/profile/{username}/followers', [ProfileController::class, 'followers'])

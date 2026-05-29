@@ -3,6 +3,10 @@
 @section('title', 'Chỉnh sửa hồ sơ - ' . ($user->name ?? 'Người dùng'))
 
 @section('content')
+<!-- Cropper.js for premium profile cropping -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" crossorigin="anonymous" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js" crossorigin="anonymous"></script>
+
 <div class="max-w-4xl mx-auto p-4 md:p-8 pb-24">
     <div class="flex items-center gap-4 mb-8">
         <a href="{{ route('profile') }}" class="p-2 glass-panel rounded-full text-slate-400 hover:text-primary transition-colors">
@@ -14,11 +18,7 @@
         </div>
     </div>
 
-    @if(session('success'))
-    <div class="mb-6 rounded-2xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-200 animate-fade-in">
-        {{ session('success') }}
-    </div>
-    @endif
+
 
     <form action="{{ route('profile.update') }}" method="POST" enctype="multipart/form-data" class="space-y-8">
         @csrf
@@ -29,7 +29,7 @@
         <input type="hidden" name="remove_cover" id="remove_cover" value="0">
 
         <section class="relative mb-24">
-            <div class="h-48 md:h-64 rounded-3xl overflow-hidden relative group bg-slate-800">
+            <div class="h-48 md:h-64 rounded-3xl overflow-hidden relative group bg-slate-800 {{ $errors->has('anh_bia') ? 'border-2 border-red-500' : '' }}">
                 <img
                     id="cover-preview"
                     alt="Ảnh bìa"
@@ -49,16 +49,23 @@
                     <span class="material-symbols-outlined text-sm font-bold">close</span>
                 </button>
                 @endif
+
+                @error('anh_bia')
+                <div class="absolute top-4 left-4 flex items-center gap-1.5 rounded-xl bg-red-500/90 backdrop-blur-md px-3 py-1.5 text-white border border-red-500/20 text-xs font-bold z-10 animate-fade-in">
+                    <span class="material-symbols-outlined text-sm">error</span>
+                    <span>{{ $message }}</span>
+                </div>
+                @enderror
             </div>
 
             <div class="absolute -bottom-16 left-8 group">
                 <div class="relative">
-                    <div class="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-background overflow-hidden glass-panel-elevated shadow-2xl">
+                    <div class="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 {{ $errors->has('anh_dai_dien') ? 'border-red-500' : 'border-background' }} overflow-hidden glass-panel-elevated shadow-2xl">
                         <img
                             id="avatar-preview"
                             class="w-full h-full object-cover"
                             alt="{{ $user->name }}"
-                            src="{{ $user->anh_dai_dien ? asset('storage/' . $user->anh_dai_dien) : 'https://ui-avatars.com/api/?name='.urlencode($user->name).'&background=random' }}" />
+                            src="{{ $user->avatar_url }}" />
                     </div>
                     <label for="anh_dai_dien" class="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
                         <span class="material-symbols-outlined text-white text-3xl">photo_camera</span>
@@ -70,6 +77,13 @@
                     <span class="material-symbols-outlined text-sm font-bold">close</span>
                 </button>
                 @endif
+
+                @error('anh_dai_dien')
+                <div class="absolute -bottom-10 left-1/2 -translate-x-1/2 whitespace-nowrap flex items-center gap-1 text-red-400 text-xs font-bold animate-fade-in bg-slate-950/90 px-3 py-1.5 rounded-xl border border-red-500/20 shadow-lg">
+                    <span class="material-symbols-outlined text-[14px]">error</span>
+                    <span>{{ $message }}</span>
+                </div>
+                @enderror
             </div>
         </section>
 
@@ -89,18 +103,6 @@
                 </div>
 
                 <div class="space-y-2">
-                    <label class="text-xs font-bold uppercase tracking-wider text-slate-500 ml-1">Địa chỉ Email</label>
-                    <div class="relative opacity-60">
-                        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">mail</span>
-                        <input
-                            type="email"
-                            value="{{ $user->email }}"
-                            disabled
-                            class="w-full bg-slate-900/50 border border-white/5 rounded-2xl py-3.5 pl-12 pr-4 text-slate-400 cursor-not-allowed">
-                    </div>
-                </div>
-
-                <div class="space-y-2 md:col-span-2">
                     <label class="text-xs font-bold uppercase tracking-wider text-slate-500 ml-1">Số điện thoại</label>
                     <div class="relative group">
                         <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-primary transition-colors">call</span>
@@ -112,6 +114,56 @@
                             class="w-full bg-slate-900/50 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-on-surface focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all outline-none">
                     </div>
                     @error('so_dien_thoai') <p class="text-xs text-red-400 mt-1">{{ $message }}</p> @enderror
+                </div>
+
+                <div class="space-y-2 md:col-span-2">
+                    <label class="text-xs font-bold uppercase tracking-wider text-slate-500 ml-1">Địa chỉ Email</label>
+                    <div class="relative flex items-center gap-3">
+                        {{-- Email field (readonly) --}}
+                        <div class="relative flex-1">
+                            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">mail</span>
+                            <input
+                                type="email"
+                                value="{{ $user->email }}"
+                                disabled
+                                id="current-email-display"
+                                class="w-full bg-slate-900/50 border border-white/5 rounded-2xl py-3.5 pl-12 pr-4 text-slate-400 cursor-not-allowed">
+                        </div>
+
+                        {{-- Action buttons: Verify + Change Email --}}
+                        <div class="flex items-center gap-2 shrink-0">
+                            {{-- Verified badge OR verify button --}}
+                            @if($user->da_xac_thuc)
+                                <div class="flex items-center gap-1.5 px-3 py-3 rounded-2xl bg-sky-500/10 border border-sky-500/20 text-sky-300 text-sm font-bold whitespace-nowrap">
+                                    <span class="material-symbols-outlined text-[18px]" style="font-variation-settings:'FILL' 1;">verified</span>
+                                    Đã xác minh
+                                </div>
+                            @else
+                                <button type="button" id="btn-open-verify-email"
+                                    class="flex items-center gap-1.5 px-3 py-3 rounded-2xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 text-amber-300 text-sm font-bold whitespace-nowrap transition-all hover:scale-[1.02] active:scale-95">
+                                    <span class="material-symbols-outlined text-[18px]">verified_user</span>
+                                    Xác minh
+                                </button>
+                            @endif
+
+                            {{-- Change Email button: chỉ hiện với tài khoản thường --}}
+                            @if(!$user->nha_cung_cap_oauth)
+                                <button type="button" id="btn-open-change-email"
+                                    class="flex items-center gap-1.5 px-3 py-3 rounded-2xl bg-slate-700/50 hover:bg-slate-700 border border-white/10 text-slate-300 text-sm font-bold whitespace-nowrap transition-all hover:scale-[1.02] active:scale-95">
+                                    <span class="material-symbols-outlined text-[18px]">edit</span>
+                                    Đổi email
+                                </button>
+                            @endif
+                        </div>
+                    </div>
+                    @if($user->nha_cung_cap_oauth)
+                        <p class="text-xs text-slate-500 ml-1 flex items-center gap-1">
+                            <span class="material-symbols-outlined text-[14px] text-slate-600">info</span>
+                            Email được quản lý bởi <span class="text-sky-500 font-semibold">{{ ucfirst($user->nha_cung_cap_oauth) }}</span> và không thể thay đổi tại đây.
+                        </p>
+                    @elseif(!$user->da_xac_thuc)
+                        <p class="text-xs text-slate-500 ml-1">Xác minh email để nhận <span class="text-sky-400 font-bold">tích xanh ✓</span> trên hồ sơ của bạn.</p>
+                    @endif
                 </div>
             </div>
 
@@ -149,27 +201,51 @@
                     <label class="text-xs font-bold uppercase tracking-wider text-slate-500 ml-1">Nơi ở</label>
                     <div class="relative">
                         <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">location_on</span>
-                        <input
+                        <select
+                            id="select-noi-o"
                             name="noi_o"
-                            type="text"
-                            value="{{ old('noi_o', $user->noi_o) }}"
-                            placeholder="Ví dụ: Hà Nội, Việt Nam"
-                            class="w-full bg-slate-900/50 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-on-surface focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all outline-none">
+                            class="w-full bg-slate-900/50 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-on-surface focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all outline-none appearance-none">
+                            <option value="">Chọn tỉnh / thành phố</option>
+                            @if(!empty($user->noi_o))
+                                <option value="{{ $user->noi_o }}" selected>{{ $user->noi_o }}</option>
+                            @endif
+                        </select>
                     </div>
                 </div>
             </div>
 
-            <div class="space-y-2">
-                <label class="text-xs font-bold uppercase tracking-wider text-slate-500 ml-1">Quyền riêng tư hồ sơ</label>
-                <div class="relative">
-                    <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">lock</span>
-                    <select
-                        name="quyen_rieng_tu"
-                        class="w-full bg-slate-900/50 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-on-surface focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all outline-none appearance-none">
-                        <option value="cong_khai" @selected(old('quyen_rieng_tu', $user->quyen_rieng_tu) === 'cong_khai')>Công khai với mọi người</option>
-                        <option value="ban_be" @selected(old('quyen_rieng_tu', $user->quyen_rieng_tu) === 'ban_be')>Chỉ bạn bè mới thấy</option>
-                        <option value="rieng_tu" @selected(old('quyen_rieng_tu', $user->quyen_rieng_tu) === 'rieng_tu')>Chỉ mình tôi</option>
-                    </select>
+            <div class="space-y-4">
+                <div class="glass-panel rounded-2xl p-6 flex flex-col justify-between shadow-[0_0_30px_rgba(125,211,252,0.02)] border border-white/5 relative">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                                    <span class="material-symbols-outlined">lock</span>
+                                </div>
+                                <h3 class="text-xl font-bold text-on-surface">Chế độ riêng tư</h3>
+                            </div>
+                            <p class="text-on-surface-variant text-sm leading-relaxed max-w-md">
+                                Khi tài khoản của bạn ở chế độ riêng tư, chỉ những người theo dõi bạn mới có thể xem nội dung và các bài đăng của bạn.
+                            </p>
+                        </div>
+                        <!-- Premium Toggle -->
+                        <label class="relative inline-flex items-center cursor-pointer mt-1">
+                            <input type="checkbox" id="privacy-toggle" name="quyen_rieng_tu_toggle" class="sr-only peer" @checked(old('quyen_rieng_tu', $user->quyen_rieng_tu) === 'rieng_tu') onchange="handlePrivacyToggle(this)">
+                            <input type="hidden" name="quyen_rieng_tu" id="quyen_rieng_tu_value" value="{{ old('quyen_rieng_tu', $user->quyen_rieng_tu ?? 'cong_khai') }}">
+                            <div class="w-14 h-8 bg-surface-container-highest rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-1 after:left-1 after:bg-primary after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-primary/20 border border-white/10"></div>
+                        </label>
+                    </div>
+                    
+                    <div class="mt-8 flex gap-4">
+                        <div class="flex-1 glass-panel-elevated p-4 rounded-lg border transition-all duration-300 {{ old('quyen_rieng_tu', $user->quyen_rieng_tu) !== 'rieng_tu' ? 'border-primary/50 bg-primary/5' : 'border-white/5 opacity-40' }}" id="panel-privacy-public">
+                            <span class="text-primary text-xs font-bold uppercase tracking-wider block mb-1">Công khai</span>
+                            <p class="text-xs text-on-surface-variant">Mọi người đều có thể tìm thấy bạn.</p>
+                        </div>
+                        <div class="flex-1 glass-panel-elevated p-4 rounded-lg border transition-all duration-300 {{ old('quyen_rieng_tu', $user->quyen_rieng_tu) === 'rieng_tu' ? 'border-tertiary/50 bg-tertiary/5' : 'border-white/5 opacity-40' }}" id="panel-privacy-private">
+                            <span class="text-tertiary text-xs font-bold uppercase tracking-wider block mb-1">Riêng tư</span>
+                            <p class="text-xs text-on-surface-variant">Yêu cầu phê duyệt người theo dõi.</p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -183,6 +259,51 @@
             </div>
         </div>
     </form>
+
+    {{-- Blocked Users List Panel --}}
+    <div class="glass-panel rounded-3xl p-6 md:p-8 space-y-6 mt-8 animate-fade-in">
+        <div class="flex items-center gap-3">
+            <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/20 shadow-lg shadow-amber-500/5">
+                <span class="material-symbols-outlined text-2xl">gavel</span>
+            </div>
+            <div>
+                <h3 class="text-xl font-bold text-on-surface">Danh sách người dùng đã chặn</h3>
+                <p class="text-sm text-slate-400">Quản lý những tài khoản bạn đã chặn. Khi chặn, cả hai bên sẽ không thể tương tác hoặc theo dõi nhau.</p>
+            </div>
+        </div>
+
+        <div id="blocked-users-list" class="space-y-4 pt-4 border-t border-white/5">
+            @forelse($blockedUsers as $blockedUser)
+                <div class="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/10 transition-all block-user-item duration-300" data-user-id="{{ $blockedUser->id }}">
+                    <div class="flex items-center gap-3">
+                        <img 
+                            src="{{ $blockedUser->avatar_url }}" 
+                            alt="{{ $blockedUser->name }}" 
+                            class="w-12 h-12 rounded-full object-cover border-2 border-white/10"
+                        />
+                        <div>
+                            <p class="font-bold text-on-surface text-sm">{{ $blockedUser->name }}</p>
+                            <p class="text-xs text-slate-400">{{ '@' . $blockedUser->ten_dang_nhap }}</p>
+                        </div>
+                    </div>
+                    
+                    <button 
+                        type="button" 
+                        onclick="unblockUserAction('{{ $blockedUser->id }}', '{{ $blockedUser->name }}', this)" 
+                        class="rounded-xl border border-sky-400/20 bg-sky-400/5 px-4 py-2 text-xs font-semibold text-sky-400 hover:bg-sky-400/20 transition-all active:scale-95 flex items-center gap-1 shadow-lg shadow-sky-500/5"
+                    >
+                        <span class="material-symbols-outlined text-sm">lock_open</span>
+                        Bỏ chặn
+                    </button>
+                </div>
+            @empty
+                <div class="text-center py-8" id="blocked-empty-state">
+                    <span class="material-symbols-outlined text-4xl text-slate-600 mb-2">person_off</span>
+                    <p class="text-slate-400 text-sm font-medium">Bạn chưa chặn người dùng nào.</p>
+                </div>
+            @endforelse
+        </div>
+    </div>
 
     <div class="glass-panel border-red-500/20 rounded-3xl p-6 flex flex-col md:flex-row items-center justify-between gap-4 mt-8 mb-4 border" style="border-color: rgba(239, 68, 68, 0.2);">
         <div>
@@ -315,6 +436,60 @@
             </form>
         </div>
     </div>
+
+    <!-- Crop Image Modal -->
+    <div id="crop-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+        <div class="glass-panel rounded-3xl w-full max-w-2xl animate-fade-in relative bg-slate-900/95 border border-white/10 overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+            <!-- Header -->
+            <div class="flex items-center justify-between px-6 py-4 border-b border-white/5">
+                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">crop_free</span>
+                    Chỉnh sửa hình ảnh
+                </h3>
+                <button type="button" onclick="closeCropModal()" class="text-slate-400 hover:text-white transition-colors">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+
+            <!-- Content Area -->
+            <div class="p-6 flex-1 overflow-y-auto flex flex-col items-center justify-center min-h-[300px] max-h-[50vh] bg-slate-950/30">
+                <div class="w-full h-full flex items-center justify-center overflow-hidden rounded-2xl border border-white/5 relative bg-black/20">
+                    <img id="crop-image" class="max-w-full max-h-full block" src="" alt="Source image">
+                </div>
+            </div>
+
+            <!-- Controls (Zoom & Actions) -->
+            <div class="px-6 py-4 border-t border-white/5 space-y-4 bg-slate-900/60">
+                <!-- Zoom Slider -->
+                <div class="flex items-center gap-4">
+                    <span class="material-symbols-outlined text-slate-400 text-sm">zoom_out</span>
+                    <input type="range" id="crop-zoom" min="0" max="100" value="0" class="flex-1 accent-primary h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer">
+                    <span class="material-symbols-outlined text-slate-400 text-sm">zoom_in</span>
+                </div>
+
+                <!-- Footer Buttons -->
+                <div class="flex items-center justify-between pt-2">
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="rotateImage(-90)" class="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition-all" title="Xoay trái">
+                            <span class="material-symbols-outlined">rotate_left</span>
+                        </button>
+                        <button type="button" onclick="rotateImage(90)" class="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition-all" title="Xoay phải">
+                            <span class="material-symbols-outlined">rotate_right</span>
+                        </button>
+                    </div>
+                    <div class="flex gap-3">
+                        <button type="button" onclick="closeCropModal()" class="px-5 py-2.5 rounded-xl font-medium text-slate-400 hover:bg-white/5 transition-colors">
+                            Hủy
+                        </button>
+                        <button type="button" onclick="saveCroppedImage()" class="px-6 py-2.5 bg-primary text-white font-bold rounded-xl hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-primary/20 flex items-center gap-2">
+                            <span class="material-symbols-outlined text-sm">check</span>
+                            Cắt & Lưu
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 @if($errors->has('password_deactivate') || $errors->has('otp_deactivate'))
@@ -333,6 +508,129 @@
 @endif
 
 <script>
+    window.handlePrivacyToggle = function(toggle) {
+        const hiddenVal = document.getElementById('quyen_rieng_tu_value');
+        const panelPublic = document.getElementById('panel-privacy-public');
+        const panelPrivate = document.getElementById('panel-privacy-private');
+        
+        if (toggle.checked) {
+            hiddenVal.value = 'rieng_tu';
+            
+            panelPublic.classList.add('opacity-40');
+            panelPublic.classList.remove('border-primary/50', 'bg-primary/5');
+            panelPublic.classList.add('border-white/5');
+            
+            panelPrivate.classList.remove('opacity-40', 'border-white/5');
+            panelPrivate.classList.add('border-tertiary/50', 'bg-tertiary/5');
+        } else {
+            hiddenVal.value = 'cong_khai';
+            
+            panelPrivate.classList.add('opacity-40');
+            panelPrivate.classList.remove('border-tertiary/50', 'bg-tertiary/5');
+            panelPrivate.classList.add('border-white/5');
+            
+            panelPublic.classList.remove('opacity-40', 'border-white/5');
+            panelPublic.classList.add('border-primary/50', 'bg-primary/5');
+        }
+    }
+
+    async function unblockUserAction(userId, userName, btn) {
+        if (!confirm(`Bạn có chắc chắn muốn bỏ chặn ${userName} không?`)) return;
+        
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-[12px]">progress_activity</span>';
+
+        try {
+            const response = await fetch(`/user/${userId}/unblock`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                if (window.showToast) {
+                    window.showToast(data.message || 'Đã bỏ chặn thành công!', 'success');
+                }
+                
+                // Find and fade out user element
+                const row = document.querySelector(`.block-user-item[data-user-id="${userId}"]`);
+                if (row) {
+                    row.classList.add('scale-95', 'opacity-0');
+                    setTimeout(() => {
+                        row.remove();
+                        // Check if block list is now empty, if so, show empty state
+                        const remaining = document.querySelectorAll('.block-user-item');
+                        if (remaining.length === 0) {
+                            const list = document.getElementById('blocked-users-list');
+                            list.innerHTML = `
+                                <div class="text-center py-8" id="blocked-empty-state">
+                                    <span class="material-symbols-outlined text-4xl text-slate-600 mb-2">person_off</span>
+                                    <p class="text-slate-400 text-sm font-medium">Bạn chưa chặn người dùng nào.</p>
+                                </div>
+                            `;
+                        }
+                    }, 300);
+                }
+            } else {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+                if (window.showToast) window.showToast('Có lỗi xảy ra, vui lòng thử lại.', 'error');
+            }
+        } catch (error) {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+            console.error('Lỗi bỏ chặn:', error);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const selectNoiO = document.getElementById('select-noi-o');
+        if (selectNoiO) {
+            const currentValue = "{{ old('noi_o', $user->noi_o) }}";
+            
+            fetch('https://provinces.open-api.vn/api/v2/p/')
+                .then(response => response.json())
+                .then(data => {
+                    // Clear existing options except placeholder
+                    selectNoiO.innerHTML = '<option value="">Chọn tỉnh / thành phố</option>';
+                    
+                    data.forEach(province => {
+                        const option = document.createElement('option');
+                        option.value = province.name;
+                        option.textContent = province.name;
+                        
+                        // Check if it matches the current value
+                        if (currentValue && (
+                            province.name.toLowerCase() === currentValue.toLowerCase() ||
+                            province.name.replace(/^(Thành phố|Tỉnh)\s+/i, '').toLowerCase() === currentValue.toLowerCase()
+                        )) {
+                            option.selected = true;
+                        }
+                        
+                        selectNoiO.appendChild(option);
+                    });
+                    
+                    // If current value doesn't match any standard province name, keep it as custom option at top
+                    if (currentValue && !Array.from(selectNoiO.options).some(opt => opt.value === currentValue)) {
+                        const customOption = document.createElement('option');
+                        customOption.value = currentValue;
+                        customOption.textContent = currentValue;
+                        customOption.selected = true;
+                        selectNoiO.insertBefore(customOption, selectNoiO.options[1]);
+                    }
+                })
+                .catch(error => {
+                    console.error('Lỗi khi tải danh sách tỉnh/thành phố:', error);
+                });
+        }
+    });
+
     function removeAvatarAction() {
         window.openConfirmModal('Xóa ảnh đại diện?', 'Bạn có chắc chắn muốn xóa ảnh đại diện hiện tại không?', () => {
             const preview = document.getElementById('avatar-preview');
@@ -425,67 +723,205 @@
     }
 </script>
 <script>
+    let cropperInstance = null;
+    let activeInputId = null;
+
     /**
      * Hàm hiển thị ảnh xem trước ngay lập tức
      */
     function previewImage(input, previewId) {
-        const preview = document.getElementById(previewId);
         const file = input.files[0];
 
         if (file) {
-            // Kiểm tra xem file có phải là ảnh không
-            if (!file.type.startsWith('image/')) {
-                alert('Vui lòng chọn tệp hình ảnh!');
+            // 1. Kiểm tra loại tệp
+            const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+            if (!validTypes.includes(file.type)) {
+                const errMsg = 'Định dạng ảnh không hợp lệ! Vui lòng chọn ảnh jpg, jpeg, png hoặc webp.';
+                if (window.showToast) window.showToast(errMsg, 'error');
+                else alert(errMsg);
+                input.value = '';
+                return;
+            }
+
+            // 2. Kiểm tra kích thước tệp
+            const maxSize = previewId === 'avatar-preview' ? 2 * 1024 * 1024 : 4 * 1024 * 1024;
+            const limitText = previewId === 'avatar-preview' ? '2MB' : '4MB';
+            if (file.size > maxSize) {
+                const errMsg = `Kích thước ảnh vượt quá giới hạn cho phép (${limitText})!`;
+                if (window.showToast) window.showToast(errMsg, 'error');
+                else alert(errMsg);
+                input.value = '';
                 return;
             }
 
             const reader = new FileReader();
-
-            // Hiệu ứng bắt đầu load (làm mờ nhẹ ảnh cũ)
-            preview.style.opacity = '0.5';
-
             reader.onload = function(e) {
-                preview.src = e.target.result;
-
-                // Reset flag xóa và hiện nút xóa nếu có ảnh mới
-                if (previewId === 'avatar-preview') {
-                    const removeAvatarInput = document.getElementById('remove_avatar');
-                    if (removeAvatarInput) removeAvatarInput.value = '0';
-                    const btn = document.getElementById('btn-remove-avatar');
-                    if (btn) btn.classList.remove('hidden');
-                } else if (previewId === 'cover-preview') {
-                    const removeCoverInput = document.getElementById('remove_cover');
-                    if (removeCoverInput) removeCoverInput.value = '0';
-                    const btn = document.getElementById('btn-remove-cover');
-                    if (btn) btn.classList.remove('hidden');
-                }
-
-                // Khi ảnh mới đã load xong
-                preview.onload = function() {
-                    preview.style.opacity = '1';
-                    // Thêm hiệu ứng xuất hiện mượt mà
-                    preview.animate([{
-                            opacity: 0,
-                            transform: 'scale(0.95)'
-                        },
-                        {
-                            opacity: 1,
-                            transform: 'scale(1)'
-                        }
-                    ], {
-                        duration: 300,
-                        easing: 'ease-out'
-                    });
-                };
+                openCropModal(e.target.result, input.id);
             };
-
             reader.readAsDataURL(file);
+        }
+    }
+
+    function openCropModal(imgSrc, inputId) {
+        activeInputId = inputId;
+        const cropModal = document.getElementById('crop-modal');
+        const cropImage = document.getElementById('crop-image');
+        
+        cropImage.src = imgSrc;
+        
+        // Hiện Modal
+        cropModal.classList.remove('hidden');
+        
+        const isAvatar = inputId === 'anh_dai_dien';
+        
+        if (isAvatar) {
+            cropModal.classList.add('circle-crop');
+        } else {
+            cropModal.classList.remove('circle-crop');
+        }
+        
+        if (cropperInstance) {
+            cropperInstance.destroy();
+        }
+        
+        // Khởi tạo Cropper
+        cropperInstance = new Cropper(cropImage, {
+            aspectRatio: isAvatar ? 1 : (896 / 256), // Ratio 1:1 cho avatar, cover tỷ lệ khung hiển thị
+            viewMode: 1, 
+            dragMode: 'move', 
+            autoCropArea: 0.9,
+            restore: false,
+            guides: false,
+            center: true,
+            highlight: false,
+            cropBoxMovable: true,
+            cropBoxResizable: !isAvatar,
+            toggleDragModeOnDblclick: false,
+            ready: function() {
+                const zoomSlider = document.getElementById('crop-zoom');
+                zoomSlider.value = 0;
+            }
+        });
+
+        // Thiết lập sự kiện thanh trượt Zoom
+        const zoomSlider = document.getElementById('crop-zoom');
+        zoomSlider.oninput = function() {
+            const zoomValue = 1 + (parseFloat(this.value) / 50);
+            cropperInstance.zoomTo(zoomValue);
+        };
+    }
+
+    function rotateImage(deg) {
+        if (cropperInstance) {
+            cropperInstance.rotate(deg);
+        }
+    }
+
+    function closeCropModal() {
+        const cropModal = document.getElementById('crop-modal');
+        cropModal.classList.add('hidden');
+        
+        if (activeInputId && !document.getElementById(activeInputId).getAttribute('data-saved')) {
+            document.getElementById(activeInputId).value = '';
+        }
+        
+        if (cropperInstance) {
+            cropperInstance.destroy();
+            cropperInstance = null;
+        }
+    }
+
+    function saveCroppedImage() {
+        if (!cropperInstance) return;
+        
+        const isAvatar = activeInputId === 'anh_dai_dien';
+        const options = isAvatar 
+            ? { width: 500, height: 500, imageSmoothingEnabled: true, imageSmoothingQuality: 'high' }
+            : { width: 1200, height: 342, imageSmoothingEnabled: true, imageSmoothingQuality: 'high' };
+            
+        const canvas = cropperInstance.getCroppedCanvas(options);
+        
+        canvas.toBlob(function(blob) {
+            const fileInput = document.getElementById(activeInputId);
+            fileInput.setAttribute('data-saved', 'true');
+            
+            // Gán file đã cắt trực tiếp vào Input file bằng DataTransfer API
+            const file = new File([blob], isAvatar ? "cropped_avatar.png" : "cropped_cover.png", { type: "image/png" });
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            fileInput.files = dataTransfer.files;
+            
+            // Cập nhật ảnh Preview lên giao diện
+            const previewId = isAvatar ? 'avatar-preview' : 'cover-preview';
+            const preview = document.getElementById(previewId);
+            preview.src = canvas.toDataURL('image/png');
+            
+            preview.style.opacity = '1';
+            preview.animate([
+                { opacity: 0, transform: 'scale(0.95)' },
+                { opacity: 1, transform: 'scale(1)' }
+            ], { duration: 300, easing: 'ease-out' });
+            
+            if (isAvatar) {
+                const removeAvatarInput = document.getElementById('remove_avatar');
+                if (removeAvatarInput) removeAvatarInput.value = '0';
+                const btn = document.getElementById('btn-remove-avatar');
+                if (btn) btn.classList.remove('hidden');
+            } else {
+                const removeCoverInput = document.getElementById('remove_cover');
+                if (removeCoverInput) removeCoverInput.value = '0';
+                const btn = document.getElementById('btn-remove-cover');
+                if (btn) btn.classList.remove('hidden');
+            }
+            
+            // Đóng Modal
+            const cropModal = document.getElementById('crop-modal');
+            cropModal.classList.add('hidden');
+            
+            if (window.showToast) {
+                window.showToast('Cắt và căn chỉnh ảnh thành công!', 'success');
+            }
+            
+            fileInput.removeAttribute('data-saved');
+        }, 'image/png');
+    }
+
+    function togglePrivacyUI(mode) {
+        const publicLabel = document.getElementById('label-privacy-public');
+        const privateLabel = document.getElementById('label-privacy-private');
+        
+        if (mode === 'cong_khai') {
+            publicLabel.className = 'relative flex flex-col md:flex-row items-center justify-center gap-2 rounded-xl py-3.5 px-4 cursor-pointer transition-all duration-300 group select-none overflow-hidden bg-primary text-white font-bold shadow-lg shadow-primary/20';
+            privateLabel.className = 'relative flex flex-col md:flex-row items-center justify-center gap-2 rounded-xl py-3.5 px-4 cursor-pointer transition-all duration-300 group select-none overflow-hidden text-slate-400 hover:text-white hover:bg-white/5';
+        } else {
+            privateLabel.className = 'relative flex flex-col md:flex-row items-center justify-center gap-2 rounded-xl py-3.5 px-4 cursor-pointer transition-all duration-300 group select-none overflow-hidden bg-primary text-white font-bold shadow-lg shadow-primary/20';
+            publicLabel.className = 'relative flex flex-col md:flex-row items-center justify-center gap-2 rounded-xl py-3.5 px-4 cursor-pointer transition-all duration-300 group select-none overflow-hidden text-slate-400 hover:text-white hover:bg-white/5';
         }
     }
 </script>
 
-
 <style>
+    /* Styling cho khung cắt hình tròn (Avatar) */
+    .circle-crop .cropper-view-box,
+    .circle-crop .cropper-face {
+        border-radius: 50%;
+    }
+
+    /* Tối ưu hóa giao diện Cropper theo phong cách Dark Mode */
+    .cropper-bg {
+        background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.02) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.02) 75%, rgba(255,255,255,0.02)) !important;
+        background-color: #020617 !important;
+    }
+    
+    .cropper-line, .cropper-point {
+        background-color: #38bdf8 !important;
+    }
+    
+    .cropper-view-box {
+        outline: 2px solid #38bdf8 !important;
+        outline-color: #38bdf8 !important;
+    }
+
     @keyframes fade-in {
         from {
             opacity: 0;
@@ -502,4 +938,514 @@
         animation: fade-in 0.3s ease-out forwards;
     }
 </style>
+
+{{-- ===== MODAL XÁC MINH EMAIL QUA OTP ===== --}}
+@if(!$user->da_xac_thuc)
+<div id="modal-verify-email" class="fixed inset-0 z-[300] hidden items-center justify-center bg-black/80 backdrop-blur-md px-4">
+    <div class="w-full max-w-md glass-panel rounded-3xl p-8 shadow-2xl border border-white/10 animate-fade-in">
+        {{-- Header --}}
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h2 class="text-xl font-bold text-on-surface flex items-center gap-2">
+                    <span class="material-symbols-outlined text-amber-400" style="font-variation-settings:'FILL' 1;">verified_user</span>
+                    Xác minh Email
+                </h2>
+                <p class="text-sm text-slate-400 mt-1">Nhận <span class="text-sky-400 font-bold">tích xanh ✓</span> cho hồ sơ của bạn</p>
+            </div>
+            <button type="button" id="btn-close-verify-modal"
+                class="w-9 h-9 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 flex items-center justify-center transition-all">
+                <span class="material-symbols-outlined text-[20px]">close</span>
+            </button>
+        </div>
+
+        {{-- Step 1: Send OTP --}}
+        <div id="verify-step-1">
+            <div class="p-4 rounded-2xl bg-slate-900/50 border border-white/5 mb-6">
+                <p class="text-sm text-slate-300">Mã OTP sẽ được gửi đến:</p>
+                <p class="text-base font-bold text-sky-300 mt-1">{{ $user->email }}</p>
+            </div>
+            <button type="button" id="btn-send-verify-otp"
+                class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-bold text-sm shadow-lg shadow-sky-500/20 transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined text-[20px]">send</span>
+                <span id="btn-send-text">Gửi mã OTP</span>
+            </button>
+            <p id="send-countdown" class="text-center text-xs text-slate-500 mt-3 hidden">
+                Gửi lại sau <span id="countdown-seconds" class="text-sky-400 font-bold">60</span>s
+            </p>
+        </div>
+
+        {{-- Step 2: Enter OTP --}}
+        <div id="verify-step-2" class="hidden mt-4">
+            <p class="text-sm text-slate-400 mb-4 text-center">Nhập mã 6 chữ số đã được gửi đến email của bạn</p>
+            <div class="flex justify-center gap-2 mb-6">
+                @for($i = 0; $i < 6; $i++)
+                <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]"
+                    class="verify-otp-input w-12 h-14 text-center text-xl font-bold rounded-xl bg-slate-900/50 border border-white/10 focus:border-sky-400 focus:ring-2 focus:ring-sky-400/20 text-on-surface outline-none transition-all"
+                    id="verify-otp-{{ $i }}">
+                @endfor
+            </div>
+            <p id="verify-error" class="text-center text-xs text-red-400 mb-3 hidden"></p>
+            <button type="button" id="btn-confirm-otp"
+                class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold text-sm shadow-lg shadow-emerald-500/20 transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined text-[20px]">check_circle</span>
+                Xác nhận & Nhận tích xanh
+            </button>
+        </div>
+
+        {{-- Step 3: Success --}}
+        <div id="verify-step-3" class="hidden text-center py-4">
+            <div class="w-20 h-20 rounded-full bg-sky-500/10 border border-sky-500/20 flex items-center justify-center mx-auto mb-4">
+                <span class="material-symbols-outlined text-5xl text-sky-400" style="font-variation-settings:'FILL' 1;">verified</span>
+            </div>
+            <h3 class="text-xl font-bold text-on-surface">Xác minh thành công!</h3>
+            <p class="text-sm text-slate-400 mt-2">Hồ sơ của bạn đã được cấp tích xanh ✓</p>
+            <button type="button" onclick="window.location.reload()"
+                class="mt-6 px-8 py-3 rounded-2xl bg-sky-500/10 border border-sky-500/20 text-sky-300 font-bold text-sm transition-all hover:bg-sky-500/20">
+                Làm mới trang
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    const modal      = document.getElementById('modal-verify-email');
+    const openBtn    = document.getElementById('btn-open-verify-email');
+    const closeBtn   = document.getElementById('btn-close-verify-modal');
+    const sendBtn    = document.getElementById('btn-send-verify-otp');
+    const confirmBtn = document.getElementById('btn-confirm-otp');
+    const step1      = document.getElementById('verify-step-1');
+    const step2      = document.getElementById('verify-step-2');
+    const step3      = document.getElementById('verify-step-3');
+    const errorEl    = document.getElementById('verify-error');
+    const countdown  = document.getElementById('send-countdown');
+    const countdownSec = document.getElementById('countdown-seconds');
+
+    function openModal() {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        document.body.style.overflow = 'hidden';
+    }
+    function closeModal() {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        document.body.style.overflow = '';
+    }
+
+    if (openBtn) openBtn.addEventListener('click', openModal);
+    if (closeBtn) closeBtn.addEventListener('click', closeModal);
+    modal?.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+
+    // OTP input: auto-advance
+    const otpInputs = document.querySelectorAll('.verify-otp-input');
+    otpInputs.forEach((inp, idx) => {
+        inp.addEventListener('input', () => {
+            inp.value = inp.value.replace(/\D/g, '');
+            if (inp.value && idx < otpInputs.length - 1) otpInputs[idx + 1].focus();
+        });
+        inp.addEventListener('keydown', e => {
+            if (e.key === 'Backspace' && !inp.value && idx > 0) otpInputs[idx - 1].focus();
+        });
+    });
+
+    let countdownTimer = null;
+    function startCountdown() {
+        let secs = 60;
+        countdown.classList.remove('hidden');
+        sendBtn.disabled = true;
+        sendBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        countdownSec.textContent = secs;
+        countdownTimer = setInterval(() => {
+            secs--;
+            countdownSec.textContent = secs;
+            if (secs <= 0) {
+                clearInterval(countdownTimer);
+                countdown.classList.add('hidden');
+                sendBtn.disabled = false;
+                sendBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                document.getElementById('btn-send-text').textContent = 'Gửi lại OTP';
+            }
+        }, 1000);
+    }
+
+    // Send OTP
+    sendBtn?.addEventListener('click', async () => {
+        sendBtn.disabled = true;
+        document.getElementById('btn-send-text').textContent = 'Đang gửi...';
+        try {
+            const res = await fetch('{{ route("profile.send-verify-otp") }}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                }
+            });
+            const data = await res.json();
+            if (data.success) {
+                step2.classList.remove('hidden');
+                startCountdown();
+                otpInputs[0]?.focus();
+                if (window.showToast) window.showToast(data.message, 'success');
+            } else {
+                if (window.showToast) window.showToast(data.message, 'error');
+                sendBtn.disabled = false;
+                document.getElementById('btn-send-text').textContent = 'Gửi mã OTP';
+            }
+        } catch (err) {
+            sendBtn.disabled = false;
+            document.getElementById('btn-send-text').textContent = 'Gửi mã OTP';
+            if (window.showToast) window.showToast('Có lỗi xảy ra. Vui lòng thử lại.', 'error');
+        }
+    });
+
+    // Confirm OTP
+    confirmBtn?.addEventListener('click', async () => {
+        const otp = Array.from(otpInputs).map(i => i.value).join('');
+        if (otp.length < 6) {
+            errorEl.textContent = 'Vui lòng nhập đủ 6 chữ số.';
+            errorEl.classList.remove('hidden');
+            return;
+        }
+        errorEl.classList.add('hidden');
+        confirmBtn.disabled = true;
+        confirmBtn.innerHTML = '<span class="material-symbols-outlined text-[20px] animate-spin">progress_activity</span> Đang xác minh...';
+        try {
+            const res = await fetch('{{ route("profile.verify-email-otp") }}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ otp })
+            });
+            const data = await res.json();
+            if (data.success) {
+                step1.classList.add('hidden');
+                step2.classList.add('hidden');
+                step3.classList.remove('hidden');
+            } else {
+                errorEl.textContent = data.message;
+                errorEl.classList.remove('hidden');
+                confirmBtn.disabled = false;
+                confirmBtn.innerHTML = '<span class="material-symbols-outlined text-[20px]">check_circle</span> Xác nhận & Nhận tích xanh';
+            }
+        } catch (err) {
+            errorEl.textContent = 'Có lỗi xảy ra. Vui lòng thử lại.';
+            errorEl.classList.remove('hidden');
+            confirmBtn.disabled = false;
+            confirmBtn.innerHTML = '<span class="material-symbols-outlined text-[20px]">check_circle</span> Xác nhận & Nhận tích xanh';
+        }
+    });
+})();
+</script>
+@endif
+
+{{-- ===== MODAL ĐỔI EMAIL (chỉ hiện với tài khoản thường, không phải OAuth) ===== --}}
+@if(!$user->nha_cung_cap_oauth)
+<div id="modal-change-email" class="fixed inset-0 z-[300] hidden items-center justify-center bg-black/80 backdrop-blur-md px-4">
+    <div class="w-full max-w-md glass-panel rounded-3xl p-8 shadow-2xl border border-white/10 animate-fade-in">
+        {{-- Header --}}
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h2 class="text-xl font-bold text-on-surface flex items-center gap-2">
+                    <span class="material-symbols-outlined text-sky-400">edit</span>
+                    Đổi địa chỉ Email
+                </h2>
+                <p class="text-sm text-slate-400 mt-1">
+                    @if($user->nha_cung_cap_oauth)
+                        Nhập mã OTP gửi đến email hiện tại để xác nhận
+                    @else
+                        Nhập mật khẩu để xác nhận danh tính
+                    @endif
+                </p>
+            </div>
+            <button type="button" id="btn-close-change-email"
+                class="w-9 h-9 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 flex items-center justify-center transition-all">
+                <span class="material-symbols-outlined text-[20px]">close</span>
+            </button>
+        </div>
+
+        {{-- Step 1: Verify identity --}}
+        <div id="change-step-1" class="space-y-4">
+            {{-- New email input --}}
+            <div class="space-y-1.5">
+                <label class="text-xs font-bold uppercase tracking-wider text-slate-500">Email mới</label>
+                <div class="relative">
+                    <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">mail</span>
+                    <input type="email" id="change-new-email" placeholder="Nhập địa chỉ email mới..."
+                        class="w-full bg-slate-900/50 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-on-surface focus:border-sky-400/50 focus:ring-2 focus:ring-sky-400/10 outline-none transition-all">
+                </div>
+            </div>
+
+            {{-- Password OR OTP send button --}}
+            @if($user->nha_cung_cap_oauth)
+                {{-- OAuth users: send OTP to current email --}}
+                <div class="p-3.5 rounded-2xl bg-slate-900/50 border border-white/5 text-sm text-slate-400">
+                    Mã OTP sẽ được gửi đến email hiện tại:
+                    <span class="text-sky-300 font-bold ml-1">{{ $user->email }}</span>
+                </div>
+                <button type="button" id="btn-send-change-otp"
+                    class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-bold text-sm shadow-lg shadow-sky-500/20 transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2">
+                    <span class="material-symbols-outlined text-[20px]">send</span>
+                    <span id="btn-change-send-text">Gửi mã OTP xác nhận</span>
+                </button>
+                <p id="change-send-countdown" class="text-center text-xs text-slate-500 hidden">
+                    Gửi lại sau <span id="change-countdown-sec" class="text-sky-400 font-bold">60</span>s
+                </p>
+            @else
+                {{-- Normal users: enter current password --}}
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold uppercase tracking-wider text-slate-500">Mật khẩu hiện tại</label>
+                    <div class="relative group">
+                        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-sky-400 transition-colors">lock</span>
+                        <input type="password" id="change-password" placeholder="Nhập mật khẩu của bạn..."
+                            class="w-full bg-slate-900/50 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-on-surface focus:border-sky-400/50 focus:ring-2 focus:ring-sky-400/10 outline-none transition-all">
+                    </div>
+                </div>
+                <p id="change-error-pass" class="text-xs text-red-400 hidden"></p>
+                <button type="button" id="btn-confirm-change-email"
+                    class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-bold text-sm shadow-lg shadow-sky-500/20 transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2">
+                    <span class="material-symbols-outlined text-[20px]">check_circle</span>
+                    Xác nhận đổi email
+                </button>
+            @endif
+        </div>
+
+        {{-- Step 2 (OAuth only): enter OTP --}}
+        @if($user->nha_cung_cap_oauth)
+        <div id="change-step-2" class="hidden mt-4 space-y-4">
+            <p class="text-sm text-slate-400 text-center">Nhập mã 6 chữ số đã gửi đến email hiện tại</p>
+            <div class="flex justify-center gap-2">
+                @for($i = 0; $i < 6; $i++)
+                <input type="text" maxlength="1" inputmode="numeric"
+                    class="change-otp-input w-12 h-14 text-center text-xl font-bold rounded-xl bg-slate-900/50 border border-white/10 focus:border-sky-400 focus:ring-2 focus:ring-sky-400/20 text-on-surface outline-none transition-all"
+                    id="change-otp-{{ $i }}">
+                @endfor
+            </div>
+            <p id="change-otp-error" class="text-center text-xs text-red-400 hidden"></p>
+            <button type="button" id="btn-confirm-change-email-otp"
+                class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold text-sm shadow-lg shadow-emerald-500/20 transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined text-[20px]">check_circle</span>
+                Xác nhận & Đổi email
+            </button>
+        </div>
+        @endif
+
+        {{-- Step 3: Success --}}
+        <div id="change-step-3" class="hidden text-center py-4">
+            <div class="w-20 h-20 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-4">
+                <span class="material-symbols-outlined text-5xl text-emerald-400" style="font-variation-settings:'FILL' 1;">mark_email_read</span>
+            </div>
+            <h3 class="text-xl font-bold text-on-surface">Đổi email thành công!</h3>
+            <p id="change-success-msg" class="text-sm text-slate-400 mt-2"></p>
+            <button type="button" onclick="window.location.reload()"
+                class="mt-6 px-8 py-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 font-bold text-sm transition-all hover:bg-emerald-500/20">
+                Làm mới trang
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    const modal    = document.getElementById('modal-change-email');
+    const openBtn  = document.getElementById('btn-open-change-email');
+    const closeBtn = document.getElementById('btn-close-change-email');
+    const step1    = document.getElementById('change-step-1');
+    const step2    = document.getElementById('change-step-2');
+    const step3    = document.getElementById('change-step-3');
+    const isOauth  = {{ $user->nha_cung_cap_oauth ? 'true' : 'false' }};
+
+    function openModal() {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        document.body.style.overflow = 'hidden';
+    }
+    function closeModal() {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        document.body.style.overflow = '';
+    }
+
+    openBtn?.addEventListener('click', openModal);
+    closeBtn?.addEventListener('click', closeModal);
+    modal?.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+
+    function showSuccess(msg) {
+        step1?.classList.add('hidden');
+        step2?.classList.add('hidden');
+        step3.classList.remove('hidden');
+        const msgEl = document.getElementById('change-success-msg');
+        if (msgEl) msgEl.textContent = msg;
+        // Update displayed email in the page
+        const emailDisplay = document.getElementById('current-email-display');
+        const newEmail = document.getElementById('change-new-email')?.value;
+        if (emailDisplay && newEmail) emailDisplay.value = newEmail;
+    }
+
+    // ============================
+    // NORMAL LOGIN: password flow
+    // ============================
+    const confirmPassBtn = document.getElementById('btn-confirm-change-email');
+    const passError      = document.getElementById('change-error-pass');
+
+    confirmPassBtn?.addEventListener('click', async () => {
+        const newEmail   = document.getElementById('change-new-email')?.value?.trim();
+        const password   = document.getElementById('change-password')?.value;
+        passError?.classList.add('hidden');
+
+        if (!newEmail) { passError.textContent = 'Vui lòng nhập email mới.'; passError.classList.remove('hidden'); return; }
+        if (!password) { passError.textContent = 'Vui lòng nhập mật khẩu.'; passError.classList.remove('hidden'); return; }
+
+        confirmPassBtn.disabled = true;
+        confirmPassBtn.innerHTML = '<span class="material-symbols-outlined text-[20px] animate-spin">progress_activity</span> Đang xử lý...';
+
+        try {
+            const res  = await fetch('{{ route("profile.change-email") }}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ new_email: newEmail, password })
+            });
+            const data = await res.json();
+            if (data.success) {
+                showSuccess(data.message);
+                if (window.showToast) window.showToast(data.message, 'success');
+            } else {
+                passError.textContent = data.message;
+                passError.classList.remove('hidden');
+                confirmPassBtn.disabled = false;
+                confirmPassBtn.innerHTML = '<span class="material-symbols-outlined text-[20px]">check_circle</span> Xác nhận đổi email';
+            }
+        } catch (err) {
+            passError.textContent = 'Có lỗi xảy ra. Vui lòng thử lại.';
+            passError.classList.remove('hidden');
+            confirmPassBtn.disabled = false;
+            confirmPassBtn.innerHTML = '<span class="material-symbols-outlined text-[20px]">check_circle</span> Xác nhận đổi email';
+        }
+    });
+
+    // ============================
+    // OAUTH LOGIN: OTP flow
+    // ============================
+    if (isOauth) {
+        const sendOtpBtn      = document.getElementById('btn-send-change-otp');
+        const countdownEl     = document.getElementById('change-send-countdown');
+        const countdownSecEl  = document.getElementById('change-countdown-sec');
+        const otpInputs       = document.querySelectorAll('.change-otp-input');
+        const confirmOtpBtn   = document.getElementById('btn-confirm-change-email-otp');
+        const otpError        = document.getElementById('change-otp-error');
+
+        // OTP auto advance
+        otpInputs.forEach((inp, idx) => {
+            inp.addEventListener('input', () => {
+                inp.value = inp.value.replace(/\D/g, '');
+                if (inp.value && idx < otpInputs.length - 1) otpInputs[idx + 1].focus();
+            });
+            inp.addEventListener('keydown', e => {
+                if (e.key === 'Backspace' && !inp.value && idx > 0) otpInputs[idx - 1].focus();
+            });
+        });
+
+        let cdTimer = null;
+        function startCd() {
+            let secs = 60;
+            countdownEl.classList.remove('hidden');
+            sendOtpBtn.disabled = true;
+            sendOtpBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            countdownSecEl.textContent = secs;
+            cdTimer = setInterval(() => {
+                secs--;
+                countdownSecEl.textContent = secs;
+                if (secs <= 0) {
+                    clearInterval(cdTimer);
+                    countdownEl.classList.add('hidden');
+                    sendOtpBtn.disabled = false;
+                    sendOtpBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    document.getElementById('btn-change-send-text').textContent = 'Gửi lại OTP';
+                }
+            }, 1000);
+        }
+
+        sendOtpBtn?.addEventListener('click', async () => {
+            const newEmail = document.getElementById('change-new-email')?.value?.trim();
+            if (!newEmail) {
+                if (window.showToast) window.showToast('Vui lòng nhập email mới trước.', 'error');
+                return;
+            }
+            sendOtpBtn.disabled = true;
+            document.getElementById('btn-change-send-text').textContent = 'Đang gửi...';
+            try {
+                const res  = await fetch('{{ route("profile.send-change-email-otp") }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ new_email: newEmail })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    step2.classList.remove('hidden');
+                    startCd();
+                    otpInputs[0]?.focus();
+                    if (window.showToast) window.showToast(data.message, 'success');
+                } else {
+                    if (window.showToast) window.showToast(data.message, 'error');
+                    sendOtpBtn.disabled = false;
+                    document.getElementById('btn-change-send-text').textContent = 'Gửi mã OTP xác nhận';
+                }
+            } catch (err) {
+                sendOtpBtn.disabled = false;
+                document.getElementById('btn-change-send-text').textContent = 'Gửi mã OTP xác nhận';
+                if (window.showToast) window.showToast('Có lỗi xảy ra.', 'error');
+            }
+        });
+
+        confirmOtpBtn?.addEventListener('click', async () => {
+            const otp      = Array.from(otpInputs).map(i => i.value).join('');
+            const newEmail = document.getElementById('change-new-email')?.value?.trim();
+            otpError?.classList.add('hidden');
+            if (otp.length < 6) { otpError.textContent = 'Vui lòng nhập đủ 6 chữ số.'; otpError.classList.remove('hidden'); return; }
+
+            confirmOtpBtn.disabled = true;
+            confirmOtpBtn.innerHTML = '<span class="material-symbols-outlined text-[20px] animate-spin">progress_activity</span> Đang xác minh...';
+            try {
+                const res  = await fetch('{{ route("profile.change-email") }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ new_email: newEmail, otp })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showSuccess(data.message);
+                    if (window.showToast) window.showToast(data.message, 'success');
+                } else {
+                    otpError.textContent = data.message;
+                    otpError.classList.remove('hidden');
+                    confirmOtpBtn.disabled = false;
+                    confirmOtpBtn.innerHTML = '<span class="material-symbols-outlined text-[20px]">check_circle</span> Xác nhận & Đổi email';
+                }
+            } catch (err) {
+                otpError.textContent = 'Có lỗi xảy ra.';
+                otpError.classList.remove('hidden');
+                confirmOtpBtn.disabled = false;
+                confirmOtpBtn.innerHTML = '<span class="material-symbols-outlined text-[20px]">check_circle</span> Xác nhận & Đổi email';
+            }
+        });
+    }
+})();
+</script>
+@endif
+
 @endsection
