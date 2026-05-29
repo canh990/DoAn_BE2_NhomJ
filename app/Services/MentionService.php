@@ -117,7 +117,7 @@ class MentionService
         $safeContent = preg_replace('/(?<=^|(?<=[^a-zA-Z0-9_\.]))@all/iu', '<span class="text-sky-400 font-bold">@all</span>', $safeContent);
 
         // Replace @username with clickable blue links
-        return preg_replace_callback('/(?<=^|(?<=[^a-zA-Z0-9_\.]))@([a-zA-Z0-9_]+)/u', function ($matches) {
+        $safeContent = preg_replace_callback('/(?<=^|(?<=[^a-zA-Z0-9_\.]))@([a-zA-Z0-9_]+)/u', function ($matches) {
             $username = $matches[1];
             if (strtolower($username) === 'all') {
                 return '@' . $username; // already handled
@@ -129,6 +129,13 @@ class MentionService
                 return '<a href="' . $url . '" class="text-sky-400 font-bold hover:underline" onclick="event.stopPropagation();">@' . $username . '</a>';
             }
             return '@' . $username;
+        }, $safeContent);
+
+        // Replace #hashtag with clickable blue links
+        return preg_replace_callback('/(?<=^|(?<=[^a-zA-Z0-9_\.]))#([\p{L}\p{N}_]+)/u', function ($matches) {
+            $tagName = $matches[1];
+            $url = route('explore', ['search' => '#' . $tagName, 'type' => 'hashtag']);
+            return '<a href="' . $url . '" class="text-sky-400 font-bold hover:underline" onclick="event.stopPropagation();">#' . $tagName . '</a>';
         }, $safeContent);
     }
 }
