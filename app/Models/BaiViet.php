@@ -91,6 +91,7 @@ class BaiViet extends Model
     /**
      * Thẻ Hashtag của bài viết.
      */
+    }
     public function hashtags(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
         return $this->belongsToMany(Hashtag::class, 'bai_viet_hashtag', 'bai_viet_id', 'hashtag_id');
