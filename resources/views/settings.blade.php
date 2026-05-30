@@ -528,43 +528,7 @@
 
 {{-- Theme Script --}}
 <script>
-document.addEventListener('DOMContentLoaded', () => {
 
-    const html = document.documentElement;
-    const btn = document.getElementById('theme-toggle-btn');
-    const thumb = document.getElementById('theme-toggle-thumb');
-    const hiddenCheckbox = document.getElementById('theme-toggle');
-
-    function setTheme(isDark) {
-        if (isDark) {
-            html.classList.add('dark');
-            html.classList.remove('light');
-            btn.style.backgroundColor = '#2563eb'; // blue-600
-            thumb.style.transform = 'translateX(1.25rem)'; // translate-x-5
-            btn.setAttribute('aria-checked', 'true');
-            if (hiddenCheckbox) hiddenCheckbox.checked = true;
-            localStorage.setItem('theme', 'dark');
-        } else {
-            html.classList.remove('dark');
-            html.classList.add('light');
-            btn.style.backgroundColor = '#334155'; // slate-700
-            thumb.style.transform = 'translateX(0.125rem)'; // translate-x-0.5
-            btn.setAttribute('aria-checked', 'false');
-            if (hiddenCheckbox) hiddenCheckbox.checked = false;
-            localStorage.setItem('theme', 'light');
-        }
-    }
-
-    // Load saved theme
-    const savedTheme = localStorage.getItem('theme');
-    setTheme(savedTheme === 'dark');
-
-    // Toggle on click
-    btn.addEventListener('click', function () {
-        const isDark = this.getAttribute('aria-checked') === 'true';
-        setTheme(!isDark);
-    });
-});
 // --- XỬ LÝ MODAL POPUP ---
 function openModal(modalId) {
     const modal = document.getElementById(modalId);
@@ -589,6 +553,67 @@ window.addEventListener('click', function(event) {
 
 // --- LOGIC CHATBOT HỖ TRỢ ---
 document.addEventListener('DOMContentLoaded', function () {
+    // --- LOGIC CHUYỂN ĐỔI CHẾ ĐỘ SÁNG / TỐI (DARK MODE) ---
+    const themeToggleBtn = document.getElementById('theme-toggle-btn');
+    const themeToggleThumb = document.getElementById('theme-toggle-thumb');
+
+    if (themeToggleBtn && themeToggleThumb) {
+        function syncThemeToggleUI() {
+            const isLight = document.documentElement.classList.contains('light');
+            const hiddenCheckbox = document.getElementById('theme-toggle');
+            if (isLight) {
+                themeToggleBtn.setAttribute('aria-checked', 'false');
+                themeToggleBtn.className = "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-transparent bg-slate-400 dark:bg-slate-700";
+                themeToggleThumb.className = "inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform duration-300 translate-x-0.5";
+                if (hiddenCheckbox) hiddenCheckbox.checked = false;
+            } else {
+                themeToggleBtn.setAttribute('aria-checked', 'true');
+                themeToggleBtn.className = "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-transparent bg-sky-500";
+                themeToggleThumb.className = "inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform duration-300 translate-x-5";
+                if (hiddenCheckbox) hiddenCheckbox.checked = true;
+            }
+        }
+
+        syncThemeToggleUI();
+
+        themeToggleBtn.addEventListener('click', function () {
+            const currentTheme = document.documentElement.classList.contains('light') ? 'light' : 'dark';
+            const nextTheme = currentTheme === 'light' ? 'dark' : 'light';
+
+            fetch('{{ route("settings.personal.setTheme") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ theme: nextTheme })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'ok') {
+                    if (data.theme === 'light') {
+                        document.documentElement.classList.remove('dark');
+                        document.documentElement.classList.add('light');
+                    } else {
+                        document.documentElement.classList.remove('light');
+                        document.documentElement.classList.add('dark');
+                    }
+                    syncThemeToggleUI();
+                    if (typeof window.showToast === 'function') {
+                        window.showToast(data.theme === 'light' ? 'Đã chuyển sang Chế độ sáng!' : 'Đã chuyển sang Chế độ tối!', 'success');
+                    }
+                }
+            })
+            .catch(err => {
+                console.error("Lỗi khi chuyển theme:", err);
+                if (typeof window.showToast === 'function') {
+                    window.showToast('Không thể thay đổi cài đặt giao diện.', 'error');
+                }
+            });
+        });
+    }
+
     const faqButtons = document.querySelectorAll('.faq-btn');
     const chatInput = document.getElementById('chatbot-input');
     const chatMessagesBox = document.getElementById('chat-messages-box');
