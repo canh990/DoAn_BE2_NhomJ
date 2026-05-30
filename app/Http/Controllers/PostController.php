@@ -50,6 +50,10 @@ class PostController extends Controller
             }])
             ->where('da_xoa', false);
 
+        $user = auth()->user();
+        $isRecommendation = false;
+        $recommendedTagNames = [];
+
         // Apply filters based on search keyword
         if ($keyword) {
             if ($type === 'hashtag') {
@@ -97,9 +101,66 @@ class PostController extends Controller
                 }
             }
         } else {
-            if ($type === 'hashtag') {
-                $query->has('hashtags');
+            // KHÔNG CÓ TỪ KHÓA TÌM KIẾM -> Áp dụng thuật toán Đề xuất bài viết thịnh hành từ người lạ dựa trên sở thích
+            $isRecommendation = true;
+
+            // 1. Chỉ lấy bài viết của NGƯỜI LẠ (chưa từng theo dõi và không phải là chính mình)
+            $followingIds = [];
+            if ($user) {
+                $followingIds = \DB::table('theo_doi')
+                    ->where('nguoi_theo_doi_id', $user->id)
+                    ->pluck('nguoi_duoc_theo_doi_id')
+                    ->toArray();
             }
+            $excludeUserIds = array_unique(array_merge($user ? [$user->id] : [], $followingIds));
+            $query->whereNotIn('nguoi_dung_id', $excludeUserIds);
+
+            // 2. Dựa trên sở thích (Hashtags quan tâm nhiều nhất)
+            $preferredHashtags = [];
+            if ($user) {
+                $likedPostIds = \DB::table('cam_xuc')
+                    ->where('nguoi_dung_id', $user->id)
+                    ->pluck('bai_viet_id')
+                    ->toArray();
+
+                $bookmarkedPostIds = \DB::table('bai_viet_da_luu')
+                    ->where('nguoi_dung_id', $user->id)
+                    ->pluck('bai_viet_id')
+                    ->toArray();
+
+                $commentedPostIds = \DB::table('binh_luan')
+                    ->where('nguoi_dung_id', $user->id)
+                    ->pluck('bai_viet_id')
+                    ->toArray();
+
+                $interactedPostIds = array_unique(array_merge($likedPostIds, $bookmarkedPostIds, $commentedPostIds));
+
+                if (!empty($interactedPostIds)) {
+                    $preferredHashtags = \DB::table('bai_viet_hashtag')
+                        ->whereIn('bai_viet_id', $interactedPostIds)
+                        ->select('hashtag_id', \DB::raw('count(*) as count'))
+                        ->groupBy('hashtag_id')
+                        ->orderBy('count', 'desc')
+                        ->take(5)
+                        ->pluck('hashtag_id')
+                        ->toArray();
+                }
+            }
+
+            // Lấp đầy ngẫu nhiên các hashtag hot nhất nếu chưa có dữ liệu tương tác
+            if (empty($preferredHashtags)) {
+                $preferredHashtags = Hashtag::orderBy('so_bai_viet', 'desc')
+                    ->take(5)
+                    ->pluck('id')
+                    ->toArray();
+            }
+
+            $query->whereHas('hashtags', function($q) use ($preferredHashtags) {
+                $q->whereIn('hashtag_id', $preferredHashtags);
+            });
+
+            // Lấy tên các hashtag đề xuất để hiển thị ngoài UI
+            $recommendedTagNames = Hashtag::whereIn('id', $preferredHashtags)->pluck('ten')->toArray();
         }
 
         // Apply time filter
@@ -110,11 +171,17 @@ class PostController extends Controller
         }
 
         // Apply sorting
-        if ($sort === 'popular') {
-            $query->orderByRaw('(reactions_count + comments_count + shares_count) DESC')
+        if ($isRecommendation) {
+            // Sắp xếp theo Điểm tương tác: (reactions_count * 2) + (comments_count * 3) giảm dần (Thịnh hành)
+            $query->orderByRaw('((reactions_count * 2) + (comments_count * 3)) DESC')
                   ->orderBy('created_at', 'desc');
         } else {
-            $query->orderBy('created_at', 'desc');
+            if ($sort === 'popular') {
+                $query->orderByRaw('(reactions_count + comments_count + shares_count) DESC')
+                      ->orderBy('created_at', 'desc');
+            } else {
+                $query->orderBy('created_at', 'desc');
+            }
         }
 
         // Paginate results
@@ -180,6 +247,8 @@ class PostController extends Controller
             'type' => $type,
             'time' => $time,
             'sort' => $sort,
+            'isRecommendation' => $isRecommendation,
+            'recommendedTagNames' => $recommendedTagNames,
             'title' => __('messages.explore_title') ?? 'Khám phá',
             'message' => __('messages.explore_subtitle') ?? 'Tìm kiếm bài viết, hashtag hoặc người dùng',
         ]);
