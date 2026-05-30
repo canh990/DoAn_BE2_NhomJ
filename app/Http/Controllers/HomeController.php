@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\BaiViet;
 use App\Models\Tin24h;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class HomeController extends Controller
@@ -89,11 +90,83 @@ class HomeController extends Controller
             ->take(9)
             ->get();
 
+        // --- LOGIC GỢI Ý KẾT BẠN (NHỮNG NGƯỜI BẠN CÓ THỂ BIẾT) ---
+        $suggestedUsers = collect();
+        if ($user) {
+            // Lấy danh sách ID đã gửi yêu cầu theo dõi hoặc đang theo dõi (tránh gợi ý lại)
+            $alreadyFollowingIds = \DB::table('theo_doi')
+                ->where('nguoi_theo_doi_id', $user->id)
+                ->pluck('nguoi_duoc_theo_doi_id')
+                ->toArray();
+
+            // Danh sách ID loại trừ: Bản thân, người đã theo dõi, người đã chặn
+            $excludeIds = array_unique(array_merge([$user->id], $alreadyFollowingIds, $blockedUserIds));
+
+            // Ưu tiên 1: Gợi ý dựa trên bạn chung
+            if (!empty($followingIds)) {
+                $mutualFriendsQuery = \DB::table('theo_doi as td1')
+                    ->join('theo_doi as td2', 'td1.nguoi_duoc_theo_doi_id', '=', 'td2.nguoi_theo_doi_id')
+                    ->where('td1.nguoi_theo_doi_id', $user->id)
+                    ->where('td1.trang_thai', 'da_chap_nhan')
+                    ->where('td2.trang_thai', 'da_chap_nhan')
+                    ->whereNotIn('td2.nguoi_duoc_theo_doi_id', $excludeIds)
+                    ->select('td2.nguoi_duoc_theo_doi_id as id', \DB::raw('count(td1.nguoi_duoc_theo_doi_id) as mutual_count'))
+                    ->groupBy('td2.nguoi_duoc_theo_doi_id')
+                    ->orderBy('mutual_count', 'desc')
+                    ->take(5)
+                    ->get();
+
+                if ($mutualFriendsQuery->isNotEmpty()) {
+                    $mutualUserIds = $mutualFriendsQuery->pluck('id')->toArray();
+                    $mutualUsers = User::whereIn('id', $mutualUserIds)->get()->keyBy('id');
+                    
+                    foreach ($mutualFriendsQuery as $item) {
+                        if (isset($mutualUsers[$item->id])) {
+                            $suUser = $mutualUsers[$item->id];
+                            $suUser->suggestion_reason = "Có {$item->mutual_count} bạn chung";
+                            $suggestedUsers->put($suUser->id, $suUser);
+                        }
+                    }
+                }
+            }
+
+            // Ưu tiên 2: Cùng nơi ở (noi_o)
+            if ($suggestedUsers->count() < 5 && !empty($user->noi_o)) {
+                $locationExcludeIds = array_unique(array_merge($excludeIds, $suggestedUsers->keys()->toArray()));
+                $locationUsers = User::whereNotIn('id', $locationExcludeIds)
+                    ->where('noi_o', 'LIKE', '%' . $user->noi_o . '%')
+                    ->where('con_hoat_dong', true)
+                    ->take(5 - $suggestedUsers->count())
+                    ->get();
+
+                foreach ($locationUsers as $lUser) {
+                    $lUser->suggestion_reason = "Sống tại " . $user->noi_o;
+                    $suggestedUsers->put($lUser->id, $lUser);
+                }
+            }
+
+            // Lấp đầy ngẫu nhiên
+            if ($suggestedUsers->count() < 5) {
+                $randomExcludeIds = array_unique(array_merge($excludeIds, $suggestedUsers->keys()->toArray()));
+                $randomUsers = User::whereNotIn('id', $randomExcludeIds)
+                    ->where('con_hoat_dong', true)
+                    ->inRandomOrder()
+                    ->take(5 - $suggestedUsers->count())
+                    ->get();
+
+                foreach ($randomUsers as $rUser) {
+                    $rUser->suggestion_reason = "Gợi ý cho bạn";
+                    $suggestedUsers->put($rUser->id, $rUser);
+                }
+            }
+        }
+
         return view('components.home', [
-            'posts'       => $posts,
-            'stories'     => $stories,
-            'recentMedia' => $recentMedia,
-            'feedType'    => $feedType,
+            'posts'          => $posts,
+            'stories'        => $stories,
+            'recentMedia'    => $recentMedia,
+            'feedType'       => $feedType,
+            'suggestedUsers' => $suggestedUsers,
         ]);
     }
 }
