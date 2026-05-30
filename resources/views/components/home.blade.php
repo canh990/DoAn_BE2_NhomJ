@@ -188,9 +188,9 @@
     </div>
 
     <!-- ===== CỘT PHỤ (SIDEBAR) ===== -->
-    <div class="hidden lg:block lg:col-span-4 space-y-6">
+    <div class="hidden lg:block lg:col-span-4 space-y-6 sticky top-24">
         <!-- Phần Phương tiện mới nhất -->
-        <section class="glass-panel rounded-2xl p-5 sticky top-24">
+        <section class="glass-panel rounded-2xl p-5">
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-lg font-bold text-sky-300 flex items-center gap-2">
                     <span class="material-symbols-outlined text-sky-400">perm_media</span>
@@ -239,7 +239,40 @@
             </div>
         </section>
 
-        <!-- Có thể thêm phần Gợi ý theo dõi ở đây -->
+        <!-- ===== BOX GỢI Ý KẾT BẠN (NHỮNG NGƯỜI BẠN CÓ THỂ BIẾT) ===== -->
+        @if(auth()->check() && isset($suggestedUsers) && $suggestedUsers->count() > 0)
+        <section class="glass-panel rounded-2xl p-5 mt-6 border border-white/10 bg-slate-900/40">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-sm font-bold text-sky-300 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-sky-400 text-lg">person_add</span>
+                    Gợi ý kết bạn
+                </h3>
+            </div>
+            
+            <div class="space-y-4">
+                @foreach($suggestedUsers as $sUser)
+                    <div class="flex items-center justify-between gap-3 p-2 rounded-xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/5 suggested-user-row" id="suggested-user-{{ $sUser->id }}">
+                        <a href="{{ route('profile.public', $sUser->ten_dang_nhap) }}" class="flex items-center gap-2 min-w-0 flex-1">
+                            <img src="{{ $sUser->avatar_url }}" alt="Avatar" class="h-8 w-8 rounded-full object-cover border border-white/10 shrink-0">
+                            <div class="min-w-0">
+                                <p class="text-xs font-bold text-slate-200 truncate hover:text-sky-300 transition-colors">{{ $sUser->ten_dang_nhap }}</p>
+                                <p class="text-[10px] text-slate-500 truncate mt-0.5 flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-[10px] shrink-0 text-slate-600">info</span>
+                                    <span class="truncate">{{ $sUser->suggestion_reason }}</span>
+                                </p>
+                            </div>
+                        </a>
+                        
+                        <button type="button" 
+                                data-user-id="{{ $sUser->id }}" 
+                                class="btn-suggest-follow px-3 py-1.5 text-[10px] font-bold text-slate-900 bg-cyan-400 hover:bg-cyan-300 rounded-full transition-all duration-300 flex items-center justify-center gap-1 shrink-0 shadow-md shadow-cyan-400/20 active:scale-95">
+                            Theo dõi
+                        </button>
+                    </div>
+                @endforeach
+            </div>
+        </section>
+        @endif
     </div>
 </div>
 
@@ -878,6 +911,74 @@
                 });
             });
         };
+
+        // --- LOGIC THEO DÕI NGƯỜI DÙNG GỢI Ý BẰNG AJAX ---
+        const suggestFollowBtns = document.querySelectorAll('.btn-suggest-follow');
+        suggestFollowBtns.forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const userId = this.getAttribute('data-user-id');
+                if (!userId) return;
+
+                const button = this;
+                button.disabled = true;
+                button.innerHTML = `
+                    <div class="w-3 h-3 border-2 border-slate-900 border-t-transparent rounded-full animate-spin"></div>
+                `;
+
+                fetch(`/user/${userId}/toggle-follow`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(res => {
+                    if (!res.ok) throw new Error('Yêu cầu thất bại');
+                    return res.json();
+                })
+                .then(data => {
+                    if (data.is_following) {
+                        button.innerHTML = data.status === 'cho_chap_nhan' ? 'Đang chờ' : 'Đang theo dõi';
+                        button.className = "btn-suggest-follow px-3 py-1.5 text-[10px] font-bold text-slate-300 bg-white/10 hover:bg-white/15 rounded-full transition-all duration-300 flex items-center justify-center gap-1 shrink-0 border border-white/5 active:scale-95";
+                        
+                        // Tự động ẩn dòng này sau 1 giây với hiệu ứng bay sang phải cực đẹp
+                        setTimeout(() => {
+                            const row = document.getElementById(`suggested-user-${userId}`);
+                            if (row) {
+                                row.style.transition = 'all 0.5s ease';
+                                row.style.opacity = '0';
+                                row.style.transform = 'translateX(50px)';
+                                setTimeout(() => {
+                                    row.remove();
+                                    
+                                    // Kiểm tra nếu không còn gợi ý nào thì ẩn cả box
+                                    const remainingRows = document.querySelectorAll('.suggested-user-row');
+                                    if (remainingRows.length === 0) {
+                                        const widget = button.closest('section');
+                                        if (widget) {
+                                            widget.style.transition = 'all 0.5s ease';
+                                            widget.style.opacity = '0';
+                                            setTimeout(() => widget.remove(), 500);
+                                        }
+                                    }
+                                }, 500);
+                            }
+                        }, 1000);
+                    } else {
+                        button.innerHTML = 'Theo dõi';
+                        button.className = "btn-suggest-follow px-3 py-1.5 text-[10px] font-bold text-slate-900 bg-cyan-400 hover:bg-cyan-300 rounded-full transition-all duration-300 flex items-center justify-center gap-1 shrink-0 shadow-md shadow-cyan-400/20 active:scale-95";
+                        button.disabled = false;
+                    }
+                })
+                .catch(err => {
+                    console.error('Lỗi theo dõi:', err);
+                    button.innerHTML = 'Theo dõi';
+                    button.disabled = false;
+                });
+            });
+        });
 
         bindPaginationLinks();
     });
