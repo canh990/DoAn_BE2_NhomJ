@@ -164,6 +164,30 @@
                 </div>
             @endif
 
+            <!-- Personalized Recommendation Banner -->
+            @if(isset($isRecommendation) && $isRecommendation)
+                <div class="glass-panel p-4 rounded-2xl border border-sky-400/20 bg-sky-400/5 backdrop-blur-md mb-4 flex items-center justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                        <div class="h-10 w-10 rounded-full bg-sky-400/20 flex items-center justify-center shrink-0 animate-pulse">
+                            <span class="material-symbols-outlined text-sky-400 text-xl">explore</span>
+                        </div>
+                        <div>
+                            <h3 class="text-xs font-bold text-sky-300">Khám phá nội dung cho bạn</h3>
+                            <p class="text-[10px] text-slate-400 mt-0.5">Bài viết thịnh hành từ những người lạ dựa trên sở thích: 
+                                @if(!empty($recommendedTagNames))
+                                    <span class="text-sky-400 font-semibold">{{ implode(', ', array_map(fn($t) => '#'.$t, $recommendedTagNames)) }}</span>
+                                @else
+                                    <span class="text-sky-400 font-semibold">Tất cả xu hướng</span>
+                                @endif
+                            </p>
+                        </div>
+                    </div>
+                    <div class="text-[10px] bg-sky-400/10 text-sky-400 px-2.5 py-1 rounded-full font-bold border border-sky-400/20 shrink-0">
+                        🔥 THỊNH HÀNH
+                    </div>
+                </div>
+            @endif
+
             <!-- Posts List -->
             @if($posts->count() > 0)
                 <div class="space-y-4">
