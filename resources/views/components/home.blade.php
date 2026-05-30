@@ -166,18 +166,24 @@
             </div>
         </section>
 
+        <!-- ===== THANH TAB CHUYỂN ĐỔI FEED ===== -->
+        <div class="flex border-b border-white/10 mb-6 relative z-40">
+            <button type="button" id="btn-feed-recommend" 
+                    class="feed-tab-btn relative pb-3 px-6 text-sm font-bold transition-all duration-300 {{ ($feedType ?? 'recommend') === 'recommend' ? 'text-cyan-400 border-b-2 border-cyan-400' : 'text-slate-400 hover:text-slate-200 border-b-2 border-transparent' }}">
+                Dành cho bạn
+            </button>
+            <button type="button" id="btn-feed-following" 
+                    class="feed-tab-btn relative pb-3 px-6 text-sm font-bold transition-all duration-300 {{ ($feedType ?? 'recommend') === 'following' ? 'text-cyan-400 border-b-2 border-cyan-400' : 'text-slate-400 hover:text-slate-200 border-b-2 border-transparent' }}">
+                Đang theo dõi
+            </button>
+        </div>
+
         {{-- ===== STORIES BAR ===== --}}
         @include('components.stories-bar', ['stories' => $stories ?? collect()])
 
         <!-- ===== DANH SÁCH BÀI VIẾT ===== -->
-        <div id="post-list-container" class="space-y-6">
-            @forelse($posts as $post)
-                <x-post-card :post="$post" class="mb-6" />
-            @empty
-                <div class="glass-panel rounded-2xl p-6 text-center text-slate-300">
-                    <p class="text-sm">Chưa có bài viết nào. Hãy là người đầu tiên đăng trạng thái!</p>
-                </div>
-            @endforelse
+        <div id="post-list-container" class="space-y-6 relative min-h-[300px]">
+            @include('components.posts-feed', ['posts' => $posts, 'feedType' => $feedType ?? 'recommend'])
         </div>
     </div>
 
@@ -252,9 +258,7 @@
         const removeAllBtn = document.getElementById('remove-all-images');
         let selectedFiles = [];
 
-        if (!textarea || !counter || !submitButton) {
-            return;
-        }
+        if (textarea && counter && submitButton) {
 
         const maxLength = Number(textarea.getAttribute('maxlength')) || 280;
 
@@ -722,8 +726,9 @@
 
         const originalUpdateSubmitButton = updateSubmitButton;
         updateSubmitButton = function() {
-            const hasFeeling = inputCamXuc.value || inputHoatDong.value;
-            const hasLocation = inputTenDiaDiem.value;
+            const hasFeeling = (typeof inputCamXuc !== 'undefined' && inputCamXuc ? inputCamXuc.value : '') || 
+                               (typeof inputHoatDong !== 'undefined' && inputHoatDong ? inputHoatDong.value : '');
+            const hasLocation = typeof inputTenDiaDiem !== 'undefined' && inputTenDiaDiem ? inputTenDiaDiem.value : '';
             const textLength = textarea.value.trim().length;
             const isPollActive = pollCreatorContainer && !pollCreatorContainer.classList.contains('hidden');
             let isPollValid = false;
@@ -742,7 +747,139 @@
                 submitButton.setAttribute('disabled', 'true');
             }
         };
+        }
+    });
+</script>
 
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Feed Switching & AJAX Pagination Logic
+        window.currentFeed = "{{ $feedType ?? 'recommend' }}";
+
+        window.switchFeed = function(type) {
+            if (window.currentFeed === type) return;
+            window.currentFeed = type;
+
+            const btnRecommend = document.getElementById('btn-feed-recommend');
+            const btnFollowing = document.getElementById('btn-feed-following');
+
+            if (type === 'recommend') {
+                btnRecommend.className = "feed-tab-btn relative pb-3 px-6 text-sm font-bold transition-all duration-300 text-cyan-400 border-b-2 border-cyan-400";
+                btnFollowing.className = "feed-tab-btn relative pb-3 px-6 text-sm font-bold transition-all duration-300 text-slate-400 hover:text-slate-200 border-b-2 border-transparent";
+            } else {
+                btnRecommend.className = "feed-tab-btn relative pb-3 px-6 text-sm font-bold transition-all duration-300 text-slate-400 hover:text-slate-200 border-b-2 border-transparent";
+                btnFollowing.className = "feed-tab-btn relative pb-3 px-6 text-sm font-bold transition-all duration-300 text-cyan-400 border-b-2 border-cyan-400";
+            }
+
+            const url = new URL(window.location);
+            url.searchParams.set('feed', type);
+            url.searchParams.delete('page');
+            window.history.pushState({}, '', url);
+
+            loadFeedContent(url.toString());
+        };
+
+        // Gắn sự kiện click trực tiếp vào nút thay vì dùng inline onclick
+        const elRecommend = document.getElementById('btn-feed-recommend');
+        const elFollowing = document.getElementById('btn-feed-following');
+        if (elRecommend) {
+            elRecommend.addEventListener('click', function() {
+                switchFeed('recommend');
+            });
+        }
+        if (elFollowing) {
+            elFollowing.addEventListener('click', function() {
+                switchFeed('following');
+            });
+        }
+
+        window.loadFeedContent = function(url) {
+            const container = document.getElementById('post-list-container');
+            if (!container) return;
+
+            // Ẩn nội dung cũ đi bằng cách thay thế ngay lập tức bằng loading skeleton cao cấp
+            container.innerHTML = `
+                <div class="space-y-6 animate-pulse">
+                    <div class="glass-panel rounded-2xl p-6 border border-white/10 bg-slate-900/40 space-y-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-slate-800"></div>
+                            <div class="space-y-2 flex-1">
+                                <div class="h-3 bg-slate-800 rounded w-1/4"></div>
+                                <div class="h-2.5 bg-slate-800 rounded w-1/6"></div>
+                            </div>
+                        </div>
+                        <div class="space-y-2 pt-2">
+                            <div class="h-3 bg-slate-800 rounded w-full"></div>
+                            <div class="h-3 bg-slate-800 rounded w-5/6"></div>
+                            <div class="h-3 bg-slate-800 rounded w-2/3"></div>
+                        </div>
+                        <div class="h-48 bg-slate-800/40 rounded-xl w-full mt-4"></div>
+                    </div>
+                    <div class="glass-panel rounded-2xl p-6 border border-white/10 bg-slate-900/40 space-y-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-slate-800"></div>
+                            <div class="space-y-2 flex-1">
+                                <div class="h-3 bg-slate-800 rounded w-1/4"></div>
+                                <div class="h-2.5 bg-slate-800 rounded w-1/6"></div>
+                            </div>
+                        </div>
+                        <div class="space-y-2 pt-2">
+                            <div class="h-3 bg-slate-800 rounded w-full"></div>
+                            <div class="h-3 bg-slate-800 rounded w-5/6"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.style.opacity = '0.85';
+            container.style.pointerEvents = 'none';
+
+            fetch(url, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(res => {
+                if (!res.ok) throw new Error('Network response was not ok');
+                return res.text();
+            })
+            .then(html => {
+                container.innerHTML = html;
+                container.style.opacity = '1';
+                container.style.pointerEvents = 'auto';
+                bindPaginationLinks();
+            })
+            .catch(err => {
+                console.error('Lỗi tải bảng tin:', err);
+                container.innerHTML = `
+                    <div class="glass-panel rounded-2xl p-12 text-center text-rose-400 border border-white/10 bg-slate-900/60">
+                        <span class="material-symbols-outlined text-4xl mb-2">error</span>
+                        <p class="text-sm font-bold">Không thể tải bảng tin. Vui lòng thử lại sau.</p>
+                    </div>
+                `;
+                container.style.opacity = '1';
+                container.style.pointerEvents = 'auto';
+            });
+        };
+
+        window.bindPaginationLinks = function() {
+            const container = document.getElementById('post-list-container');
+            if (!container) return;
+
+            const paginationLinks = container.querySelectorAll('.posts-pagination a');
+            paginationLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const targetUrl = this.getAttribute('href');
+                    if (targetUrl) {
+                        window.history.pushState({}, '', targetUrl);
+                        loadFeedContent(targetUrl);
+                        container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                });
+            });
+        };
+
+        bindPaginationLinks();
     });
 </script>
 @endsection
