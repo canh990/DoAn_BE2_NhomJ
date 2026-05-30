@@ -1,27 +1,661 @@
-/* Light mode overrides when html has class 'light' */
+/* ==========================================================================
+   Google-Style Light Mode Theme Stylesheet
+   Applies clean white/light gray backgrounds, dark gray text, thin borders,
+   and elegant Google Blue accent colors across the NHOMJ social network.
+   ========================================================================== */
+
 html.light {
   color-scheme: light;
 }
+
+/* 1. Global Reset & Typography */
 html.light body {
-  background: #ffffff !important;
-  color: #000000 !important;
+  background-color: #f8f9fa !important;
+  color: #202124 !important;
+  font-family: 'Inter', sans-serif;
+  line-height: 1.6 !important;
 }
-html.light .glass-panel {
-  background: rgba(255,255,255,0.9) !important;
-  backdrop-filter: none !important;
-  border: 1px solid rgba(15,21,36,0.06) !important;
+
+/* Global typography overrides for legible contrast */
+html.light h1,
+html.light h2,
+html.light h3,
+html.light h4,
+html.light h5,
+html.light h6 {
+  color: #202124 !important;
 }
+
+html.light p, 
+html.light span,
+html.light div,
+html.light label {
+  color: #3c4043;
+}
+
+/* 2. Header & Navigation styling */
+html.light header {
+  background-color: #ffffff !important;
+  background-image: none !important;
+  border-bottom: 1px solid #e0e0e0 !important;
+  box-shadow: 0 1px 3px rgba(60, 64, 67, 0.08) !important;
+}
+
+html.light header span.bg-gradient-to-r {
+  background: none !important;
+  color: #1a73e8 !important;
+  -webkit-text-fill-color: #1a73e8 !important;
+}
+
+/* Header search bar override */
+html.light header #search-user {
+  color: #202124 !important;
+}
+html.light header #search-user::placeholder {
+  color: #70757a !important;
+}
+html.light header .bg-white\/5 {
+  background-color: #f1f3f4 !important;
+  border: 1px solid #dadce0 !important;
+}
+
+/* Sidebar navigation styling */
+html.light aside {
+  background-color: #ffffff !important;
+  border-right: 1px solid #e0e0e0 !important;
+}
+
+html.light aside nav a {
+  color: #5f6368 !important;
+  border-radius: 12px !important;
+}
+
+html.light aside nav a:hover {
+  background-color: #f1f3f4 !important;
+  color: #1a73e8 !important;
+}
+
+html.light aside nav a.bg-sky-400\/20 {
+  background-color: #e8f0fe !important;
+  color: #1a73e8 !important;
+  border: 1px solid #d2e3fc !important;
+}
+
+/* Sidebar post button styling (Google Blue) */
+html.light aside button.bg-sky-400\/20 {
+  background-color: #1a73e8 !important;
+  border: 1px solid #1a73e8 !important;
+  color: #ffffff !important;
+}
+html.light aside button.bg-sky-400\/20:hover {
+  background-color: #1557b0 !important;
+  box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15) !important;
+}
+
+/* Mobile Bottom Navigation */
+html.light nav.md\:hidden {
+  background-color: #ffffff !important;
+  border-top: 1px solid #e0e0e0 !important;
+}
+
+html.light nav.md\:hidden a {
+  color: #5f6368 !important;
+}
+
+html.light nav.md\:hidden a.text-sky-300 {
+  color: #1a73e8 !important;
+  background-color: #e8f0fe !important;
+}
+
+/* 3. Cards, Panels and Glassmorphism conversion to Flat UI */
+html.light .glass-panel,
 html.light .glass-panel-elevated {
-  background: rgba(255,255,255,0.95) !important;
+  background-color: #ffffff !important;
+  background-image: none !important;
   backdrop-filter: none !important;
-  border: 1px solid rgba(15,21,36,0.08) !important;
+  -webkit-backdrop-filter: none !important;
+  border: 1px solid #e0e0e0 !important;
+  box-shadow: 0 1px 2px 0 rgba(60,64,67,0.1), 0 2px 6px 2px rgba(60,64,67,0.05) !important;
 }
-html.light .bg-background { background-color: #ffffff !important; }
-html.light .text-on-background { color: #0b1220 !important; }
-html.light .text-on-surface { color: #0b1220 !important; }
-html.light .text-on-surface-variant { color: #475569 !important; }
-html.light .bg-slate-950\/60 { background-color: rgba(255,255,255,0.6) !important; }
-html.light .border-white\/10 { border-color: rgba(0,0,0,0.06) !important; }
-/* Make the switch track lighter */
-html.light .w-11.h-6 { background-color: #e5e7eb !important; }
-html.light .peer-checked:bg-primary { background-color: #0ea5a4 !important; }
+
+/* Remove all glowing background gradients */
+html.light .bg-slate-900\/60,
+html.light .bg-slate-950\/60,
+html.light .bg-slate-900\/80,
+html.light .bg-white\/5,
+html.light .bg-slate-950 {
+  background-color: #ffffff !important;
+  background-image: none !important;
+}
+
+html.light .border-white\/10,
+html.light .border-white\/5,
+html.light .border-sky-400\/10,
+html.light .border-sky-400\/20 {
+  border-color: #e0e0e0 !important;
+}
+
+/* 4. Posts Cards and Text Area styling */
+html.light article {
+  background-color: #ffffff !important;
+  border: 1px solid #e0e0e0 !important;
+  border-radius: 16px !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important;
+  padding: 24px !important; /* Spacious Google Cards */
+  margin-bottom: 24px !important;
+}
+
+html.light article .text-slate-300,
+html.light article .text-slate-200 {
+  color: #3c4043 !important;
+  font-size: 14.5px !important;
+  line-height: 1.625 !important; /* High legibility line-height */
+}
+
+/* Author info */
+html.light article .text-sky-300,
+html.light article a.font-bold {
+  color: #202124 !important;
+}
+html.light article a.text-slate-500 {
+  color: #70757a !important;
+}
+
+/* Hashtags Google Blue style */
+html.light a[href*="search="],
+html.light .text-sky-400 {
+  color: #1a73e8 !important;
+  font-weight: 500 !important;
+}
+html.light a[href*="search="]:hover {
+  text-decoration: underline !important;
+}
+
+/* Accent text */
+html.light .text-sky-300 {
+  color: #1a73e8 !important;
+}
+
+/* Interaction icons: Keep system icons colorful, only mute general ones */
+html.light .material-symbols-outlined:not(.text-sky-400):not(.text-primary):not(.text-error):not(.text-warning):not(.text-success):not([data-icon="verified"]):not(.text-yellow-400):not(.text-red-500):not(.text-emerald-400):not(.text-blue-500) {
+  color: #5f6368 !important;
+}
+
+/* Post interaction buttons */
+html.light button.text-slate-400,
+html.light a.text-slate-400 {
+  color: #5f6368 !important;
+}
+html.light button.text-slate-400:hover,
+html.light a.text-slate-400:hover {
+  background-color: #f1f3f4 !important;
+  color: #1a73e8 !important;
+}
+
+html.light button.bg-sky-400\/10 {
+  background-color: #e8f0fe !important;
+  color: #1a73e8 !important;
+}
+
+/* 5. Feed and Tab switch styling */
+html.light .feed-tab-btn {
+  color: #5f6368 !important;
+  border-bottom: 3px solid transparent !important;
+  font-weight: 500 !important;
+}
+
+html.light .feed-tab-btn.active {
+  color: #1a73e8 !important;
+  border-bottom-color: #1a73e8 !important;
+  font-weight: 600 !important;
+}
+
+/* 6. Form Fields & Inputs */
+html.light input[type="text"],
+html.light input[type="email"],
+html.light input[type="password"],
+html.light textarea,
+html.light select {
+  background-color: #f1f3f4 !important;
+  border: 1px solid transparent !important;
+  color: #202124 !important;
+  border-radius: 12px !important;
+  padding: 12px 16px !important;
+  font-size: 14px !important;
+  transition: all 0.2s ease !important;
+}
+
+html.light input[type="text"]:focus,
+html.light input[type="email"]:focus,
+html.light input[type="password"]:focus,
+html.light textarea:focus,
+html.light select:focus {
+  background-color: #ffffff !important;
+  border-color: #1a73e8 !important;
+  box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.15) !important;
+  outline: none !important;
+}
+
+html.light input::placeholder,
+html.light textarea::placeholder {
+  color: #70757a !important;
+}
+
+/* 7. Comments Section styling */
+html.light .comment-thread {
+  margin-top: 16px !important;
+}
+html.light .comment-thread .bg-slate-950 {
+  background-color: #f8f9fa !important;
+  border: 1px solid #e0e0e0 !important;
+}
+html.light .comment-thread span.font-semibold {
+  color: #202124 !important;
+}
+html.light .comment-thread p.text-slate-300 {
+  color: #3c4043 !important;
+}
+
+/* 8. Specific UI Fixes (Explore page, Polls, Badges) */
+html.light .poll-option-btn {
+  background-color: #f1f3f4 !important;
+  border: 1px solid #e0e0e0 !important;
+}
+html.light .poll-option-btn:hover {
+  background-color: #e8eaed !important;
+}
+html.light .poll-progress {
+  background-color: rgba(26, 115, 232, 0.15) !important;
+}
+html.light .poll-progress.bg-sky-500\/30 {
+  background-color: rgba(26, 115, 232, 0.3) !important;
+}
+
+
+
+/* Modals */
+html.light .bg-black\/50 {
+  background-color: rgba(60, 64, 67, 0.6) !important;
+}
+
+/* Popular hashtags list on Explore */
+html.light .hover\:bg-white\/5:hover {
+  background-color: #f1f3f4 !important;
+}
+html.light .bg-sky-500\/10 {
+  background-color: #e8f0fe !important;
+  color: #1a73e8 !important;
+  border-color: #d2e3fc !important;
+}
+
+/* General button accent resets */
+html.light .bg-sky-500 {
+  background-color: #1a73e8 !important;
+  color: #ffffff !important;
+}
+html.light .bg-sky-500:hover {
+  background-color: #1557b0 !important;
+}
+
+/* Notification panel specific */
+html.light .notification-item {
+  background-color: #ffffff !important;
+  border: 1px solid #e0e0e0 !important;
+  border-radius: 12px !important;
+}
+html.light .notification-item:hover {
+  background-color: #f8f9fa !important;
+}
+
+/* Mentions styling */
+html.light .textarea-highlighter-backdrop span {
+  color: #1a73e8 !important;
+}
+html.light .textarea-highlighter-wrapper textarea {
+  caret-color: #202124 !important;
+}
+
+/* Dark mode elements explicitly turned off in Light mode */
+html.light .text-on-surface-variant {
+  color: #5f6368 !important;
+}
+html.light .text-on-surface {
+  color: #202124 !important;
+}
+html.light .bg-primary\/20 {
+  background-color: #e8f0fe !important;
+  color: #1a73e8 !important;
+}
+html.light .border-primary\/20 {
+  border-color: #d2e3fc !important;
+}
+html.light .text-primary {
+  color: #1a73e8 !important;
+}
+html.light .text-slate-500 {
+  color: #70757a !important;
+}
+html.light .text-slate-400 {
+  color: #5f6368 !important;
+}
+
+/* ==========================================================================
+   NEW SPECIFIC LIGHT MODE FIXES FOR USER FEEDBACK
+   ========================================================================== */
+
+/* 1. Mention Highlighter Textarea Input Text Fix (Make typed text visible black) */
+html.light #post-content,
+html.light textarea#post-content,
+html.light .textarea-highlighter-backdrop {
+  color: #202124 !important;
+  -webkit-text-fill-color: #202124 !important;
+  caret-color: #202124 !important;
+}
+html.light .textarea-highlighter-wrapper textarea {
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+  caret-color: #202124 !important;
+}
+
+/* 2. Preserve Verification Blue Badge (Tích xanh) */
+html.light .material-symbols-outlined.text-sky-400,
+html.light .material-symbols-outlined[data-icon="verified"],
+html.light span[title="Đã xác thực"] {
+  color: #1a73e8 !important;
+}
+
+/* 3. Notifications List User Name Fix (Make Bold and Jet Black) */
+html.light .notification-item a.font-bold,
+html.light .notification-item span.font-bold,
+html.light .notification-item strong {
+  color: #202124 !important;
+  font-weight: 700 !important;
+}
+
+/* 4. Complete Chat Room Light Mode (1-1 and Group chats) */
+html.light .chat-surface {
+  background-color: #f8f9fa !important;
+  color: #202124 !important;
+}
+
+html.light .chat-surface section {
+  background-color: #ffffff !important;
+  border-right: 1px solid #e0e0e0 !important;
+}
+
+html.light .chat-surface section h1,
+html.light .chat-surface section h2,
+html.light .chat-surface section h3 {
+  color: #202124 !important;
+}
+
+html.light .chat-surface section p,
+html.light .chat-surface section span.text-slate-500 {
+  color: #70757a !important;
+}
+
+html.light .chat-surface section label,
+html.light .chat-surface section input {
+  background-color: #f1f3f4 !important;
+  border-color: #dadce0 !important;
+  color: #202124 !important;
+}
+
+html.light .chat-surface section input::placeholder {
+  color: #70757a !important;
+}
+
+html.light .chat-surface section a {
+  color: #202124 !important;
+}
+
+html.light .chat-surface section a:hover {
+  background-color: #f1f3f4 !important;
+}
+
+html.light .chat-surface section a.bg-sky-500\/12 {
+  background-color: #e8f0fe !important;
+  border-color: #d2e3fc !important;
+  color: #1a73e8 !important;
+}
+
+html.light .chat-surface section a.bg-sky-500\/12 div,
+html.light .chat-surface section a.bg-sky-500\/12 span {
+  color: #1a73e8 !important;
+}
+
+html.light .chat-surface .avatar-ring {
+  box-shadow: 0 0 0 1px rgba(26, 115, 232, 0.2), 0 4px 12px rgba(60, 64, 67, 0.08) !important;
+}
+
+html.light .chat-surface span.absolute.border-2 {
+  border-color: #ffffff !important;
+}
+
+/* Chat Main Background area */
+html.light .chat-bg {
+  background-color: #f8f9fa !important;
+  background-image: none !important;
+}
+
+html.light .chat-bg header {
+  background-color: #ffffff !important;
+  border-bottom: 1px solid #e0e0e0 !important;
+}
+
+html.light .chat-bg header h2,
+html.light .chat-bg header div {
+  color: #202124 !important;
+}
+
+html.light .chat-bg header .text-emerald-400 {
+  color: #34a853 !important;
+}
+
+html.light .chat-bg header button.material-symbols-outlined {
+  color: #5f6368 !important;
+}
+
+html.light .chat-bg header button.material-symbols-outlined:hover {
+  color: #1a73e8 !important;
+}
+
+/* Message Bubble - Other User */
+html.light .chat-surface .bg-\[\#101827\],
+html.light .chat-surface .border-\[\#1d344e\] {
+  background-color: #ffffff !important;
+  border-color: #e0e0e0 !important;
+  color: #202124 !important;
+}
+
+html.light .chat-surface .bg-\[\#101827\] div,
+html.light .chat-surface .bg-\[\#101827\] p,
+html.light .chat-surface .bg-\[\#101827\] span {
+  color: #202124 !important;
+}
+
+/* Message Bubble - Mine */
+html.light .chat-surface .bg-sky-400\/20,
+html.light .chat-surface .border-sky-300\/35,
+html.light .chat-surface .border-sky-300\/30 {
+  background-color: #1a73e8 !important;
+  border-color: transparent !important;
+  color: #ffffff !important;
+}
+
+html.light .chat-surface .bg-sky-400\/20 div,
+html.light .chat-surface .bg-sky-400\/20 p,
+html.light .chat-surface .bg-sky-400\/20 span {
+  color: #ffffff !important;
+}
+
+/* Message Form & Text Input bottom */
+html.light .chat-surface #messageForm,
+html.light .chat-surface #groupMessageForm {
+  background-color: #ffffff !important;
+  border: 1px solid #e0e0e0 !important;
+  box-shadow: 0 1px 3px rgba(60, 64, 67, 0.08) !important;
+}
+
+html.light .chat-surface #messageInput,
+html.light .chat-surface #groupMessageInput {
+  background-color: #f1f3f4 !important;
+  border: 1px solid #dadce0 !important;
+  color: #202124 !important;
+}
+
+html.light .chat-surface #messageInput:focus,
+html.light .chat-surface #groupMessageInput:focus {
+  background-color: #ffffff !important;
+  border-color: #1a73e8 !important;
+}
+
+html.light .chat-surface #emojiPicker,
+html.light .chat-surface #groupSearchResults {
+  background-color: #ffffff !important;
+  border: 1px solid #e0e0e0 !important;
+}
+
+html.light .chat-surface #emojiPicker button:hover {
+  background-color: #f1f3f4 !important;
+}
+
+/* Typing Indicator bar */
+html.light .chat-surface #typingIndicator div,
+html.light .chat-surface #groupTypingIndicator div {
+  background-color: #ffffff !important;
+  border-color: #e0e0e0 !important;
+  color: #5f6368 !important;
+}
+
+html.light .chat-surface .typing-dot {
+  background-color: #1a73e8 !important;
+}
+
+/* Delete Message Modal */
+html.light #deleteGroupMessageModal .bg-\[\#0d1423\] {
+  background-color: #ffffff !important;
+  border: 1px solid #e0e0e0 !important;
+}
+
+html.light #deleteGroupMessageModal h3 {
+  color: #202124 !important;
+}
+
+html.light #deleteGroupMessageModal button {
+  background-color: #ffffff !important;
+  border: 1px solid #dadce0 !important;
+}
+
+html.light #deleteGroupMessageModal button:hover {
+  background-color: #f1f3f4 !important;
+}
+
+html.light #deleteGroupMessageModal button div {
+  color: #202124 !important;
+}
+
+html.light #deleteGroupMessageModal button .text-slate-400 {
+  color: #5f6368 !important;
+}
+
+/* Mute states toast */
+html.light #muteToast {
+  background-color: #ffffff !important;
+  border: 1px solid #e0e0e0 !important;
+  color: #202124 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* 5. Personal Profile background fix */
+html.light main .profile-container,
+html.light main section.profile-section {
+  background-color: #ffffff !important;
+}
+
+/* Keep vivid Facebook-like colors for standard status/action icons */
+html.light .text-blue-500, html.light .text-sky-500 { color: #1a73e8 !important; }
+html.light .text-red-500 { color: #f02849 !important; }
+html.light .text-yellow-500 { color: #f5c33b !important; }
+html.light .text-emerald-500, html.light .text-green-500 { color: #45bd62 !important; }
+html.light .text-purple-500 { color: #8a3ab9 !important; }
+html.light .text-pink-500 { color: #e1306c !important; }
+
+/* ==========================================================================
+   NEW SPECIFIC LIGHT MODE FIXES FOR PROFILE PAGE (FACEBOOK STYLE)
+   ========================================================================== */
+
+/* Facebook-style Light Profile Cover Page */
+html.light .profile-avatar-container {
+  border-color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(60, 64, 67, 0.15) !important;
+}
+
+/* Sticky top menu layout on Profile Page */
+html.light .sticky.top-16 {
+  background-color: rgba(255, 255, 255, 0.85) !important;
+  border-color: #e0e0e0 !important;
+}
+
+html.light .tab-btn {
+  color: #5f6368 !important;
+}
+
+html.light .tab-btn.text-sky-300 {
+  color: #1a73e8 !important;
+  border-bottom-color: #1a73e8 !important;
+}
+
+/* Lock Panel for Private user */
+html.light .glass-panel.bg-slate-900\/40 {
+  background-color: #ffffff !important;
+  border-color: #e0e0e0 !important;
+}
+
+/* Background list image panels */
+html.light .chat-surface section label,
+html.light .chat-surface section input,
+html.light .bg-slate-900\/50,
+html.light .bg-slate-950\/40,
+html.light .bg-white\/\[0\.02\],
+html.light .bg-white\/5 {
+  background-color: #f1f3f4 !important;
+  color: #202124 !important;
+  border-color: #dadce0 !important;
+}
+
+html.light .bg-white\/5 p,
+html.light .bg-white\/5 span {
+  color: #3c4043 !important;
+}
+
+html.light .bg-white\/5 .text-white {
+  color: #202124 !important;
+}
+
+/* Media placeholder area */
+html.light .aspect-square.bg-slate-800,
+html.light .aspect-square.bg-slate-900 {
+  background-color: #f1f3f4 !important;
+  border-color: #e0e0e0 !important;
+}
+
+/* Block user confirmation modal light mode */
+html.light #block-user-modal .bg-\[\#0b0f19\] {
+  background-color: #ffffff !important;
+  border-color: #e0e0e0 !important;
+}
+
+html.light #block-user-modal h3 {
+  color: #202124 !important;
+}
+
+html.light #block-user-modal .text-slate-400 {
+  color: #5f6368 !important;
+}
+
+html.light #block-user-modal button.bg-white\/5 {
+  background-color: #f1f3f4 !important;
+  border-color: #dadce0 !important;
+  color: #3c4043 !important;
+}

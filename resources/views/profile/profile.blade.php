@@ -33,28 +33,24 @@ $profileUrl = route('profile.public', ['username' => $user->ten_dang_nhap]);
         </div>
 
         <div class="relative z-10 -mt-16 flex flex-col items-start px-6 sm:-mt-24">
-            <div class="flex w-full items-end justify-between">
+            <div class="flex w-full items-end justify-between flex-wrap gap-4">
                 <div class="group relative">
-                    <div class="glass-panel-elevated h-32 w-32 overflow-hidden rounded-full border-4 border-background sm:h-44 sm:w-44">
+                    <div class="profile-avatar-container h-32 w-32 overflow-hidden rounded-full border-[3px] border-[#0a0e1a] sm:h-44 sm:w-44 shadow-lg z-20">
                         <img
                             class="h-full w-full object-cover"
                             alt="{{ $user->name }}"
                             src="{{ $user->avatar_url }}" />
                     </div>
-                    <!-- @if($isOwnProfile)
-                    <div class="absolute bottom-2 right-2 hidden cursor-pointer rounded-full bg-sky-400 p-2 text-on-primary shadow-lg transition-transform hover:scale-110 group-hover:block">
-                        <span class="material-symbols-outlined text-base" data-icon="photo_camera">photo_camera</span>
-                    </div>
-                    @endif -->
                 </div>
 
-                <div class="mb-2 flex gap-3">
+                <div class="mb-2 flex items-center gap-2 sm:gap-3 flex-wrap">
                     @if($isOwnProfile)
-                    <a href="{{ route('profile.edit') }}" class="inline-flex items-center rounded-xl border border-sky-400/20 glass-panel px-6 py-2 font-semibold text-on-surface transition-all hover:bg-white/10 active:scale-95">
+                    <a href="{{ route('profile.edit') }}" class="inline-flex items-center justify-center rounded-xl bg-gray-200 dark:bg-slate-800 hover:bg-gray-300 dark:hover:bg-slate-700 px-4 py-2 text-sm font-bold text-gray-800 dark:text-slate-200 transition-all active:scale-95 shadow-sm">
+                        <span class="material-symbols-outlined text-[18px] mr-1.5">edit</span>
                         Chỉnh sửa hồ sơ
                     </a>
                     @elseif(auth()->check())
-                    <button id="follow-btn" data-user-id="{{ $user->id }}" class="rounded-xl border {{ $isMutual ? 'border-emerald-500/20 text-emerald-400' : ($isFollowing ? 'border-sky-400/20 text-slate-300' : 'border-sky-400/20 text-sky-300') }} glass-panel px-6 py-2 font-semibold transition-all hover:bg-white/10 flex items-center justify-center gap-1.5 shadow-lg">
+                    <button id="follow-btn" data-user-id="{{ $user->id }}" class="inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-bold transition-all active:scale-95 gap-1.5 shadow-sm {{ $isMutual ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : ($isFollowing ? 'bg-gray-200 dark:bg-slate-800 hover:bg-gray-300 dark:hover:bg-slate-700 text-gray-800 dark:text-slate-200' : 'bg-blue-600 hover:bg-blue-700 text-white') }}">
                         @if($isPendingFollower)
                             Chờ chấp nhận
                         @elseif($isMutual)
@@ -66,22 +62,22 @@ $profileUrl = route('profile.public', ['username' => $user->ten_dang_nhap]);
                             Theo dõi
                         @endif
                     </button>
-                    <button type="button" onclick="openBlockModal('{{ $user->id }}', '{{ $user->name }}')" class="rounded-xl border border-red-500/20 glass-panel px-6 py-2 font-semibold text-red-400 transition-all hover:bg-red-500/10 active:scale-95 flex items-center gap-1.5 shadow-lg shadow-red-500/5">
+                    <button type="button" onclick="openBlockModal('{{ $user->id }}', '{{ $user->name }}')" class="inline-flex items-center justify-center rounded-xl bg-gray-200 dark:bg-slate-800 hover:bg-gray-300 dark:hover:bg-slate-700 px-4 py-2 text-sm font-bold text-red-600 dark:text-red-400 transition-all active:scale-95 gap-1.5 shadow-sm">
                         <span class="material-symbols-outlined text-[18px]">block</span>
                         Chặn
                     </button>
                     @else
-                    <a href="{{ route('login') }}" class="inline-flex items-center rounded-xl border border-sky-400/20 glass-panel px-6 py-2 font-semibold text-sky-300 transition-all hover:bg-white/10">
+                    <a href="{{ route('login') }}" class="inline-flex items-center justify-center rounded-xl bg-blue-600 hover:bg-blue-700 px-4 py-2 text-sm font-bold text-white transition-all">
                         Đăng nhập để theo dõi
                     </a>
                     @endif
 
                     <button
                         type="button"
-                        class="rounded-xl border border-sky-400/20 glass-panel p-2 text-on-surface transition-all hover:bg-white/10"
+                        class="inline-flex items-center justify-center rounded-xl bg-gray-200 dark:bg-slate-800 hover:bg-gray-300 dark:hover:bg-slate-700 p-2 text-gray-800 dark:text-slate-200 transition-all active:scale-95 shadow-sm"
                         onclick="navigator.clipboard.writeText('{{ $profileUrl }}'); if(typeof window.showToast === 'function') { window.showToast('Đã sao chép liên kết hồ sơ!', 'success'); }"
                         title="Sao chép liên kết hồ sơ">
-                        <span class="material-symbols-outlined" data-icon="share">share</span>
+                        <span class="material-symbols-outlined text-[18px]" data-icon="share">share</span>
                     </button>
                 </div>
             </div>
