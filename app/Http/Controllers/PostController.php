@@ -33,12 +33,144 @@ class PostController extends Controller
 
     public function explore(Request $request)
     {
-        $media = MediaBaiViet::with('baiViet.user')
-            ->whereHas('baiViet', function($query) {
-                $query->where('da_xoa', false);
-            })
-            ->latest('ngay_tao')
-            ->paginate(24);
+        $type = $request->input('type', 'all');
+        $time = $request->input('time', 'all');
+        $sort = $request->input('sort', 'latest');
+        $keyword = trim($request->input('search', ''));
+
+        // Start base query on BaiViet model
+        $query = BaiViet::with(['user', 'media', 'originalPost.user', 'originalPost.media', 'poll.options.votes', 'poll.votes'])
+            ->withCount(['reactions', 'comments', 'shares'])
+            ->with(['reactions' => function ($q) {
+                $q->where('nguoi_dung_id', auth()->id());
+            }, 'comments' => function ($q) {
+                $q->whereNull('binh_luan_cha_id')->with(['user', 'nestedChildren'])->latest('ngay_tao');
+            }, 'bookmarks' => function ($q) {
+                $q->where('nguoi_dung_id', auth()->id());
+            }])
+            ->where('da_xoa', false);
+
+        // Apply filters based on search keyword
+        if ($keyword) {
+            if ($type === 'hashtag') {
+                $cleanKeyword = ltrim($keyword, '#');
+                $query->whereHas('hashtags', function($q) use ($cleanKeyword) {
+                    $q->where('ten', 'LIKE', "%{$cleanKeyword}%");
+                });
+            } elseif ($type === 'post') {
+                if (str_starts_with($keyword, '#')) {
+                    $cleanKeyword = ltrim($keyword, '#');
+                    $query->where(function($q) use ($keyword, $cleanKeyword) {
+                        $q->where('noi_dung', 'LIKE', "%{$keyword}%")
+                          ->orWhereHas('hashtags', function($qh) use ($cleanKeyword) {
+                              $qh->where('ten', 'LIKE', "%{$cleanKeyword}%");
+                          });
+                    });
+                } else {
+                    $query->where('noi_dung', 'LIKE', "%{$keyword}%");
+                }
+            } elseif ($type === 'user') {
+                $query->whereHas('user', function($q) use ($keyword) {
+                    $q->where('ten_dang_nhap', 'LIKE', "%{$keyword}%")
+                      ->orWhere('email', 'LIKE', "%{$keyword}%");
+                });
+            } else { // type === 'all'
+                if (str_starts_with($keyword, '#')) {
+                    $cleanKeyword = ltrim($keyword, '#');
+                    $query->where(function($q) use ($keyword, $cleanKeyword) {
+                        $q->where('noi_dung', 'LIKE', "%{$keyword}%")
+                          ->orWhereHas('hashtags', function($qh) use ($cleanKeyword) {
+                              $qh->where('ten', 'LIKE', "%{$cleanKeyword}%");
+                          });
+                    });
+                } else {
+                    $query->where(function($q) use ($keyword) {
+                        $q->where('noi_dung', 'LIKE', "%{$keyword}%")
+                          ->orWhereHas('hashtags', function($qh) use ($keyword) {
+                              $qh->where('ten', 'LIKE', "%{$keyword}%");
+                          })
+                          ->orWhereHas('user', function($qu) use ($keyword) {
+                              $qu->where('ten_dang_nhap', 'LIKE', "%{$keyword}%")
+                                ->orWhere('email', 'LIKE', "%{$keyword}%");
+                          });
+                    });
+                }
+            }
+        } else {
+            if ($type === 'hashtag') {
+                $query->has('hashtags');
+            }
+        }
+
+        // Apply time filter
+        if ($time === 'today') {
+            $query->where('created_at', '>=', now()->startOfDay());
+        } elseif ($time === 'week') {
+            $query->where('created_at', '>=', now()->subDays(7));
+        }
+
+        // Apply sorting
+        if ($sort === 'popular') {
+            $query->orderByRaw('(reactions_count + comments_count + shares_count) DESC')
+                  ->orderBy('created_at', 'desc');
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
+
+        // Paginate results
+        $posts = $query->paginate(10)->withQueryString();
+
+        // Get popular hashtags
+        $popularHashtags = Hashtag::orderBy('so_bai_viet', 'desc')
+            ->take(10)
+            ->get()
+            ->map(function ($tag) {
+                // Find latest post with this hashtag that has media
+                $latestPostWithMedia = $tag->posts()
+                    ->where('da_xoa', false)
+                    ->whereHas('media')
+                    ->latest()
+                    ->first();
+
+                // If no media, find any latest post
+                if (!$latestPostWithMedia) {
+                    $latestPost = $tag->posts()
+                        ->where('da_xoa', false)
+                        ->latest()
+                        ->first();
+                } else {
+                    $latestPost = $latestPostWithMedia;
+                }
+
+                $thumbnail = null;
+                if ($latestPostWithMedia && $latestPostWithMedia->media->isNotEmpty()) {
+                    $thumbnail = asset('storage/' . $latestPostWithMedia->media->first()->duong_dan);
+                } elseif ($latestPost && $latestPost->user) {
+                    $thumbnail = $latestPost->user->anh_dai_dien 
+                        ? asset('storage/' . $latestPost->user->anh_dai_dien) 
+                        : asset('storage/avatars/avtmacdinh.png');
+                } else {
+                    $thumbnail = asset('storage/avatars/avtmacdinh.png');
+                }
+
+                return [
+                    'ten' => $tag->ten,
+                    'so_bai_viet' => $tag->so_bai_viet,
+                    'thumbnail' => $thumbnail,
+                ];
+            });
+
+        // Get matched users if type is user
+        $matchedUsers = collect();
+        if ($keyword && $type === 'user') {
+            $matchedUsers = \App\Models\User::where('con_hoat_dong', true)
+                ->where(function($q) use ($keyword) {
+                    $q->where('ten_dang_nhap', 'LIKE', "%{$keyword}%")
+                      ->orWhere('email', 'LIKE', "%{$keyword}%");
+                })
+                ->limit(10)
+                ->get();
+        }
 
         return view('explore', [
             'posts' => $posts,
@@ -48,8 +180,8 @@ class PostController extends Controller
             'type' => $type,
             'time' => $time,
             'sort' => $sort,
-            'title' => __('messages.explore_title'),
-            'message' => __('messages.explore_subtitle'),
+            'title' => __('messages.explore_title') ?? 'Khám phá',
+            'message' => __('messages.explore_subtitle') ?? 'Tìm kiếm bài viết, hashtag hoặc người dùng',
         ]);
     }
 
@@ -150,6 +282,9 @@ class PostController extends Controller
             'kinh_do' => $validated['kinh_do'] ?? null,
             'quyen_rieng_tu' => 'cong_khai',
         ]);
+
+        // Sync hashtags
+        $this->syncHashtags($post);
 
         if ($isPoll) {
             $poll = \App\Models\BinhChon::create([
@@ -364,5 +499,42 @@ class PostController extends Controller
             'total_votes' => $totalVotes,
             'user_voted_option_id' => $option->id,
         ]);
+    }
+
+    protected function syncHashtags(BaiViet $post)
+    {
+        $content = $post->noi_dung ?? '';
+        preg_match_all('/(?<=^|(?<=[^a-zA-Z0-9_\.]))#([\p{L}\p{N}_]+)/u', $content, $matches);
+        
+        $tags = [];
+        if (!empty($matches[1])) {
+            $tags = array_unique(array_map('mb_strtolower', $matches[1]));
+        }
+
+        $tagIds = [];
+        foreach ($tags as $tagName) {
+            $hashtag = Hashtag::firstOrCreate(
+                ['ten' => $tagName],
+                ['so_bai_viet' => 0]
+            );
+            $tagIds[] = $hashtag->id;
+        }
+
+        $changes = $post->hashtags()->sync($tagIds);
+
+        // Update counts for attached/detached/updated hashtags
+        $allAffectedIds = array_unique(array_merge($changes['attached'], $changes['detached'], $changes['updated']));
+        foreach ($allAffectedIds as $id) {
+            $tag = Hashtag::find($id);
+            if ($tag) {
+                $count = $tag->posts()->count();
+                if ($count === 0) {
+                    $tag->delete();
+                } else {
+                    $tag->so_bai_viet = $count;
+                    $tag->save();
+                }
+            }
+        }
     }
 }
