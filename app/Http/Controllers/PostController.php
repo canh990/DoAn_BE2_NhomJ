@@ -458,16 +458,17 @@ class PostController extends Controller
         return back()->with('success', 'Bài viết đã được xóa thành công.');
     }
 
+    // CHIA SẺ BÀI VIẾT: Nhân bản bài viết thành bài viết mới có loại 'chia_se', liên kết tới bài viết gốc
     public function share(Request $request, BaiViet $post)
     {
-        // Xác định bài viết gốc thực sự (nếu bài hiện tại là bài chia sẻ)
+        // XÁC ĐỊNH BÀI VIẾT GỐC THẬT SỰ: Tránh chia sẻ lồng nhau nhiều cấp (A chia sẻ B, B chia sẻ C) gây lỗi đệ quy hiển thị
         $originalPost = $post->loai === 'chia_se' && $post->bai_goc_id ? BaiViet::find($post->bai_goc_id) : $post;
 
         if (!$originalPost || $originalPost->da_xoa) {
             return response()->json(['success' => false, 'message' => 'Bài viết gốc không còn tồn tại.'], 404);
         }
 
-        // Kiểm tra xem người dùng đã chia sẻ bài viết này chưa
+        // CHẶN CHIA SẺ TRÙNG LẶP: Đảm bảo một người dùng chỉ chia sẻ một bài viết gốc tối đa 1 lần
         $alreadyShared = BaiViet::where('bai_goc_id', $originalPost->id)
             ->where('nguoi_dung_id', auth()->id())
             ->exists();
@@ -476,7 +477,7 @@ class PostController extends Controller
             return response()->json(['success' => false, 'message' => 'Bạn đã chia sẻ bài viết này rồi.'], 400);
         }
 
-        // Tạo bài viết mới với loại là chia_se
+        // Tạo bài viết mới dạng chia sẻ
         $sharedPost = BaiViet::create([
             'nguoi_dung_id' => auth()->id(),
             'loai' => 'chia_se',
@@ -485,7 +486,7 @@ class PostController extends Controller
             'quyen_rieng_tu' => 'ban_be',
         ]);
 
-        // Tạo thông báo cho chủ bài viết gốc
+        // TẠO THÔNG BÁO CHO CHỦ BÀI VIẾT GỐC
         if ($originalPost->nguoi_dung_id !== auth()->id()) {
             \App\Models\ThongBao::create([
                 'nguoi_dung_id' => $originalPost->nguoi_dung_id,
@@ -496,7 +497,7 @@ class PostController extends Controller
             ]);
         }
         
-        // Tạo thông báo cho người mà mình chia sẻ bài của họ (nếu bài hiện tại là bài chia sẻ)
+        // TẠO THÔNG BÁO CHO CHỦ BÀI TRUNG GIAN (nếu người dùng chia sẻ từ bài chia sẻ của người khác)
         if ($post->id !== $originalPost->id && $post->nguoi_dung_id !== auth()->id() && $post->nguoi_dung_id !== $originalPost->nguoi_dung_id) {
             \App\Models\ThongBao::create([
                 'nguoi_dung_id' => $post->nguoi_dung_id,
@@ -509,7 +510,7 @@ class PostController extends Controller
 
         $sharesCount = BaiViet::where('bai_goc_id', $originalPost->id)->count();
 
-        // Render the new post HTML
+        // Trả về HTML render sẵn của thẻ post-card mới để chèn thẳng vào DOM realtime
         $html = view('components.post-card', ['post' => $sharedPost->load(['user', 'media', 'originalPost.user', 'originalPost.media'])])->render();
 
         return response()->json([
@@ -605,5 +606,41 @@ class PostController extends Controller
                 }
             }
         }
+    }
+
+    // GHIM/BỎ GHIM BÀI VIẾT: Tách biệt logic pin bài viết lên trang cá nhân
+    public function togglePin(BaiViet $post)
+    {
+        // KIỂM TRA QUYỀN SỞ HỮU: Chỉ cho phép ghim bài viết của chính mình (chủ tài khoản đăng bài)
+        if ($post->nguoi_dung_id !== auth()->id()) {
+            return response()->json([
+                'success' => false,
+                'message' => app()->getLocale() === 'en' ? 'You do not have permission to perform this action.' : 'Bạn không có quyền thực hiện hành động này.'
+            ], 403);
+        }
+
+        // Nếu bài viết đã ghim thì tiến hành bỏ ghim
+        if ($post->da_ghim) {
+            $post->update(['da_ghim' => false]);
+            return response()->json([
+                'success' => true,
+                'message' => app()->getLocale() === 'en' ? 'Post unpinned successfully.' : 'Đã bỏ ghim bài viết thành công.',
+                'da_ghim' => false
+            ]);
+        }
+
+        // GIỚI HẠN TỐI ĐA 1 BÀI GHIM: Bỏ ghim toàn bộ các bài viết cũ đã ghim trước đó của cùng một người dùng
+        BaiViet::where('nguoi_dung_id', auth()->id())
+            ->where('da_ghim', true)
+            ->update(['da_ghim' => false]);
+
+        // Ghim bài viết mới
+        $post->update(['da_ghim' => true]);
+
+        return response()->json([
+            'success' => true,
+            'message' => app()->getLocale() === 'en' ? 'Post pinned successfully.' : 'Đã ghim bài viết thành công.',
+            'da_ghim' => true
+        ]);
     }
 }

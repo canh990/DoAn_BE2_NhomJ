@@ -284,6 +284,7 @@
             const commentCancel = event.target.closest('[data-comment-cancel]');
             const shareButton = event.target.closest('[data-share-button]');
             const bookmarkButton = event.target.closest('[data-bookmark-button]');
+            const pinButton = event.target.closest('.btn-toggle-pin');
             const pollOptionBtn = event.target.closest('.poll-option-btn');
             const readMoreToggleBtn = event.target.closest('[data-read-more-toggle]');
             const reactionAreas = document.querySelectorAll('[data-reaction-area]');
@@ -418,26 +419,23 @@
                         if (typeof window.showToast === 'function') {
                             window.showToast(error.message || 'Có lỗi xảy ra khi bình chọn.', 'error');
                         } else {
-                            alert(error.message || 'Có lỗi xảy ra khi bình chọn.');
-                        }
-                    });
-
-                return;
-            }
-
+                            alert(error.message || 'Có lỗi xảy ra khi bình c            // ==========================================
+            // CHỨC NĂNG BOOKMARK: Lưu/Bỏ lưu bài viết
+            // ==========================================
             if (bookmarkButton) {
                 event.preventDefault();
                 const postId = bookmarkButton.dataset.postId;
                 const icon = bookmarkButton.querySelector('[data-bookmark-icon]');
                 const text = bookmarkButton.querySelector('[data-bookmark-text]');
                 
-                // Đóng reaction picker của bài viết này nếu đang mở
+                // Đóng reaction picker của bài viết này nếu đang mở để tránh giao diện bị đè chồng
                 const area = bookmarkButton.closest('[data-reaction-area]');
                 const picker = area?.querySelector('[data-reaction-picker]');
                 if (picker) {
                     picker.classList.add('hidden');
                 }
                 
+                // Gửi request toggle bookmark bài viết qua AJAX
                 fetch(`/posts/${postId}/bookmark`, {
                     method: 'POST',
                     headers: {
@@ -447,6 +445,7 @@
                     }
                 })
                 .then(response => {
+                    // Check lỗi phân quyền (chưa đăng nhập)
                     if (response.status === 401) {
                         if (typeof window.showToast === 'function') {
                             window.showToast('Vui lòng đăng nhập để thực hiện chức năng này.', 'error');
@@ -459,6 +458,7 @@
                 })
                 .then(data => {
                     if (data.success) {
+                        // Cập nhật trạng thái icon và text trên giao diện realtime
                         const isBookmarked = data.is_bookmarked;
                         if (isBookmarked) {
                             icon.classList.add('text-yellow-400');
@@ -470,6 +470,7 @@
                             if (text) text.textContent = 'Lưu';
                         }
                         
+                        // Nếu đang ở trang danh sách Bookmark mà bấm bỏ lưu, ẩn bài viết đó đi bằng hiệu ứng mượt
                         if (window.location.pathname === '/bookmarks' && !isBookmarked) {
                             const postCard = bookmarkButton.closest('article');
                             if (postCard) {
@@ -506,6 +507,142 @@
                 return;
             }
 
+            // CHỨC NĂNG PIN BÀI VIẾT: Ghim/Bỏ ghim bài đăng
+            if (pinButton) {
+                event.preventDefault();
+                const postId = pinButton.dataset.postId;
+                const isPinned = pinButton.dataset.pinned === '1';
+
+                // Đóng dropdown menu tùy chọn bài viết
+                const dropdownMenu = pinButton.closest('.post-dropdown-menu');
+                if (dropdownMenu) {
+                    dropdownMenu.classList.add('hidden');
+                }
+
+                // Dùng localization fallback dạng inline để tránh sửa file messages.php
+                const pinnedText = "{{ app()->getLocale() === 'en' ? 'Pinned post' : 'Bài viết đã ghim' }}";
+                const pinLabel = "{{ app()->getLocale() === 'en' ? 'Pin post' : 'Ghim bài viết' }}";
+                const unpinLabel = "{{ app()->getLocale() === 'en' ? 'Unpin post' : 'Bỏ ghim bài viết' }}";
+
+                // Gửi request ghim/bỏ ghim bài viết qua AJAX
+                fetch(`/posts/${postId}/pin`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                    }
+                })
+                .then(response => {
+                    // Check lỗi phân quyền (chưa đăng nhập hoặc không phải chủ bài viết)
+                    if (response.status === 401) {
+                        if (typeof window.showToast === 'function') {
+                            window.showToast('Vui lòng đăng nhập để thực hiện.', 'error');
+                        }
+                        throw new Error('Unauthorized');
+                    }
+                    if (response.status === 403) {
+                        return response.json().then(data => {
+                            if (typeof window.showToast === 'function') {
+                                window.showToast(data.message || 'Bạn không có quyền thực hiện.', 'error');
+                            }
+                            throw new Error('Forbidden');
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        const nowPinned = data.da_ghim;
+
+                        if (nowPinned) {
+                            // Find and unpin any other pinned posts in frontend
+                            document.querySelectorAll('.btn-toggle-pin[data-pinned="1"]').forEach(btn => {
+                                if (btn.dataset.postId !== postId) {
+                                    btn.dataset.pinned = '0';
+                                    const otherIcon = btn.querySelector('.pin-icon');
+                                    if (otherIcon) {
+                                        otherIcon.textContent = 'push_pin';
+                                        otherIcon.style.fontVariationSettings = "'FILL' 0";
+                                    }
+                                    const otherText = btn.querySelector('.pin-text');
+                                    if (otherText) otherText.textContent = pinLabel;
+                                    
+                                    const otherCard = btn.closest('article');
+                                    if (otherCard) {
+                                        const indicator = otherCard.querySelector('.pinned-indicator-container');
+                                        if (indicator) indicator.innerHTML = '';
+                                    }
+                                }
+                            });
+                        }
+
+                        // Update current button
+                        pinButton.dataset.pinned = nowPinned ? '1' : '0';
+                        const icon = pinButton.querySelector('.pin-icon');
+                        if (icon) {
+                            icon.textContent = 'push_pin';
+                            icon.style.fontVariationSettings = nowPinned ? "'FILL' 1" : "'FILL' 0";
+                        }
+                        const text = pinButton.querySelector('.pin-text');
+                        if (text) text.textContent = nowPinned ? unpinLabel : pinLabel;
+
+                        // Update current post card indicator
+                        const postCard = pinButton.closest('article');
+                        if (postCard) {
+                            const indicatorContainer = postCard.querySelector('.pinned-indicator-container');
+                            if (indicatorContainer) {
+                                if (nowPinned) {
+                                    indicatorContainer.innerHTML = `
+                                        <div class="pinned-indicator flex items-center gap-1 text-xs font-bold text-sky-300 mb-1 select-none">
+                                            <span class="mr-0.5">📌</span>
+                                            <span>${pinnedText}</span>
+                                        </div>
+                                    `;
+                                } else {
+                                    indicatorContainer.innerHTML = '';
+                                }
+                            }
+
+                            // Prepend post card if in profile tab feed
+                            const container = document.getElementById('post-list-container');
+                            if (container && nowPinned) {
+                                // Add smooth fade transition
+                                postCard.style.transition = 'opacity 0.25s ease';
+                                postCard.style.opacity = '0.3';
+                                setTimeout(() => {
+                                    container.prepend(postCard);
+                                    postCard.style.opacity = '1';
+                                    // Smooth scroll to top of feed
+                                    const feedTop = container.getBoundingClientRect().top + window.scrollY - 100;
+                                    window.scrollTo({ top: feedTop, behavior: 'smooth' });
+                                }, 250);
+                            }
+                        }
+
+                        if (typeof window.showToast === 'function') {
+                            window.showToast(data.message, 'success');
+                        }
+                    } else {
+                        if (typeof window.showToast === 'function') {
+                            window.showToast(data.message || 'Có lỗi xảy ra', 'error');
+                        }
+                    }
+                })
+                .catch(error => {
+                    if (error.message !== 'Unauthorized' && error.message !== 'Forbidden') {
+                        console.error('Lỗi khi ghim bài viết:', error);
+                        if (typeof window.showToast === 'function') {
+                            window.showToast('Không thể kết nối máy chủ.', 'error');
+                        }
+                    }
+                });
+                return;
+            }
+
+            // ==========================================
+            // HỦY TRẢ LỜI: Hủy phản hồi và đưa ô input về trạng thái viết bình luận mới
+            // ==========================================
             if (commentCancel) {
                 event.preventDefault();
                 const area = commentCancel.closest('[data-reaction-area]');
@@ -518,11 +655,15 @@
                 return;
             }
 
+            // ==========================================
+            // TRẢ LỜI BÌNH LUẬN: Kích hoạt chế độ trả lời bình luận cha
+            // ==========================================
             if (commentReplyButton) {
                 event.preventDefault();
                 const area = commentReplyButton.closest('[data-reaction-area]');
                 const form = area?.querySelector('.comment-submit-form');
                 if (form) {
+                    // Gán ID bình luận cha vào input ẩn để gửi lên server đúng luồng trả lời
                     form.querySelector('input[name="binh_luan_cha_id"]').value = commentReplyButton.dataset.commentId;
                     form.querySelector('textarea[name="noi_dung"]').focus();
                     form.querySelector('[data-comment-action]').textContent = `Trả lời ${commentReplyButton.dataset.commentUser}`;
@@ -534,6 +675,9 @@
                 return;
             }
 
+            // ==========================================
+            // ĐÓNG/MỞ HỘP THOẠI BÌNH LUẬN: Toggle hiển thị danh sách và ô nhập bình luận
+            // ==========================================
             if (commentToggle) {
                 event.stopPropagation();
                 const area = commentToggle.closest('[data-reaction-area]');
@@ -544,6 +688,9 @@
                 return;
             }
 
+            // ==========================================
+            // THẢ CẢM XÚC (LIKE/REACTION): Gửi AJAX cảm xúc đã chọn
+            // ==========================================
             if (reactionOption) {
                 event.stopPropagation();
                 const reaction = reactionOption.dataset.reaction;
@@ -559,6 +706,7 @@
                 body.append('_token', token);
                 body.append('loai_cam_xuc', reaction);
 
+                // Gửi request cập nhật cảm xúc qua AJAX
                 fetch(action, {
                     method: 'POST',
                     headers: {
@@ -575,6 +723,7 @@
                             return;
                         }
 
+                        // Cập nhật biểu tượng và màu sắc của nút cảm xúc tương ứng realtime
                         const triggerIcon = area.querySelector('[data-reaction-trigger-icon]');
                         const triggerLabel = area.querySelector('[data-reaction-trigger-label]');
                         const triggerBtn = area.querySelector('[data-reaction-trigger]');
@@ -645,6 +794,7 @@
             });
         });
 
+        // LẮNG NGHE SỰ KIỆN SUBMIT BÌNH LUẬN: Gửi bình luận qua AJAX và cập nhật giao diện realtime không cần tải lại trang
         document.addEventListener('submit', function (event) {
             const commentForm = event.target.closest('.comment-submit-form');
             if (!commentForm) {
@@ -653,8 +803,10 @@
 
             event.preventDefault();
             const action = commentForm.action;
+            // Sử dụng FormData để thu thập toàn bộ dữ liệu gồm text nội dung và các tệp tin media (ảnh, video) đính kèm
             const body = new FormData(commentForm);
             console.log('Submitting comment content:', commentForm.querySelector('textarea[name="noi_dung"]').value);
+            
             fetch(action, {
                 method: 'POST',
                 headers: {
@@ -667,7 +819,7 @@
                     return response.json();
                 })
                 .then(function (data) {
-                    // Nếu Laravel trả về lỗi validation (422)
+                    // XỬ LÝ LỖI VALIDATION (422) HOẶC LỖI TỪ SERVER
                     if (data.errors) {
                         const firstError = Object.values(data.errors)[0][0];
                         if (typeof window.showToast === 'function') {
@@ -687,20 +839,24 @@
                         return;
                     }
 
+                    // CẬP NHẬT GIAO DIỆN SAU KHI ĐĂNG THÀNH CÔNG
                     const area = commentForm.closest('[data-reaction-area]');
                     const countNode = area?.querySelector('[data-comment-count]');
                     const box = commentForm.closest('[data-comment-box]');
                     const textarea = commentForm.querySelector('textarea[name="noi_dung"]');
 
+                    // Cập nhật số lượng bình luận hiển thị trên bài viết
                     if (countNode) {
                         countNode.textContent = '(' + data.comments_count + ')';
                     }
 
+                    // Reset ô nhập liệu văn bản và trigger event 'input' để đồng bộ hóa highlighter nhắc tên (@)
                     if (textarea) {
                         textarea.value = '';
                         textarea.dispatchEvent(new Event('input', { bubbles: true }));
                     }
 
+                    // Reset input media và vùng hiển thị preview ảnh/video đính kèm
                     const mediaInput = commentForm.querySelector('.comment-media-input');
                     const mediaPreview = commentForm.querySelector('.comment-media-preview');
                     if (mediaInput) {
@@ -712,6 +868,7 @@
                         mediaPreview.classList.add('hidden');
                     }
 
+                    // DỰNG DOM BÌNH LUẬN MỚI REALTIME
                     if (box) {
                         const noComments = box.querySelector('[data-no-comments]');
                         const list = box.querySelector('[data-comment-list]');
@@ -722,10 +879,12 @@
 
                         const parentId = data.comment.parent_id;
                         
+                        // Tạo khối bao quanh luồng (thread) bình luận
                         const newThread = document.createElement('div');
                         newThread.className = 'comment-thread w-full';
                         newThread.dataset.commentId = data.comment.id;
 
+                        // Tạo khối chứa nội dung bình luận
                         const newComment = document.createElement('div');
                         newComment.className = 'rounded-2xl border border-white/10 bg-slate-950 p-3';
                         newComment.innerHTML = `
@@ -737,6 +896,8 @@
                                         <span class="text-xs text-slate-500">${data.comment.created_at}</span>
                                     </div>
                                     <p class="mt-1 text-sm leading-relaxed text-slate-300">${data.comment.content}</p>
+                                    
+                                    <!-- Render Media đính kèm nếu có -->
                                     ${data.comment.media && data.comment.media.length > 0 ? `
                                     <div class="mt-2 grid gap-2 ${data.comment.media.length == 1 ? 'grid-cols-1' : (data.comment.media.length == 2 ? 'grid-cols-2' : 'grid-cols-2 sm:grid-cols-3')} max-w-sm">
                                         ${data.comment.media.map(m => `
@@ -753,6 +914,7 @@
                             </div>
                         `;
 
+                        // Nút phản hồi (Trả lời) bình luận này
                         const replyButton = document.createElement('button');
                         replyButton.type = 'button';
                         replyButton.dataset.commentReplyButton = '';
@@ -803,19 +965,20 @@
                         newComment.querySelector('.flex-1').appendChild(replyWrapper);
                         newThread.appendChild(newComment);
 
+                        // Tạo container chứa các bình luận con (replies)
                         const replyContainer = document.createElement('div');
                         replyContainer.className = 'mt-2 space-y-2 pl-6 sm:pl-12 relative';
                         replyContainer.dataset.commentReplies = '';
                         newThread.appendChild(replyContainer);
 
+                        // XÁC ĐỊNH VỊ TRÍ CHÈN BÌNH LUẬN TRÊN CÂY GIAO DIỆN
                         if (parentId) {
-                            // Find the parent's reply container which is a direct sibling of the parent's comment block
-                            // actually it's list.querySelector('[data-comment-id="..."] > [data-comment-replies]')
-                            // but since [data-comment-replies] is unique inside the thread wrapper, we can just use descendant selector:
+                            // Nếu là bình luận con: Tìm container phản hồi của bình luận cha để chèn vào
                             const parentReplies = list.querySelector('[data-comment-id="' + parentId + '"] [data-comment-replies]');
                             if (parentReplies) {
                                 let verticalLine = parentReplies.querySelector('.absolute.bg-white\\/10');
                                 if (!verticalLine) {
+                                    // Tạo đường kẻ dọc kết nối các bình luận phản hồi cho trực quan
                                     verticalLine = document.createElement('div');
                                     verticalLine.className = 'absolute left-[15px] sm:left-[27px] top-0 bottom-0 w-px bg-white/10';
                                     parentReplies.insertBefore(verticalLine, parentReplies.firstChild);
@@ -830,6 +993,7 @@
                                 else list.appendChild(newThread);
                             }
                         } else {
+                            // Nếu là bình luận gốc (cha cấp cao nhất): Chèn lên đầu danh sách bình luận bài viết
                             if (list.firstChild && list.firstChild.dataset && list.firstChild.dataset.noComments !== undefined) {
                                 list.innerHTML = '';
                                 list.appendChild(newThread);
@@ -839,8 +1003,7 @@
                             }
                         }
                         
-                        // "phải trả lời bình luận liên tiếp nhau": do not reset parentInput, actionLabel, cancelBtn
-                        // so the user can continue replying to the same comment if they want.
+                        // LƯU Ý: Không reset parentInput, actionLabel, cancelBtn để người dùng có thể liên tục phản hồi cùng bình luận đó.
                     }
                 })
                 .catch(function (error) {
@@ -855,19 +1018,20 @@
     </script>
     
     <script>
+        // XỬ LÝ QUẢN LÝ VÀ HIỂN THỊ HÌNH ẢNH/VIDEO ĐÍNH KÈM KHI BÌNH LUẬN (Realtime Preview)
         window.handleCommentMediaSelect = function(input, isUpdate = false) {
             const previewContainer = input.parentElement.querySelector('.comment-media-preview');
             if (!previewContainer) return;
             
-            // Khởi tạo mảng lưu trữ file nếu chưa có
+            // Khởi tạo mảng lưu trữ danh sách tệp đã chọn nếu chưa tồn tại
             if (!input._selectedFiles) {
                 input._selectedFiles = [];
             }
             
-            // Nếu người dùng vừa chọn file mới (không phải gọi từ hàm xoá)
+            // Nếu người dùng vừa thực hiện chọn tệp (không phải gọi lại từ hàm xóa phần tử)
             if (!isUpdate && input.files && input.files.length > 0) {
                 Array.from(input.files).forEach(file => {
-                    // Tránh thêm trùng file (kiểm tra theo tên và dung lượng)
+                    // TRÁNH CHỌN TRÙNG LẶP: So sánh tên và kích thước tệp để không đưa vào 2 lần
                     const exists = input._selectedFiles.some(f => f.name === file.name && f.size === file.size);
                     if (!exists) {
                         input._selectedFiles.push(file);
@@ -875,18 +1039,22 @@
                 });
             }
             
+            // Xóa sạch khung xem trước cũ để vẽ lại toàn bộ danh sách mới
             previewContainer.innerHTML = '';
             
             if (input._selectedFiles.length > 0) {
                 previewContainer.classList.remove('hidden');
                 
+                // Sử dụng đối tượng DataTransfer để đồng bộ tệp vật lý với thẻ input file của HTML form
                 const dt = new DataTransfer();
                 input._selectedFiles.forEach((file, index) => {
                     dt.items.add(file);
                     
+                    // Tạo khối bao quanh thumbnail preview
                     const wrapper = document.createElement('div');
                     wrapper.className = 'relative w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden border border-white/20 shadow-sm group shrink-0 bg-slate-900/50';
                     
+                    // Nút xóa nhanh tệp đã chọn
                     const removeBtn = document.createElement('button');
                     removeBtn.type = 'button';
                     removeBtn.className = 'absolute top-1 right-1 bg-slate-900/80 hover:bg-rose-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-all duration-200 flex items-center justify-center z-10';
@@ -894,16 +1062,20 @@
                     removeBtn.onclick = function(e) {
                         e.preventDefault();
                         wrapper.remove();
+                        // Xóa tệp khỏi mảng lưu trữ tạm
                         input._selectedFiles.splice(index, 1);
+                        // Gọi đệ quy cập nhật lại danh sách preview và input
                         window.handleCommentMediaSelect(input, true);
                     };
                     
+                    // Phân biệt định dạng Video và Hình ảnh để render thẻ HTML cho đúng
                     if (file.type.startsWith('video/')) {
                         const video = document.createElement('video');
                         video.src = URL.createObjectURL(file);
                         video.className = 'w-full h-full object-cover';
                         wrapper.appendChild(video);
                         
+                        // Icon play giả định đè lên thumbnail video
                         const playIcon = document.createElement('div');
                         playIcon.className = 'absolute inset-0 flex items-center justify-center pointer-events-none bg-black/20';
                         playIcon.innerHTML = '<span class="material-symbols-outlined text-white text-2xl drop-shadow-md" style="font-variation-settings: \'FILL\' 1;">play_circle</span>';
@@ -918,8 +1090,10 @@
                     previewContainer.appendChild(wrapper);
                 });
                 
+                // Gán lại danh sách tệp mới đã chuẩn hóa cho thuộc tính files của thẻ input
                 input.files = dt.files;
             } else {
+                // Nếu không còn tệp nào được chọn, ẩn vùng xem trước và làm sạch input file
                 previewContainer.classList.add('hidden');
                 input.files = new DataTransfer().files; // Clear files
             }
@@ -1255,10 +1429,11 @@
             }, 3000);
         };
 
-        // ===== SHARE MODAL LOGIC =====
+        // ===== CHỨC NĂNG CHIA SẺ BÀI VIẾT (SHARE POST MODAL) =====
         let currentShareUrl = null;
         let currentShareButton = null;
 
+        // MỞ MODAL CHIA SẺ: Lưu lại URL chia sẻ và phần tử nút kích hoạt để lát cập nhật số liệu
         window.openShareModal = function(shareUrl, buttonEl) {
             const modal = document.getElementById('share-post-modal');
             const contentInput = document.getElementById('share-post-content');
@@ -1266,10 +1441,10 @@
             
             currentShareUrl = shareUrl;
             currentShareButton = buttonEl;
-            if (contentInput) contentInput.value = '';
+            if (contentInput) contentInput.value = ''; // Reset ô nhập nội dung chia sẻ
 
             modal.classList.remove('hidden');
-            // Allow display block to apply before adding opacity
+            // Đợi hiệu ứng trình duyệt áp dụng hiển thị trước khi chạy hiệu ứng mờ/scale
             requestAnimationFrame(() => {
                 modal.classList.remove('opacity-0');
                 const modalContent = modal.querySelector('.glass-panel');
@@ -1277,6 +1452,7 @@
             });
         };
 
+        // ĐÓNG MODAL CHIA SẺ: Ẩn giao diện modal với hiệu ứng và dọn dẹp biến tạm
         window.closeShareModal = function() {
             const modal = document.getElementById('share-post-modal');
             const modalContent = modal ? modal.querySelector('.glass-panel') : null;
@@ -1292,6 +1468,7 @@
             }, 300);
         };
 
+        // GỬI REQUEST CHIA SẺ: Gọi AJAX lên endpoint chia sẻ của bài viết
         window.submitShare = function() {
             if (!currentShareUrl) return;
             
@@ -1326,7 +1503,8 @@
                 if (data.success) {
                     window.showToast('Chia sẻ thành công', 'success');
                     
-                    // Thêm bài viết mới vào đầu danh sách nếu đang ở trang có danh sách bài viết
+                    // CHÈN BÀI VIẾT MỚI VÀO FEED REALTIME:
+                    // Trích xuất mã HTML nhận được từ response và đẩy thẳng lên đầu danh sách bài viết hiển thị
                     const container = document.getElementById('post-list-container');
                     if (container && data.html) {
                         const temp = document.createElement('div');
@@ -1334,11 +1512,12 @@
                         const newPost = temp.firstElementChild;
                         if (newPost) {
                             container.prepend(newPost);
-                            // Scroll to top
+                            // Cuộn mượt màn hình lên đầu danh sách bài đăng
                             window.scrollTo({ top: 0, behavior: 'smooth' });
                         }
                     }
 
+                    // Cập nhật lại huy hiệu đếm số lượt chia sẻ trên nút bài viết gốc
                     if (currentShareButton) {
                         const shareCountSpan = currentShareButton.querySelector('[data-share-count]');
                         if (shareCountSpan && data.shares_count > 0) {
@@ -1500,40 +1679,41 @@
     </script>
     <!-- Complete Mentions Suggestions Logic -->
     <script>
+        // LÔ-GÍCH GỢI Ý VÀ HIGHLIGHT NHẮC TÊN (@MENTION) TRONG Ô NHẬP LIỆU
         document.addEventListener('DOMContentLoaded', function() {
-            // Mention Suggestions logic
             let activeTextarea = null;
             let suggestionBox = null;
             let selectedIndex = -1;
             let queryStart = -1;
 
-            // 1. Textarea Mention Highlighter setup
+            // 1. CÀI ĐẶT BỘ TÔ SÁNG MENTION TRONG TEXTAREA:
+            // Tạo một khung backdrop trong suốt nằm ngay phía dưới ô textarea để hiển thị màu sắc làm nổi bật chữ có @
             function initHighlighter(textarea) {
                 if (textarea.dataset.highlighterInit) return;
                 textarea.dataset.highlighterInit = "true";
 
-                // Create wrapper
+                // Tạo thẻ div bọc ngoài (wrapper) ô textarea
                 const wrapper = document.createElement('div');
                 wrapper.className = 'textarea-highlighter-wrapper';
                 
-                // Insert wrapper before textarea, then move textarea inside it
+                // Chèn wrapper vào DOM
                 textarea.parentNode.insertBefore(wrapper, textarea);
                 wrapper.appendChild(textarea);
                 
-                // Create backdrop
+                // Tạo thẻ backdrop chứa text được định dạng màu sắc
                 const backdrop = document.createElement('div');
                 backdrop.className = 'textarea-highlighter-backdrop';
                 
-                // Insert backdrop before textarea inside wrapper
                 wrapper.insertBefore(backdrop, textarea);
 
-                // Copy layout styles to wrapper
+                // Sao chép các thuộc tính CSS hiển thị của textarea sang wrapper để khớp hoàn hảo
                 const computed = window.getComputedStyle(textarea);
                 wrapper.style.display = computed.display === 'inline' ? 'inline-block' : computed.display;
                 wrapper.style.margin = computed.margin;
                 wrapper.style.verticalAlign = computed.verticalAlign;
                 wrapper.style.flexGrow = computed.flexGrow;
 
+                // Hàm an toàn tránh tấn công XSS khi render văn bản thô vào innerHTML của backdrop
                 function escapeHtml(str) {
                     return str
                         .replace(/&/g, '&amp;')
@@ -1543,6 +1723,7 @@
                         .replace(/'/g, '&#039;');
                 }
 
+                // Hàm đồng bộ nội dung văn bản và áp dụng thẻ HTML highlight
                 function sync() {
                     const comp = window.getComputedStyle(textarea);
                     backdrop.style.fontFamily = comp.fontFamily;
@@ -1563,16 +1744,16 @@
                     let text = textarea.value;
                     let html = escapeHtml(text);
                     
-                    // Highlight @all
+                    // HIGHLIGHT @all: Tô màu xanh dương
                     html = html.replace(/(?<=^|(?<=[^a-zA-Z0-9_\.]))@all/iu, '<span class="text-sky-400">@all</span>');
                     
-                    // Highlight @username
+                    // HIGHLIGHT @username: Tìm các ký tự bắt đầu bằng @ và bôi xanh đậm
                     html = html.replace(/(?<=^|(?<=[^a-zA-Z0-9_\.]))@([a-zA-Z0-9_]+)/gu, function(match, username) {
                         if (username.toLowerCase() === 'all') return match;
                         return `<span class="text-sky-400 font-bold">@${username}</span>`;
                     });
 
-                    // Avoid space collapse in HTML backdrop by replacing consecutive spaces and trailing spaces
+                    // Ngăn chặn sự sụp đổ khoảng trắng trong HTML backdrop (giúp khớp vị trí với textarea thực)
                     html = html.replace(/ {2}/g, ' &nbsp;');
                     html = html.replace(/ \n/g, '&nbsp;\n');
                     html = html.replace(/ $/g, '&nbsp;');
@@ -1583,12 +1764,14 @@
                     backdrop.scrollLeft = textarea.scrollLeft;
                 }
 
+                // Lắng nghe thao tác nhập liệu và cuộn trang của người dùng để cập nhật backdrop tương ứng
                 textarea.addEventListener('input', sync);
                 textarea.addEventListener('scroll', () => {
                     backdrop.scrollTop = textarea.scrollTop;
                     backdrop.scrollLeft = textarea.scrollLeft;
                 });
 
+                // Sử dụng ResizeObserver để đồng bộ lại kích thước khi textarea bị kéo giãn tự do
                 if (window.ResizeObserver) {
                     const ro = new ResizeObserver(() => {
                         sync();
@@ -1599,10 +1782,10 @@
                 sync();
             }
 
-            // Initialize existing textareas
+            // Khởi tạo bộ highlight cho các textarea tĩnh đã load sẵn
             document.querySelectorAll('textarea').forEach(initHighlighter);
 
-            // Observe dynamic textareas (e.g., dynamically appended comments/replies)
+            // MUTATION OBSERVER: Lắng nghe và tự động đăng ký highlighter cho các textarea được thêm mới động (như khi nhấn reply bình luận)
             const observer = new MutationObserver((mutations) => {
                 for (const mutation of mutations) {
                     for (const node of mutation.addedNodes) {
@@ -1618,7 +1801,8 @@
             });
             observer.observe(document.body, { childList: true, subtree: true });
 
-            // 2. Mention Autocomplete logic
+            // 2. LÔ-GÍCH TỰ ĐỘNG ĐỀ XUẤT NHẮC TÊN (AUTOCOMPLETE SUGGESTIONS)
+            // Tạo thẻ gợi ý danh sách người dùng bay lơ lửng trên màn hình
             function createSuggestionBox() {
                 if (document.getElementById('mention-suggestions')) {
                     suggestionBox = document.getElementById('mention-suggestions');
@@ -1630,6 +1814,7 @@
                 document.body.appendChild(suggestionBox);
             }
 
+            // Lắng nghe ký tự nhập để kích hoạt gợi ý
             document.addEventListener('input', async function(e) {
                 const target = e.target;
                 if (target.tagName !== 'TEXTAREA' && !(target.tagName === 'INPUT' && target.type === 'text')) {
@@ -1643,11 +1828,12 @@
                 const selectionStart = activeTextarea.selectionStart;
                 const textBeforeCaret = value.substring(0, selectionStart);
                 
-                // Match last typed '@' that is either at the beginning or preceded by whitespace
+                // Tìm kiếm ký tự '@' cuối cùng đứng ở đầu dòng hoặc sau một khoảng trắng
                 const atIndex = textBeforeCaret.lastIndexOf('@');
                 if (atIndex !== -1 && (atIndex === 0 || /\s/.test(textBeforeCaret.charAt(atIndex - 1)))) {
                     const searchQ = textBeforeCaret.substring(atIndex + 1);
-                    if (!/\s/.test(searchQ)) { // Suggestion trigger active if no space typed after @
+                    // Chỉ kích hoạt gợi ý khi người dùng chưa gõ khoảng trắng sau dấu @
+                    if (!/\s/.test(searchQ)) { 
                         queryStart = atIndex;
                         await fetchSuggestions(searchQ);
                         return;
@@ -1656,6 +1842,7 @@
                 hideSuggestions();
             });
 
+            // Gửi yêu cầu lấy danh sách gợi ý từ API
             async function fetchSuggestions(q) {
                 try {
                     let postId = '';
@@ -1664,6 +1851,7 @@
                         if (form) {
                             const action = form.getAttribute('action');
                             if (action) {
+                                // Trích xuất bài viết ID từ URL để lọc người liên quan (chủ bài, người tham gia bình luận)
                                 const match = action.match(/\/posts\/(\d+)\/comments?/);
                                 if (match) {
                                     postId = match[1];
@@ -1686,6 +1874,7 @@
                 }
             }
 
+            // Vẽ danh sách gợi ý người dùng ra giao diện HTML
             function renderSuggestions(users) {
                 suggestionBox.innerHTML = users.map((user, idx) => {
                     const avatarHtml = user.is_all 
@@ -1719,13 +1908,14 @@
                 suggestionBox.classList.remove('hidden');
             }
 
+            // Định vị tọa độ bay của ô gợi ý chính xác nằm phía dưới con trỏ soạn thảo của textarea
             function positionSuggestionBox() {
                 const rect = activeTextarea.getBoundingClientRect();
-                // Position it right below or above the input area
                 suggestionBox.style.left = `${rect.left + window.scrollX}px`;
                 suggestionBox.style.top = `${rect.bottom + window.scrollY + 6}px`;
             }
 
+            // Ẩn hộp thoại đề xuất
             function hideSuggestions() {
                 if (suggestionBox) {
                     suggestionBox.classList.add('hidden');
@@ -1734,6 +1924,7 @@
                 queryStart = -1;
             }
 
+            // Đóng hộp thoại nếu click ra vùng ngoài
             document.addEventListener('click', function(e) {
                 if (suggestionBox && !suggestionBox.contains(e.target) && e.target !== activeTextarea) {
                     hideSuggestions();
@@ -1745,6 +1936,8 @@
                 }
             });
 
+            // THAY THẾ CHỮ ĐANG GÕ BẰNG MENTION THỰC SỰ:
+            // Nối chuỗi văn bản chèn thêm username đã chọn và tự động đính kèm thêm dấu cách phía sau
             function insertMention(username) {
                 if (!activeTextarea) return;
                 const value = activeTextarea.value;
@@ -1759,13 +1952,13 @@
                 const newCursorPos = queryStart + username.length + 2; // account for @ and space
                 activeTextarea.setSelectionRange(newCursorPos, newCursorPos);
                 
-                // Force input event dispatch to immediately sync highlighter styling
+                // Kích hoạt lại sự kiện 'input' để đồng bộ hóa việc highlight chữ trong khung backdrop tức thời
                 activeTextarea.dispatchEvent(new Event('input', { bubbles: true }));
                 
                 hideSuggestions();
             }
 
-            // Add keyboard navigation
+            // HỖ TRỢ ĐIỀU HƯỚNG BẰNG PHÍM CƠ BẢN: Lên, Xuống, Enter chọn kết quả và Phím ESC để hủy bỏ
             document.addEventListener('keydown', function(e) {
                 if (!suggestionBox || suggestionBox.classList.contains('hidden')) return;
                 

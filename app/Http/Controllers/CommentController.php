@@ -17,6 +17,7 @@ class CommentController extends Controller
             'media.*' => ['file', 'mimes:jpeg,png,jpg,gif,webp,bmp,svg,heic,heif,mp4,mov,webm,avi,mkv,wmv', 'max:51200'],
         ]);
 
+        // KIỂM TRA CHẶN: Tránh lỗi bình luận chéo khi người dùng đã chặn nhau
         if ($request->user()->hasAnyBlockRelationship($post->nguoi_dung_id)) {
             return response()->json([
                 'success' => false,
@@ -24,6 +25,7 @@ class CommentController extends Controller
             ], 403);
         }
 
+        // XÁC THỰC BÌNH LUẬN CHA: Kiểm tra bình luận cha có tồn tại và thuộc cùng bài viết hay không để tránh lỗi logic
         if (!empty($validated['binh_luan_cha_id'])) {
             $parentComment = BinhLuan::find($validated['binh_luan_cha_id']);
             if (!$parentComment || $parentComment->bai_viet_id !== $post->id) {
@@ -42,6 +44,7 @@ class CommentController extends Controller
             'da_xoa' => false,
         ]);
 
+        // XỬ LÝ ĐÍNH KÈM MEDIA: Lưu file vật lý và tạo bản ghi liên kết, phân biệt video/hình ảnh
         if ($request->hasFile('media')) {
             foreach ($request->file('media') as $file) {
                 $path = $file->store('comments', 'public');
@@ -57,12 +60,13 @@ class CommentController extends Controller
         }
 
         // --- QUÉT MENTION/TAG VÀ TẠO THÔNG BÁO ---
+        // XỬ LÝ NHẮC TÊN (@username): Phân tích nội dung và gửi thông báo cho những người được tag
         $currentUser = $request->user();
         $mentionService = resolve(\App\Services\MentionService::class);
         $taggedUserIds = $mentionService->processMentions($comment->noi_dung ?? '', $currentUser, $post, $comment);
 
-        // --- TẠO THÔNG BÁO ---
-        // 1. Thông báo cho chủ bài viết
+        // --- TẠO THÔNG BÁO TƯƠNG TÁC ---
+        // 1. Thông báo cho chủ bài viết (chỉ gửi khi chủ bài viết không phải là người bình luận và chưa được tag tên)
         if ($post->nguoi_dung_id !== $currentUser->id && !in_array($post->nguoi_dung_id, $taggedUserIds)) {
             \App\Models\ThongBao::create([
                 'nguoi_dung_id' => $post->nguoi_dung_id,
@@ -74,10 +78,10 @@ class CommentController extends Controller
             ]);
         }
 
-        // 2. Thông báo cho chủ bình luận cha (nếu là trả lời)
+        // 2. Thông báo cho chủ bình luận cha (khi có phản hồi/reply)
         if (!empty($validated['binh_luan_cha_id'])) {
             $parentComment = BinhLuan::find($validated['binh_luan_cha_id']);
-            // Tránh gửi trùng nếu chủ bình luận cha cũng là chủ bài viết (đã gửi ở trên) hoặc đã bị tag
+            // Tránh gửi trùng nếu chủ bình luận cha cũng là chủ bài viết (đã gửi ở trên), tự trả lời chính mình, hoặc đã nhận thông báo tag tên
             if ($parentComment && 
                 $parentComment->nguoi_dung_id !== $currentUser->id && 
                 $parentComment->nguoi_dung_id !== $post->nguoi_dung_id &&
