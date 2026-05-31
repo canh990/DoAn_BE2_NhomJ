@@ -22,7 +22,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         // Fix lỗi độ dài key cho MySQL cũ
-        Schema::defaultStringLength(255); 
+        Schema::defaultStringLength(191); 
 
         // If the app is configured to use database sessions but the DB isn't ready,
         // fallback to file sessions so the app can boot without requiring session table.

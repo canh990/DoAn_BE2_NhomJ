@@ -2,29 +2,18 @@
 (function() {
     // Check if localStorage has a saved language preference
     const savedLocale = localStorage.getItem('app-language');
-    const currentLang = document.documentElement.lang;
+    const currentLang = document.documentElement.lang || 'vi';
     
-    // Update HTML lang attribute if different from localStorage
+    // Sync localStorage with the language rendered by the server
     if (savedLocale && savedLocale !== currentLang) {
-        // The page was already rendered in the wrong language
-        // We'll need to reload to apply the correct language
-        // This prevents the flash of wrong language
-        const desiredLocale = savedLocale === 'vi' ? 'vi' : 'en';
-        if (currentLang !== desiredLocale) {
-            // Silently reload without showing the loader, as Laravel will handle the session
-            window.location.href = window.location.href;
-        }
-    } else if (savedLocale) {
-        // Language matches, good to go
-        document.documentElement.lang = savedLocale;
-    } else {
+        localStorage.setItem('app-language', currentLang);
+    } else if (!savedLocale) {
         // First visit - save current language
-        const currentLocale = document.documentElement.lang || 'vi';
-        localStorage.setItem('app-language', currentLocale);
+        localStorage.setItem('app-language', currentLang);
     }
     
     // Also set the lang attribute if not already set
     if (!document.documentElement.lang) {
-        document.documentElement.lang = localStorage.getItem('app-language') || 'vi';
+        document.documentElement.lang = currentLang;
     }
 })();

@@ -66,6 +66,10 @@ class DatabaseSeeder extends Seeder
         $this->command->info('⚙️ Đang tạo cài đặt người dùng...');
         $this->call(CaiDatNguoiDungSeeder::class);
 
+        // 13. Tạo phiên đăng nhập (Quản lý thiết bị)
+        $this->command->info('📱 Đang tạo phiên đăng nhập thiết bị...');
+        $this->call(PhienDangNhapSeeder::class);
+
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
         $this->command->info('🎉 ĐÃ SEED TOÀN BỘ CƠ SỞ DỮ LIỆU THÀNH CÔNG!');
