@@ -419,7 +419,14 @@
                         if (typeof window.showToast === 'function') {
                             window.showToast(error.message || 'Có lỗi xảy ra khi bình chọn.', 'error');
                         } else {
-                            alert(error.message || 'Có lỗi xảy ra khi bình c            // ==========================================
+                            alert(error.message || 'Có lỗi xảy ra khi bình chọn.');
+                        }
+                    });
+
+                return;
+            }
+
+            // ==========================================
             // CHỨC NĂNG BOOKMARK: Lưu/Bỏ lưu bài viết
             // ==========================================
             if (bookmarkButton) {
