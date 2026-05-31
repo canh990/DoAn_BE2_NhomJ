@@ -49,6 +49,9 @@ Route::middleware('auth')->group(function () {
     Route::delete('/posts/{post}', [PostController::class, 'destroy'])
         ->name('posts.destroy');
 
+    Route::post('/posts/{post}/pin', [PostController::class, 'togglePin'])
+        ->name('posts.pin');
+
     // -----------------------------------------------
     // Story (Tin 24h) routes
     // -----------------------------------------------

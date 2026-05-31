@@ -149,6 +149,16 @@
         </a>
 
         <div class="min-w-0 flex-1 space-y-3">
+            <!-- Pinned Post Indicator Container -->
+            <div class="pinned-indicator-container">
+                @if(data_get($post, 'da_ghim'))
+                    <div class="pinned-indicator flex items-center gap-1 text-xs font-bold text-sky-300 mb-1 select-none">
+                        <span class="mr-0.5">📌</span>
+                        <span>{{ app()->getLocale() === 'en' ? 'Pinned post' : 'Bài viết đã ghim' }}</span>
+                    </div>
+                @endif
+            </div>
+
             <div class="flex items-start justify-between gap-4">
                 <div class="min-w-0 flex-1">
                     <!-- Dòng 1: Tên hiển thị + Tích xanh -->
@@ -230,6 +240,19 @@
                             </button>
                             <div class="post-dropdown-menu hidden absolute right-0 top-full mt-1 w-40 bg-slate-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden z-20">
                                 @if($postId)
+                                @if(auth()->id() === (int) data_get($post, 'nguoi_dung_id'))
+                                <button type="button" 
+                                        class="w-full text-left px-4 py-3 text-sm text-sky-400 hover:bg-white/5 flex items-center gap-2 transition-colors border-b border-white/5 btn-toggle-pin" 
+                                        data-post-id="{{ $postId }}"
+                                        data-pinned="{{ data_get($post, 'da_ghim') ? '1' : '0' }}">
+                                    <span class="material-symbols-outlined text-[18px] pin-icon" style="{{ data_get($post, 'da_ghim') ? 'font-variation-settings: \'FILL\' 1;' : '' }}">
+                                        push_pin
+                                    </span>
+                                    <span class="pin-text">
+                                        {{ data_get($post, 'da_ghim') ? (app()->getLocale() === 'en' ? 'Unpin post' : 'Bỏ ghim bài viết') : (app()->getLocale() === 'en' ? 'Pin post' : 'Ghim bài viết') }}
+                                    </span>
+                                </button>
+                                @endif
                                 <button type="button" class="w-full text-left px-4 py-3 text-sm text-sky-400 hover:bg-white/5 flex items-center gap-2 transition-colors border-b border-white/5" onclick="window.openEditModal('{{ $postId }}', this.getAttribute('data-post-content'))" data-post-content="{{ data_get($post, 'noi_dung') }}">
                                     <span class="material-symbols-outlined text-[18px]">edit</span>
                                     Chỉnh sửa bài viết
