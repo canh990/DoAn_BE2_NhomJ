@@ -14,7 +14,7 @@ return new class extends Migration
     Schema::create('nguoi_dung', function (Blueprint $table) {
         $table->id();
         $table->string('ten_dang_nhap', 50)->unique();
-        $table->string('email', 255)->unique()->nullable();
+        $table->string('email', 191)->unique()->nullable();
         $table->string('so_dien_thoai', 20)->unique()->nullable();
         $table->string('mat_khau_hash', 255)->nullable();
         $table->string('anh_dai_dien', 500)->nullable();

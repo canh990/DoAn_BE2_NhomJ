@@ -13,7 +13,7 @@ return new class extends Migration
         $table->foreignId('nguoi_dung_id')->constrained('nguoi_dung')->cascadeOnDelete();
         $table->string('thong_tin_thiet_bi', 255)->nullable();
         $table->string('dia_chi_ip', 45)->nullable();
-        $table->string('token_hash', 255);
+        $table->string('token_hash', 191);
         $table->timestamp('het_han');
         $table->timestamp('ngay_tao')->useCurrent();
 
