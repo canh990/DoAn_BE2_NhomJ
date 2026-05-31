@@ -416,7 +416,7 @@
                                 <div class="relative flex items-center justify-center transition-transform group-hover:scale-110 group-active:scale-95">
                                     <span class="material-symbols-outlined text-[20px] sm:text-[22px] {{ $selectedColor }}" data-reaction-trigger-icon style="{{ $selected ? 'font-variation-settings: \'FILL\' 1;' : '' }}">{{ $selectedIcon }}</span>
                                 </div>
-                                <span class="text-[13px] sm:text-sm font-semibold tracking-wide" data-reaction-trigger-label>{{ $selectedLabel }}</span>
+                                <span class="text-[13px] sm:text-sm font-semibold tracking-wide {{ $selected ? 'hidden' : '' }}" data-reaction-trigger-label>{{ $selected ? '' : $selectedLabel }}</span>
                             </button>
 
                             <button type="button" data-comment-toggle class="group flex items-center gap-1.5 rounded-full px-3 py-1.5 sm:px-4 sm:py-2 text-slate-400 transition-all duration-300 hover:bg-slate-800/60 hover:text-sky-300">
@@ -444,12 +444,11 @@
                         </div>
                     </div>
 
-                    <div data-reaction-picker class="hidden absolute left-0 bottom-full z-10 mb-2 w-auto rounded-[32px] border border-white/10 bg-slate-950/95 p-3 shadow-[0_12px_35px_rgba(0,0,0,0.25)] backdrop-blur-sm transition-all duration-200">
+                    <div data-reaction-picker class="hidden absolute left-0 bottom-full z-10 mb-2 w-auto rounded-[32px] border border-white/10 bg-slate-950/95 p-2 shadow-[0_12px_35px_rgba(0,0,0,0.25)] backdrop-blur-sm transition-all duration-200">
                         <div class="flex items-center gap-2">
                             @foreach($reactionButtons as $type => $button)
-                                <button type="button" data-reaction-option data-reaction="{{ $type }}" data-reaction-label="{{ $button['label'] }}" data-reaction-color="{{ $button['color'] }}" data-reaction-icon="{{ $button['icon'] }}" class="flex flex-col items-center justify-center rounded-3xl bg-slate-900 px-3 py-2 text-center text-slate-300 transition duration-200 hover:-translate-y-1 hover:bg-sky-400/10 hover:text-sky-300">
+                                <button type="button" data-reaction-option data-reaction="{{ $type }}" data-reaction-label="{{ $button['label'] }}" data-reaction-color="{{ $button['color'] }}" data-reaction-icon="{{ $button['icon'] }}" class="flex items-center justify-center rounded-full bg-slate-900 p-2.5 text-center text-slate-300 transition duration-200 hover:-translate-y-1 hover:bg-sky-400/10 hover:text-sky-300" title="{{ $button['label'] }}">
                                     <span class="material-symbols-outlined {{ $button['color'] }} text-xl">{{ $button['icon'] }}</span>
-                                    <span class="text-[10px]">{{ $button['label'] }}</span>
                                 </button>
                             @endforeach
                         </div>

@@ -604,7 +604,13 @@
                         }
 
                         if (triggerLabel) {
-                            triggerLabel.textContent = newLabel;
+                            if (isRemoved) {
+                                triggerLabel.textContent = "{{ __('messages.post_like') }}";
+                                triggerLabel.classList.remove('hidden');
+                            } else {
+                                triggerLabel.textContent = '';
+                                triggerLabel.classList.add('hidden');
+                            }
                         }
 
                         if (countNode) {
