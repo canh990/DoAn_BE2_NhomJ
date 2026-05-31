@@ -177,8 +177,28 @@ html.light .text-sky-300 {
 }
 
 /* Interaction icons: Keep system icons colorful, only mute general ones */
-html.light .material-symbols-outlined:not(.text-sky-400):not(.text-primary):not(.text-error):not(.text-warning):not(.text-success):not([data-icon="verified"]):not(.text-yellow-400):not(.text-red-500):not(.text-emerald-400):not(.text-blue-500) {
+html.light .material-symbols-outlined:not(.text-sky-400):not(.text-rose-400):not(.text-yellow-300):not(.text-slate-400):not(.text-orange-400):not(.text-emerald-400):not(.text-primary):not(.text-error):not(.text-warning):not(.text-success):not([data-icon="verified"]):not(.text-yellow-500):not(.text-red-500):not(.text-emerald-500):not(.text-green-500):not(.text-blue-500) {
   color: #5f6368 !important;
+}
+
+/* Preserve original colors for reaction icons in light mode */
+html.light .material-symbols-outlined.text-sky-400 {
+  color: #38bdf8 !important;
+}
+html.light .material-symbols-outlined.text-rose-400 {
+  color: #fb7185 !important;
+}
+html.light .material-symbols-outlined.text-yellow-300 {
+  color: #facc15 !important;
+}
+html.light .material-symbols-outlined.text-slate-400 {
+  color: #94a3b8 !important;
+}
+html.light .material-symbols-outlined.text-orange-400 {
+  color: #fb923c !important;
+}
+html.light .material-symbols-outlined.text-emerald-400 {
+  color: #34d399 !important;
 }
 
 /* Post interaction buttons */
@@ -658,4 +678,41 @@ html.light #block-user-modal button.bg-white\/5 {
   background-color: #f1f3f4 !important;
   border-color: #dadce0 !important;
   color: #3c4043 !important;
+}
+
+/* Light mode overrides for reaction picker, active state, comment box and inputs */
+html.light [data-reaction-picker] {
+  background-color: #ffffff !important;
+  border: 1px solid #e0e0e0 !important;
+  box-shadow: 0 4px 12px rgba(60, 64, 67, 0.15) !important;
+}
+
+html.light [data-reaction-option] {
+  background-color: #f1f3f4 !important;
+  color: #3c4043 !important;
+}
+
+html.light [data-reaction-option]:hover {
+  background-color: #e8f0fe !important;
+}
+
+html.light [data-comment-box] {
+  background-color: #ffffff !important;
+  border: 1px solid #e0e0e0 !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important;
+}
+
+html.light [data-comment-box] textarea {
+  background-color: #f1f3f4 !important;
+  color: #202124 !important;
+  -webkit-text-fill-color: #202124 !important;
+  border: 1px solid #dadce0 !important;
+}
+
+html.light [data-comment-box] textarea::placeholder {
+  color: #70757a !important;
+}
+
+html.light [data-comment-replies] .bg-white\/10 {
+  background-color: #e0e0e0 !important;
 }
