@@ -12,6 +12,9 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'NHOMJ')</title>
     
+    {{-- Language initialization script - must run before other scripts --}}
+    <script src="/js/language-init.js"></script>
+    
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
@@ -125,7 +128,7 @@
             <div class="relative hidden md:block">
                 <div class="flex items-center bg-white/5 border border-sky-400/10 rounded-full px-4 py-1.5 focus-within:border-sky-400/30 transition-all">
                     <span class="material-symbols-outlined text-slate-400 text-sm mr-2">search</span>
-                    <input id="search-user" type="text" placeholder="Tìm kiếm trên NHOMJ" autocomplete="off" class="bg-transparent border-none focus:ring-0 text-sm text-on-surface placeholder:text-slate-500 w-64"/>
+                    <input id="search-user" type="text" placeholder="{{ __('messages.chat_header_search') }}" autocomplete="off" class="bg-transparent border-none focus:ring-0 text-sm text-on-surface placeholder:text-slate-500 w-64"/>
                 </div>
 
                 <!-- dropdown -->
@@ -225,7 +228,7 @@
             </a>
             <a class="flex items-center gap-3 {{ request()->routeIs('bookmarks.index') ? 'bg-sky-400/20 text-sky-300 border border-sky-400/20' : 'text-slate-400 hover:bg-white/5 hover:text-sky-200' }} px-4 py-3 rounded-xl transition-colors cursor-pointer transition-transform active:translate-x-1 font-inter text-sm font-medium" href="{{ route('bookmarks.index') }}">
                 <span class="material-symbols-outlined" data-icon="bookmark">bookmark</span>
-                <span class="text-lg font-medium">Bài viết đã lưu</span>
+                <span class="text-lg font-medium">{{ __('messages.bookmarks') }}</span>
             </a>
             <a href="{{ route('settings.index') }}" class="flex items-center gap-4 px-4 py-3 rounded-full transition-all hover:bg-white/10 group">
     <span class="material-symbols-outlined" data-icon="settings">settings</span>
@@ -233,7 +236,7 @@
 </a>
         </nav>
         <button class="mt-4 w-full py-3 bg-sky-400/20 border border-sky-400/30 text-sky-300 font-bold rounded-xl hover:bg-sky-400/30 transition-all active:scale-95">
-            Đăng bài mới
+            {{ __('messages.new_post') }}
         </button>
     </aside>
 

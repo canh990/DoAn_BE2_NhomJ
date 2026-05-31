@@ -61,7 +61,7 @@ class PersonalSettingsController extends Controller
     public function setLanguage(Request $request)
     {
         $data = $request->validate([
-            'locale' => 'required|string|in:vi,en,ja'
+            'locale' => 'required|string|in:vi,en'
         ]);
 
         session(['personal_locale' => $data['locale']]);

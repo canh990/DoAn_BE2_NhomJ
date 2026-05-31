@@ -6,10 +6,10 @@
             <div class="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-slate-800/50 text-slate-500 border border-dashed border-slate-700">
                 <span class="material-symbols-outlined text-4xl">group</span>
             </div>
-            <h3 class="text-xl font-bold text-white">Chưa có bài viết nào</h3>
+            <h3 class="text-xl font-bold text-white">{{ __('messages.explore_no_results') }}</h3>
             <p class="mt-2 text-slate-400 max-w-md mx-auto text-xs">Bạn chưa theo dõi ai hoặc những người bạn theo dõi chưa đăng bài viết nào. Hãy đi tìm thêm bạn bè hoặc xem Tab Dành cho bạn!</p>
             <a href="{{ route('explore') }}" class="mt-6 px-6 py-2.5 bg-sky-500 hover:bg-sky-600 text-white font-bold text-sm rounded-xl transition-all duration-300 active:scale-95 shadow-md shadow-sky-500/20">
-                Khám phá thành viên
+                {{ __('messages.home_explore_members') }}
             </a>
         </div>
     @else

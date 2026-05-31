@@ -107,10 +107,6 @@
                             {{ __('messages.lang_en') }}
                         </option>
 
-                        <option value="ja" {{ app()->getLocale() == 'ja' ? 'selected' : '' }}>
-                            日本語
-                        </option>
-
                     </select>
                 </div>
 
@@ -279,7 +275,7 @@
         <div class="md:col-span-3 border border-white/10 bg-slate-900/50 backdrop-blur-md rounded-xl p-4 flex justify-between items-center">
             <h2 class="text-base font-bold text-white flex items-center gap-2">
                 <span class="material-symbols-outlined text-primary text-lg">help</span>
-                Hỗ trợ
+                {{ __('messages.support') }}
             </h2>
             <div class="flex gap-4">
                 <button onclick="openModal('termsModal')" class="text-xs text-on-surface-variant hover:text-primary transition-colors flex items-center gap-1">
@@ -309,7 +305,7 @@
                                 NHOMJ
                                 <span class="w-2 h-2 rounded-full bg-slate-500 ring-2 ring-slate-900" title="Offline" id="bot-status-dot"></span>
                             </h4>
-                            <p class="text-[10px] text-slate-400 italic mt-0.5">Agt chat live</p>
+                            <p class="text-[10px] text-slate-400 italic mt-0.5">Agt chat live</p> {{-- Chuỗi này thường giữ nguyên hoặc dùng Agt Live --}}
                         </div>
                     </div>
                 </div>
@@ -323,21 +319,21 @@
                         </div>
                         <div class="space-y-3 max-w-[80%]">
                             <div class="p-3 bg-white/5 border border-white/5 text-xs text-slate-200 rounded-2xl rounded-tl-none leading-relaxed">
-                                Xin chào! Tôi là chatbot tự động của NHOMJ. Dưới đây là các câu hỏi thường gặp, bạn có thể bấm trực tiếp để hỏi hoặc nhập nội dung ở ô chat phía dưới:
+                                {{ __('messages.chatbot_welcome') }}
                             </div>
                             <!-- Khối câu hỏi tự động dạng danh sách nút bấm xếp dọc -->
                             <div class="flex flex-col gap-2 w-full">
                                 <button type="button" class="faq-btn text-left text-xs bg-white/5 hover:bg-primary/10 border border-white/10 hover:border-primary/20 text-slate-300 hover:text-primary transition-all duration-200 p-2.5 rounded-xl active:scale-[0.98] outline-none">
-                                    Làm thế nào để báo cáo nội dung vi phạm?
+                                    {{ __('messages.chatbot_faq_report') }}
                                 </button>
                                 <button type="button" class="faq-btn text-left text-xs bg-white/5 hover:bg-primary/10 border border-white/10 hover:border-primary/20 text-slate-300 hover:text-primary transition-all duration-200 p-2.5 rounded-xl active:scale-[0.98] outline-none">
-                                    Tôi bị mất tài khoản, phải làm sao?
+                                    {{ __('messages.chatbot_faq_lost_acc') }}
                                 </button>
                                 <button type="button" class="faq-btn text-left text-xs bg-white/5 hover:bg-primary/10 border border-white/10 hover:border-primary/20 text-slate-300 hover:text-primary transition-all duration-200 p-2.5 rounded-xl active:scale-[0.98] outline-none">
-                                    Tôi quên mật khẩu, cách lấy lại?
+                                    {{ __('messages.chatbot_faq_forgot_pwd') }}
                                 </button>
                                 <button type="button" class="faq-btn text-left text-xs bg-white/5 hover:bg-primary/10 border border-white/10 hover:border-primary/20 text-slate-300 hover:text-primary transition-all duration-200 p-2.5 rounded-xl active:scale-[0.98] outline-none">
-                                    Cách bật bảo mật 2FA?
+                                    {{ __('messages.chatbot_faq_2fa') }}
                                 </button>
                             </div>
                         </div>
@@ -350,7 +346,7 @@
                         <input
                             type="text"
                             id="chatbot-input"
-                            placeholder="Chatbot NHOMJ"
+                            placeholder="{{ __('messages.chatbot_placeholder') }}"
                             autocomplete="off"
                             class="flex-1 bg-white/5 border border-white/10 rounded-full px-4 py-2 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all"
                         />
@@ -358,7 +354,7 @@
                             type="submit"
                             class="px-5 py-2 bg-primary text-black font-semibold hover:bg-primary/80 transition-colors cursor-pointer text-xs rounded-none"
                         >
-                            Gửi
+                            {{ __('messages.chatbot_send') }}
                         </button>
                     </form>
                 </div>
@@ -373,7 +369,7 @@
                     </div>
                     <div>
                         <p class="text-2xl font-black text-white leading-none">1900 1111</p>
-                        <p class="text-xs text-slate-400 italic mt-1">Hỗ trợ 24/7</p>
+                        <p class="text-xs text-slate-400 italic mt-1">{{ __('messages.support_247') }}</p>
                     </div>
                 </div>
 
@@ -384,7 +380,7 @@
                     </div>
                     <div>
                         <p class="text-sm font-semibold text-white">support@nhomj.vn</p>
-                        <p class="text-xs text-slate-400 mt-0.5">Thư điện tử</p>
+                        <p class="text-xs text-slate-400 mt-0.5">{{ __('messages.support_email_label') }}</p>
                     </div>
                 </div>
 
@@ -395,7 +391,7 @@
                     </div>
                     <div>
                         <p class="text-sm font-semibold text-white">T2-CN (24/7)</p>
-                        <p class="text-xs text-slate-400 mt-0.5">Thời gian làm việc</p>
+                        <p class="text-xs text-slate-400 mt-0.5">{{ __('messages.support_working_time') }}</p>
                     </div>
                 </div>
             </div>
@@ -434,17 +430,17 @@
         
         <h3 class="text-lg font-bold text-on-surface mb-4 flex items-center gap-2">
             <span class="material-symbols-outlined text-primary">support_agent</span>
-            Thông tin Hỗ trợ
+            {{ __('messages.support_info_title') }}
         </h3>
         
         <div class="space-y-3 text-sm text-on-surface-variant">
-            <p>Nếu bạn gặp sự cố, vui lòng liên hệ bộ phận IT:</p>
+            <p>{{ __('messages.support_contact_desc') }}</p>
             <div class="p-3 bg-white/5 rounded-lg border border-white/5 space-y-2">
                 <p><strong>Email:</strong> {{ $supportInfo['email'] ?? 'it@company.com' }}</p>
                 <p><strong>Hotline:</strong> {{ $supportInfo['hotline'] ?? '1900 xxxx' }}</p>
             </div>
             <a href="{{ $supportInfo['zalo_group'] ?? '#' }}" target="_blank" class="inline-block mt-2 px-4 py-2 bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-colors font-medium">
-                Tham gia nhóm Zalo
+                {{ __('messages.support_zalo_btn') }}
             </a>
         </div>
     </div>
@@ -460,15 +456,15 @@
         
         <h3 class="text-lg font-bold text-on-surface mb-4 flex items-center gap-2">
             <span class="material-symbols-outlined text-primary">info</span>
-            Giới thiệu Hệ thống
+            {{ __('messages.about_system_title') }}
         </h3>
         
         <div class="space-y-3 text-sm text-on-surface-variant">
             <p class="text-base text-on-surface font-medium">{{ $aboutInfo['app_name'] ?? 'Phần mềm Quản trị' }}</p>
-            <p>Phiên bản: <span class="text-primary font-mono bg-primary/10 px-1 rounded">{{ $aboutInfo['version'] ?? 'v1.0' }}</span></p>
-            <p>Cập nhật lần cuối: {{ $aboutInfo['release_date'] ?? 'N/A' }}</p>
+            <p>{{ __('messages.about_version') }}: <span class="text-primary font-mono bg-primary/10 px-1 rounded">{{ $aboutInfo['version'] ?? 'v1.0' }}</span></p>
+            <p>{{ __('messages.about_last_update') }}: {{ $aboutInfo['release_date'] ?? 'N/A' }}</p>
             <div class="pt-3 mt-3 border-t border-white/10">
-                <p>Bản quyền © {{ date('Y') }} thuộc về <strong>{{ $aboutInfo['company'] ?? 'Công ty' }}</strong>.</p>
+                <p>{{ __('messages.about_copyright', ['year' => date('Y')]) }} <strong>{{ $aboutInfo['company'] ?? 'Công ty' }}</strong>.</p>
             </div>
         </div>
     </div>
@@ -482,16 +478,16 @@
         
         <h3 class="text-lg font-bold text-on-surface mb-4 flex items-center gap-2">
             <span class="material-symbols-outlined text-primary">description</span>
-            Điều khoản sử dụng
+            {{ __('messages.terms') }}
         </h3>
         
         <div class="space-y-3 text-sm text-on-surface-variant max-h-[60vh] overflow-y-auto pr-2 leading-relaxed">
-            <p class="font-semibold text-on-surface">1. Quy định chung</p>
-            <p>Khi truy cập và sử dụng hệ thống quản trị, bạn đồng ý tuân thủ tuyệt đối các quy chế an toàn thông tin của tổ chức đưa ra.</p>
-            <p class="font-semibold text-on-surface">2. Bảo mật tài khoản</p>
-            <p>Người dùng có trách nhiệm tự bảo mật tài khoản, không cung cấp cookie hoặc token phiên đăng nhập cho bất kỳ bên thứ ba nào.</p>
-            <p class="font-semibold text-on-surface">3. Giới hạn sử dụng</p>
-            <p>Nghiêm cấm mọi hành vi sử dụng công cụ tự động để can thiệp, phá hoại hoặc khai thác dữ liệu trái phép từ hệ thống.</p>
+            <p class="font-semibold text-on-surface">{{ __('messages.terms_c1_title') }}</p>
+            <p>{{ __('messages.terms_c1_content') }}</p>
+            <p class="font-semibold text-on-surface">{{ __('messages.terms_c2_title') }}</p>
+            <p>{{ __('messages.terms_c2_content') }}</p>
+            <p class="font-semibold text-on-surface">{{ __('messages.terms_c3_title') }}</p>
+            <p>{{ __('messages.terms_c3_content') }}</p>
         </div>
     </div>
 </div>
@@ -505,16 +501,16 @@
         
         <h3 class="text-lg font-bold text-on-surface mb-4 flex items-center gap-2">
             <span class="material-symbols-outlined text-primary">shield</span>
-            Chính sách bảo mật
+            {{ __('messages.privacy') }}
         </h3>
         
         <div class="space-y-3 text-sm text-on-surface-variant max-h-[60vh] overflow-y-auto pr-2 leading-relaxed">
-            <p class="font-semibold text-on-surface">1. Thông tin thu thập</p>
-            <p>Hệ thống thu thập dữ liệu lịch sử đăng nhập bao gồm: Địa chỉ IP, thông tin thiết bị (Hệ điều hành, Trình duyệt) nhằm mục đích bảo vệ tài khoản của chính bạn.</p>
-            <p class="font-semibold text-on-surface">2. Mục đích sử dụng</p>
-            <p>Các dữ liệu thu thập chỉ phục vụ cho tính năng "Quản lý thiết bị" giúp bạn phát hiện các phiên đăng nhập bất thường.</p>
-            <p class="font-semibold text-on-surface">3. Cam kết</p>
-            <p>Chúng tôi cam kết không chia sẻ thông tin nhật ký hoạt động cá nhân của bạn cho bất kỳ đối tác bên ngoài nào.</p>
+            <p class="font-semibold text-on-surface">{{ __('messages.privacy_c1_title') }}</p>
+            <p>{{ __('messages.privacy_c1_content') }}</p>
+            <p class="font-semibold text-on-surface">{{ __('messages.privacy_c2_title') }}</p>
+            <p>{{ __('messages.privacy_c2_content') }}</p>
+            <p class="font-semibold text-on-surface">{{ __('messages.privacy_c3_title') }}</p>
+            <p>{{ __('messages.privacy_c3_content') }}</p>
         </div>
     </div>
 </div>
@@ -601,7 +597,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                     syncThemeToggleUI();
                     if (typeof window.showToast === 'function') {
-                        window.showToast(data.theme === 'light' ? 'Đã chuyển sang Chế độ sáng!' : 'Đã chuyển sang Chế độ tối!', 'success');
+                        window.showToast(data.theme === 'light' ? "{{ __('messages.theme_light_success') }}" : "{{ __('messages.theme_dark_success') }}", 'success');
                     }
                 }
             })
@@ -632,10 +628,10 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     const botReplies = {
-        "Làm thế nào để báo cáo nội dung vi phạm?": "Để báo cáo vi phạm, bạn bấm vào nút ba chấm ở góc trên bài viết hoặc bình luận và chọn 'Báo cáo vi phạm'. Đội ngũ kiểm duyệt sẽ xử lý trong vòng 15 phút.",
-        "Tôi bị mất tài khoản, phải làm sao?": "Vui lòng sử dụng tính năng 'Quên mật khẩu' hoặc gửi email trực tiếp tới support@nhomj.vn kèm theo giấy tờ định danh để được hỗ trợ khôi phục tài khoản.",
-        "Tôi quên mật khẩu, cách lấy lại?": "Bạn có thể nhấp vào liên kết 'Quên mật khẩu' ở trang đăng nhập, điền email hoặc số điện thoại đăng ký để nhận mã OTP khôi phục mật khẩu mới.",
-        "Cách bật bảo mật 2FA?": "Truy cập phần Cài đặt tài khoản > Bảo mật và bật tính năng 'Xác thực 2 yếu tố (2FA)'. Sử dụng Google Authenticator để quét mã QR được cung cấp."
+        "{{ __('messages.chatbot_faq_report') }}": "{{ __('messages.chatbot_reply_report') }}",
+        "{{ __('messages.chatbot_faq_lost_acc') }}": "{{ __('messages.chatbot_reply_lost_acc') }}",
+        "{{ __('messages.chatbot_faq_forgot_pwd') }}": "{{ __('messages.chatbot_reply_forgot_pwd') }}",
+        "{{ __('messages.chatbot_faq_2fa') }}": "{{ __('messages.chatbot_reply_2fa') }}"
     };
 
     window.sendChatMessage = function() {
@@ -655,7 +651,7 @@ document.addEventListener('DOMContentLoaded', function () {
         // Tự động rep sau 1-2 giây
         setTimeout(() => {
             removeBotLoading();
-            const reply = botReplies[messageText] || "Cảm ơn bạn đã nhắn tin. Hệ thống tự động đã ghi nhận yêu cầu của bạn, điều phối viên hỗ trợ sẽ liên hệ với bạn trong giây lát.";
+            const reply = botReplies[messageText] || "{{ __('messages.chatbot_default_reply') }}";
             appendMessage(reply, 'bot');
         }, 1500);
     };
