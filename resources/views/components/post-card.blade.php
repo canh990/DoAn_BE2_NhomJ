@@ -73,7 +73,7 @@
     }
 
     $createdAt = $timestamp ?? data_get($post, 'created_at') ?? data_get($post, 'thoi_gian_tao');
-    $displayTime = 'Vừa xong';
+    $displayTime = app()->getLocale() === 'en' ? 'Just now' : 'Vừa xong';
 
     if ($createdAt instanceof \Carbon\CarbonInterface) {
         $displayTime = $createdAt->diffForHumans();
@@ -108,18 +108,18 @@
     $comments = collect(data_get($post, 'comments', []));
 
     $reactionButtons = [
-        'thich' => ['icon' => 'thumb_up', 'label' => 'Thích', 'color' => 'text-sky-400'],
-        'tim' => ['icon' => 'favorite', 'label' => 'Yêu thích', 'color' => 'text-rose-400'],
-        'haha' => ['icon' => 'mood', 'label' => 'Haha', 'color' => 'text-yellow-300'],
-        'buon' => ['icon' => 'sentiment_dissatisfied', 'label' => 'Buồn', 'color' => 'text-slate-400'],
-        'phan_no' => ['icon' => 'mood_bad', 'label' => 'Phẫn nộ', 'color' => 'text-orange-400'],
-        'wow' => ['icon' => 'emoji_objects', 'label' => 'Wow', 'color' => 'text-emerald-400'],
+        'thich' => ['icon' => 'thumb_up', 'label' => __('messages.react_thich'), 'color' => 'text-sky-400'],
+        'tim' => ['icon' => 'favorite', 'label' => __('messages.react_tim'), 'color' => 'text-rose-400'],
+        'haha' => ['icon' => 'mood', 'label' => __('messages.react_haha'), 'color' => 'text-yellow-300'],
+        'buon' => ['icon' => 'sentiment_dissatisfied', 'label' => __('messages.react_buon'), 'color' => 'text-slate-400'],
+        'phan_no' => ['icon' => 'mood_bad', 'label' => __('messages.react_phan_no'), 'color' => 'text-orange-400'],
+        'wow' => ['icon' => 'emoji_objects', 'label' => __('messages.react_wow'), 'color' => 'text-emerald-400'],
     ];
 
     $userReaction = optional(data_get($post, 'reactions'))->first()->loai_cam_xuc ?? null;
     $selected = $userReaction ? ($reactionButtons[$userReaction] ?? null) : null;
     $selectedIcon = $selected['icon'] ?? 'thumb_up';
-    $selectedLabel = $selected['label'] ?? 'Thích';
+    $selectedLabel = $selected['label'] ?? __('messages.post_like');
     $selectedColor = $selected ? ($selected['color'] ?? 'text-sky-400') : '';
 
     $isProfileUpdate = \Illuminate\Support\Str::startsWith($body, 'vừa cập nhật ảnh');
@@ -393,16 +393,16 @@
                             <span class="material-symbols-outlined text-[15px] sm:text-[16px] text-rose-400 bg-rose-500/20 rounded-full p-0.5" style="font-variation-settings: 'FILL' 1;">favorite</span>
                             <span class="material-symbols-outlined text-[15px] sm:text-[16px] text-yellow-300 bg-yellow-500/20 rounded-full p-0.5" style="font-variation-settings: 'FILL' 1;">mood</span>
                         </div>
-                        <span class="font-semibold text-slate-300 group-hover:text-sky-400 transition-colors" data-reaction-count-display="{{ $postId }}"><span data-reaction-count>{{ $reactionCount }}</span> cảm xúc</span>
+                        <span class="font-semibold text-slate-300 group-hover:text-sky-400 transition-colors" data-reaction-count-display="{{ $postId }}"><span data-reaction-count>{{ $reactionCount }}</span> {{ app()->getLocale() === 'en' ? ($reactionCount <= 1 ? 'reaction' : 'reactions') : 'cảm xúc' }}</span>
                     </button>
 
                     <div class="flex items-center gap-2 text-slate-500">
                         <button type="button" data-comment-toggle class="hover:underline hover:text-sky-300 font-medium text-slate-400 transition-colors">
-                            <span data-comment-count-text>{{ $commentCount }}</span> bình luận
+                            <span data-comment-count-text>{{ $commentCount }}</span> {{ app()->getLocale() === 'en' ? ($commentCount <= 1 ? 'comment' : 'comments') : 'bình luận' }}
                         </button>
                         @if($shareCount > 0)
                             <span>·</span>
-                            <span class="font-medium text-slate-400"><span data-share-count-text>{{ $shareCount }}</span> lượt chia sẻ</span>
+                            <span class="font-medium text-slate-400"><span data-share-count-text>{{ $shareCount }}</span> {{ app()->getLocale() === 'en' ? ($shareCount <= 1 ? 'share' : 'shares') : 'lượt chia sẻ' }}</span>
                         @endif
                     </div>
                 </div>
@@ -423,7 +423,7 @@
                                 <div class="relative flex items-center justify-center transition-transform group-hover:scale-110 group-active:scale-95">
                                     <span class="material-symbols-outlined text-[20px] sm:text-[22px]" data-icon="chat_bubble_outline">chat_bubble</span>
                                 </div>
-                                <span class="text-[13px] sm:text-sm font-semibold tracking-wide hidden sm:block">Bình luận</span>
+                                <span class="text-[13px] sm:text-sm font-semibold tracking-wide hidden sm:block">{{ __('messages.post_comment') }}</span>
                             </button>
 
                             @if($hasPersistedPost)
@@ -431,7 +431,7 @@
                                     <div class="relative flex items-center justify-center transition-transform group-hover:scale-110 group-active:scale-95">
                                         <span class="material-symbols-outlined text-[20px] sm:text-[22px]" data-icon="share">share</span>
                                     </div>
-                                    <span class="text-[13px] sm:text-sm font-semibold tracking-wide hidden sm:block">Chia sẻ</span>
+                                    <span class="text-[13px] sm:text-sm font-semibold tracking-wide hidden sm:block">{{ __('messages.post_share') }}</span>
                                 </button>
                             @endif
 
@@ -439,7 +439,7 @@
                                 <div class="relative flex items-center justify-center transition-transform group-hover:scale-110 group-active:scale-95">
                                     <span class="material-symbols-outlined text-[20px] sm:text-[22px] {{ $isBookmarked ? 'text-yellow-400' : '' }}" data-bookmark-icon style="{{ $isBookmarked ? 'font-variation-settings: \'FILL\' 1;' : '' }}">bookmark</span>
                                 </div>
-                                <span class="text-[13px] sm:text-sm font-semibold tracking-wide hidden sm:block" data-bookmark-text>{{ $isBookmarked ? 'Đã lưu' : 'Lưu' }}</span>
+                                <span class="text-[13px] sm:text-sm font-semibold tracking-wide hidden sm:block" data-bookmark-text>{{ $isBookmarked ? __('messages.post_saved') : __('messages.post_save') }}</span>
                             </button>
                         </div>
                     </div>
@@ -468,7 +468,7 @@
                                 @csrf
                                 <input type="hidden" name="binh_luan_cha_id" value="">
                                 <div class="relative">
-                                    <textarea name="noi_dung" rows="2" class="w-full bg-transparent border border-white/10 focus:border-sky-400 focus:ring-0 rounded-3xl p-3 pr-12 text-sm text-slate-100 placeholder:text-slate-500" placeholder="Viết bình luận..."></textarea>
+                                    <textarea name="noi_dung" rows="2" class="w-full bg-transparent border border-white/10 focus:border-sky-400 focus:ring-0 rounded-3xl p-3 pr-12 text-sm text-slate-100 placeholder:text-slate-500" placeholder="{{ __('messages.post_comment_placeholder') }}"></textarea>
                                     <button type="button" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-sky-400 transition-colors cursor-pointer z-10" onclick="this.closest('form').querySelector('.comment-media-input').click()">
                                         <span class="material-symbols-outlined">image</span>
                                     </button>
@@ -476,14 +476,14 @@
                                 <input type="file" name="media[]" multiple accept="image/*,video/*,.gif,.webp,.bmp,.svg,.heic,.heif" class="hidden comment-media-input" onchange="window.handleCommentMediaSelect(this)">
                                 <div class="comment-media-preview hidden mt-3 flex flex-wrap gap-3"></div>
                                 <div class="mt-3 flex items-center justify-between gap-3">
-                                    <span class="text-xs text-slate-500" data-comment-action>Viết bình luận mới</span>
-                                    <button type="button" data-comment-cancel class="hidden text-xs text-slate-400 hover:text-white">Hủy trả lời</button>
-                                    <button type="submit" class="rounded-full bg-sky-400/10 text-sky-300 px-4 py-2 text-sm font-semibold hover:bg-sky-400/20">Gửi</button>
+                                    <span class="text-xs text-slate-500" data-comment-action>{{ __('messages.post_comment_new') }}</span>
+                                    <button type="button" data-comment-cancel class="hidden text-xs text-slate-400 hover:text-white">{{ __('messages.post_comment_cancel') }}</button>
+                                    <button type="submit" class="rounded-full bg-sky-400/10 text-sky-300 px-4 py-2 text-sm font-semibold hover:bg-sky-400/20">{{ __('messages.post_comment_send') }}</button>
                                 </div>
                             </form>
                         @else
                             <div class="rounded-2xl border border-dashed border-white/10 bg-slate-950/60 p-3 text-sm text-slate-500">
-                                Bài viết mẫu không hỗ trợ cảm xúc hoặc bình luận.
+                                {{ __('messages.post_comment_sample_warning') }}
                             </div>
                         @endif
 
@@ -492,7 +492,7 @@
                                 $rootComments = $comments->whereNull('binh_luan_cha_id');
                             @endphp
                             @if($comments->isEmpty())
-                                <div data-no-comments class="text-sm text-slate-500">Chưa có bình luận nào. Hãy là người đầu tiên bình luận.</div>
+                                <div data-no-comments class="text-sm text-slate-500">{{ __('messages.post_comment_no_comments') }}</div>
                             @else
                                 @foreach($rootComments as $comment)
                                     @include('components.comment-node', ['comment' => $comment])

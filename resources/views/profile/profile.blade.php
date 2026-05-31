@@ -47,36 +47,36 @@ $profileUrl = route('profile.public', ['username' => $user->ten_dang_nhap]);
                     @if($isOwnProfile)
                     <a href="{{ route('profile.edit') }}" class="inline-flex items-center justify-center rounded-xl bg-gray-200 dark:bg-slate-800 hover:bg-gray-300 dark:hover:bg-slate-700 px-4 py-2 text-sm font-bold text-gray-800 dark:text-slate-200 transition-all active:scale-95 shadow-sm">
                         <span class="material-symbols-outlined text-[18px] mr-1.5">edit</span>
-                        Chỉnh sửa hồ sơ
+                        {{ __('messages.profile_edit_profile') }}
                     </a>
                     @elseif(auth()->check())
                     <button id="follow-btn" data-user-id="{{ $user->id }}" class="inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-bold transition-all active:scale-95 gap-1.5 shadow-sm {{ $isMutual ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : ($isFollowing ? 'bg-gray-200 dark:bg-slate-800 hover:bg-gray-300 dark:hover:bg-slate-700 text-gray-800 dark:text-slate-200' : 'bg-blue-600 hover:bg-blue-700 text-white') }}">
                         @if($isPendingFollower)
-                            Chờ chấp nhận
+                            {{ __('messages.profile_pending_accept') }}
                         @elseif($isMutual)
                             <span class="material-symbols-outlined text-[18px]">handshake</span>
-                            Bạn bè
+                            {{ __('messages.profile_friends') }}
                         @elseif($isFollowing)
-                            Bỏ theo dõi
+                            {{ __('messages.profile_unfollow') }}
                         @else
-                            Theo dõi
+                            {{ __('messages.profile_follow') }}
                         @endif
                     </button>
                     <button type="button" onclick="openBlockModal('{{ $user->id }}', '{{ $user->name }}')" class="inline-flex items-center justify-center rounded-xl bg-gray-200 dark:bg-slate-800 hover:bg-gray-300 dark:hover:bg-slate-700 px-4 py-2 text-sm font-bold text-red-600 dark:text-red-400 transition-all active:scale-95 gap-1.5 shadow-sm">
                         <span class="material-symbols-outlined text-[18px]">block</span>
-                        Chặn
+                        {{ __('messages.profile_block') }}
                     </button>
                     @else
                     <a href="{{ route('login') }}" class="inline-flex items-center justify-center rounded-xl bg-blue-600 hover:bg-blue-700 px-4 py-2 text-sm font-bold text-white transition-all">
-                        Đăng nhập để theo dõi
+                        {{ __('messages.profile_login_to_follow') }}
                     </a>
                     @endif
 
                     <button
                         type="button"
                         class="inline-flex items-center justify-center rounded-xl bg-gray-200 dark:bg-slate-800 hover:bg-gray-300 dark:hover:bg-slate-700 p-2 text-gray-800 dark:text-slate-200 transition-all active:scale-95 shadow-sm"
-                        onclick="navigator.clipboard.writeText('{{ $profileUrl }}'); if(typeof window.showToast === 'function') { window.showToast('Đã sao chép liên kết hồ sơ!', 'success'); }"
-                        title="Sao chép liên kết hồ sơ">
+                        onclick="navigator.clipboard.writeText('{{ $profileUrl }}'); if(typeof window.showToast === 'function') { window.showToast('{{ __('messages.profile_link_copied') }}', 'success'); }"
+                        title="{{ __('messages.profile_copy_link') }}">
                         <span class="material-symbols-outlined text-[18px]" data-icon="share">share</span>
                     </button>
                 </div>
@@ -94,22 +94,22 @@ $profileUrl = route('profile.public', ['username' => $user->ten_dang_nhap]);
 
             <div class="mt-4 max-w-2xl">
                 <p class="leading-relaxed text-on-surface-variant">
-                    {{ $user->tieu_su ?? 'Chưa có giới thiệu nào' }}
+                    {{ $user->tieu_su ?? __('messages.profile_no_bio') }}
                 </p>
             </div>
 
             <div class="mt-6 flex flex-wrap gap-6">
                 <a href="{{ route('profile.following', ['username' => $user->ten_dang_nhap]) }}" class="group flex cursor-pointer items-center gap-1.5">
                     <span class="font-bold text-on-surface group-hover:text-sky-300">{{ number_format($user->following_count ?? 0) }}</span>
-                    <span class="text-slate-400 group-hover:text-slate-300">Đang theo dõi</span>
+                    <span class="text-slate-400 group-hover:text-slate-300">{{ __('messages.profile_following') }}</span>
                 </a>
                 <a href="{{ route('profile.followers', ['username' => $user->ten_dang_nhap]) }}" class="group flex cursor-pointer items-center gap-1.5">
                     <span id="followers-count" class="font-bold text-on-surface group-hover:text-sky-300">{{ number_format($user->followers_count ?? 0) }}</span>
-                    <span class="text-slate-400 group-hover:text-slate-300">Người theo dõi</span>
+                    <span class="text-slate-400 group-hover:text-slate-300">{{ __('messages.profile_followers') }}</span>
                 </a>
                 <div class="flex items-center gap-1.5 text-slate-400">
                     <span class="material-symbols-outlined text-sm" data-icon="calendar_month">calendar_month</span>
-                    <span>Đã tham gia {{ isset($user->created_at) ? $user->created_at->format('m/Y') : '10/2023' }}</span>
+                    <span>{{ __('messages.profile_joined') }} {{ isset($user->created_at) ? $user->created_at->format('m/Y') : '10/2023' }}</span>
                 </div>
             </div>
         </div>
@@ -117,12 +117,12 @@ $profileUrl = route('profile.public', ['username' => $user->ten_dang_nhap]);
 
     <div class="sticky top-16 z-30 mt-8 border-b border-sky-400/10 bg-[#0a0e1a]/80 backdrop-blur-md">
         <div class="no-scrollbar flex overflow-x-auto px-2">
-            <button id="btn-tab-bai-dang" data-tab="bai-dang" class="tab-btn whitespace-nowrap border-b-2 border-sky-400 px-6 py-4 font-bold text-sky-300 transition-all">Bài đăng</button>
+            <button id="btn-tab-bai-dang" data-tab="bai-dang" class="tab-btn whitespace-nowrap border-b-2 border-sky-400 px-6 py-4 font-bold text-sky-300 transition-all">{{ __('messages.profile_posts_tab') }}</button>
             @if($isOwnProfile)
-            <button id="btn-tab-nhat-ky" data-tab="nhat-ky" class="tab-btn whitespace-nowrap px-6 py-4 font-medium text-slate-400 transition-all hover:bg-white/5 hover:text-sky-200">Nhật ký hoạt động</button>
+            <button id="btn-tab-nhat-ky" data-tab="nhat-ky" class="tab-btn whitespace-nowrap px-6 py-4 font-medium text-slate-400 transition-all hover:bg-white/5 hover:text-sky-200">{{ __('messages.profile_activity_tab') }}</button>
             @endif
-            <button id="btn-tab-phuong-tien" data-tab="phuong-tien" class="tab-btn whitespace-nowrap px-6 py-4 font-medium text-slate-400 transition-all hover:bg-white/5 hover:text-sky-200">Phương tiện</button>
-            <button id="btn-tab-ban-be" data-tab="ban-be" class="tab-btn whitespace-nowrap px-6 py-4 font-medium text-slate-400 transition-all hover:bg-white/5 hover:text-sky-200">Bạn bè ({{ $mutualFriends->count() }})</button>
+            <button id="btn-tab-phuong-tien" data-tab="phuong-tien" class="tab-btn whitespace-nowrap px-6 py-4 font-medium text-slate-400 transition-all hover:bg-white/5 hover:text-sky-200">{{ __('messages.profile_media_tab') }}</button>
+            <button id="btn-tab-ban-be" data-tab="ban-be" class="tab-btn whitespace-nowrap px-6 py-4 font-medium text-slate-400 transition-all hover:bg-white/5 hover:text-sky-200">{{ __('messages.profile_friends_tab') }} ({{ $mutualFriends->count() }})</button>
         </div>
     </div>
 
@@ -133,14 +133,14 @@ $profileUrl = route('profile.public', ['username' => $user->ten_dang_nhap]);
                 <div class="mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-slate-800/40 text-sky-400 border border-sky-400/20 shadow-lg shadow-sky-400/5">
                     <span class="material-symbols-outlined text-5xl" style="font-variation-settings: 'FILL' 1;">lock</span>
                 </div>
-                <h3 class="text-2xl font-black text-on-surface tracking-wide">Đây là tài khoản riêng tư</h3>
-                <p class="mt-3 text-slate-400 max-w-md mx-auto text-sm leading-relaxed">Chỉ những người theo dõi được chấp nhận mới có thể xem ảnh, bài viết và thông tin chi tiết của người dùng này.</p>
+                <h3 class="text-2xl font-black text-on-surface tracking-wide">{{ __('messages.profile_private') }}</h3>
+                <p class="mt-3 text-slate-400 max-w-md mx-auto text-sm leading-relaxed">{{ __('messages.profile_private_desc') }}</p>
             </div>
         @else
             <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
             <div id="profile-sidebar" class="space-y-6 md:col-span-1 transition-all duration-300">
                 <div class="glass-panel space-y-4 rounded-2xl p-5">
-                    <h3 class="text-lg font-bold text-sky-300">Giới thiệu</h3>
+                    <h3 class="text-lg font-bold text-sky-300">{{ __('messages.profile_about') }}</h3>
                     <div class="space-y-3">
                         @if(!empty($user->noi_o) && ($isOwnProfile || $user->quyen_rieng_tu !== 'rieng_tu' || $isAcceptedFollower))
                         <div class="flex items-center gap-3 text-slate-300 min-w-0">
@@ -174,8 +174,8 @@ $profileUrl = route('profile.public', ['username' => $user->ten_dang_nhap]);
 
                 <div class="glass-panel space-y-4 rounded-2xl p-5">
                     <div class="flex items-center justify-between">
-                        <h3 class="text-lg font-bold text-sky-300">Phương tiện</h3>
-                        <button id="btn-view-all-media" class="text-xs text-sky-300 hover:underline">Xem tất cả</button>
+                        <h3 class="text-lg font-bold text-sky-300">{{ __('messages.profile_media') }}</h3>
+                        <button id="btn-view-all-media" class="text-xs text-sky-300 hover:underline">{{ __('messages.profile_view_all') }}</button>
                     </div>
                     <div class="grid grid-cols-3 gap-2">
                         @forelse($userMedia->take(6) as $media)

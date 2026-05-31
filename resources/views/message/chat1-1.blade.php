@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('title', 'Tin nhan')
 
@@ -46,18 +46,18 @@
 
             <div class="flex items-center justify-between px-8 py-7">
                 <div>
-                    <h1 class="text-3xl font-extrabold">Tin nhắn</h1>
+                    <h1 class="text-3xl font-extrabold">{{ __('messages.chat_title') }}</h1>
                     <p class="mt-1 text-sm font-semibold text-slate-500">Chat 1-1</p>
                 </div>
                 <a href="{{ route('chat.groups.index') }}" class="rounded-2xl border border-sky-400/30 px-4 py-2 text-sm font-bold text-sky-300 hover:bg-sky-400/10">
-                    Nhóm
+                    {{ __('messages.chat_tab_groups') }}
                 </a>
             </div>
 
             <div class="px-8">
                 <label class="flex h-12 items-center gap-3 rounded-3xl border border-[#1b3047] bg-[#101827] px-4 text-slate-500">
                     <span class="material-symbols-outlined text-xl">search</span>
-                    <input class="w-full border-0 bg-transparent text-base outline-none placeholder:text-slate-500 focus:ring-0" placeholder="Tìm kiếm cuộc trò chuyện..." type="search">
+                    <input class="w-full border-0 bg-transparent text-base outline-none placeholder:text-slate-500 focus:ring-0" placeholder="{{ __('messages.chat_search') }}" type="search">
                 </label>
             </div>
 
@@ -66,10 +66,10 @@
                 <div class="flex gap-2">
                     <input name="account"
                            class="h-11 min-w-0 flex-1 rounded-2xl border border-[#1b3047] bg-[#101827] px-4 text-sm font-semibold text-slate-100 outline-none placeholder:text-slate-500 focus:border-sky-400"
-                           placeholder="Email / SDT / tên đăng nhập"
+                           placeholder="{{ __('messages.chat_find_user') }}"
                            value="{{ old('account') }}">
                     <button class="shrink-0 rounded-2xl bg-sky-300 px-4 text-sm font-black text-[#07111f] hover:bg-sky-200" type="submit">
-                        Kết bạn
+                        {{ __('messages.chat_add_friend') }}
                     </button>
                 </div>
 
@@ -107,20 +107,20 @@
                             <div class="flex items-center justify-between gap-3">
                                 <div class="truncate text-lg font-bold">{{ $name }}</div>
                                 <div class="shrink-0 text-sm font-semibold {{ $isActive ? 'text-sky-300' : 'text-slate-400' }}">
-                                {{ $isActive ? 'Vua xong' : 'Online' }}
+                                {{ $isActive ? __('messages.chat_just_now') : 'Online' }}
                             </div>
                         </div>
                             <div class="mt-1 flex items-center gap-2 truncate font-medium {{ $isActive ? 'text-sky-300' : 'text-slate-400' }}">
                                 @if ($isMuted)
                                     <span class="material-symbols-outlined text-[16px] text-amber-300" title="Đã tắt thông báo">notifications_off</span>
                                 @endif
-                                <span class="truncate">{{ $isActive && $messages->last() ? ($messages->last()->noi_dung ?: '[Tệp đính kèm]') : ($user->email ?: 'Bắt đầu trò chuyện') }}</span>
+                                <span class="truncate">{{ $isActive && $messages->last() ? ($messages->last()->noi_dung ?: '[Tệp đính kèm]') : ($user->email ?: __('messages.chat_start_intro')) }}</span>
                             </div>
                         </div>
                     </a>
                 @empty
                     <div class="rounded-3xl border border-[#1b3047] bg-white/[.03] p-5 text-center text-slate-400">
-                        Chưa có người dùng khác để chat.
+                        {{ __('messages.chat_no_users') }}
                     </div>
                 @endforelse
             </div>
@@ -155,9 +155,9 @@
                             <button id="muteChatButton"
                                     class="mute-glass group inline-flex h-12 items-center gap-2 rounded-2xl border px-4 text-sm font-black transition {{ $activeUserMuted ? 'border-amber-300/40 text-amber-200 hover:bg-amber-300/10' : 'border-sky-300/25 text-sky-200 hover:bg-sky-300/10' }}"
                                     type="submit"
-                                    title="{{ $activeUserMuted ? 'Bật lại thông báo' : 'Tắt thông báo' }}">
+                                    title="{{ $activeUserMuted ? (app()->getLocale() === 'en' ? 'Unmute' : 'Bật lại thông báo') : (app()->getLocale() === 'en' ? 'Mute' : 'Tắt thông báo') }}">
                                 <span class="material-symbols-outlined text-[22px] transition group-hover:scale-110">{{ $activeUserMuted ? 'notifications_off' : 'notifications' }}</span>
-                                <span>{{ $activeUserMuted ? 'Đang tắt' : 'Tắt chuông' }}</span>
+                                <span>{{ $activeUserMuted ? (app()->getLocale() === 'en' ? 'Muted' : 'Đang tắt') : (app()->getLocale() === 'en' ? 'Mute' : 'Tắt chuông') }}</span>
                             </button>
                         </form>
                         <button class="material-symbols-outlined rounded-2xl p-2 hover:bg-white/[.06] hover:text-sky-300" type="button">settings</button>
@@ -167,7 +167,7 @@
 
                 <div id="chatMessages" class="min-h-0 flex-1 space-y-8 overflow-y-auto px-8 py-7">
                     <div class="flex justify-center">
-                        <span class="rounded-full bg-white/[.06] px-5 py-2 text-xs font-black uppercase tracking-[.22em] text-slate-400">Hom nay</span>
+                        <span class="rounded-full bg-white/[.06] px-5 py-2 text-xs font-black uppercase tracking-[.22em] text-slate-400">{{ app()->getLocale() === 'en' ? 'Today' : 'Hôm nay' }}</span>
                     </div>
 
                     @forelse ($messages as $chatMessage)
@@ -219,7 +219,7 @@
                         </div>
                     @empty
                         <div class="flex h-full items-center justify-center text-lg font-semibold text-slate-500">
-                            Chưa có tin nhắn. Hay gửi tin đầu tiên.
+                            {{ __('messages.chat_empty_state') }}
                         </div>
                     @endforelse
                 </div>
@@ -264,7 +264,7 @@
                         <input id="messageInput"
                                name="noi_dung"
                                class="h-14 min-w-0 flex-1 rounded-full border border-[#1b3047] bg-[#111a2a] px-6 text-lg font-semibold text-slate-100 outline-none placeholder:text-slate-500 focus:border-sky-400"
-                               placeholder="Nhap tin nhan cua ban..."
+                               placeholder="{{ __('messages.chat_type_message') }}"
                                autocomplete="off"
                                value="{{ old('noi_dung') }}">
                         <button id="recordButton" class="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-transparent text-slate-400 hover:bg-sky-400/10 hover:text-sky-300" type="button" title="Ghi âm">
@@ -274,7 +274,7 @@
                             <svg class="h-8 w-8" viewBox="0 0 24 24" fill="currentColor"><path d="M3.4 20.4 21 12 3.4 3.6 3 10l10 2-10 2 .4 6.4Z"/></svg>
                         </button>
                     </form>
-
+ 
                     @error('noi_dung')
                         <div class="mt-3 px-3 text-sm font-semibold text-red-300">{{ $message }}</div>
                     @enderror
@@ -291,10 +291,9 @@
                     <div id="attachmentPreview" class="mt-2 px-3 text-sm font-semibold text-sky-300"></div>
                 </div>
             @else
-                {{-- Chưa chọn người dùng: nhắc bắt đầu chat. --}}
                 <div class="flex h-full flex-col items-center justify-center gap-4 text-slate-400">
                     <div class="grid h-20 w-20 place-items-center rounded-full bg-sky-400/10 text-4xl text-sky-300">≡</div>
-                    <div class="text-xl font-bold">Chọn một người dùng để bắt đầu chat.</div>
+                    <div class="text-xl font-bold">{{ __('messages.chat_select_user') }}</div>
                 </div>
             @endif
         </main>

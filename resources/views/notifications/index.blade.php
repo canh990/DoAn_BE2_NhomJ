@@ -1,21 +1,21 @@
 @extends('layouts.app')
 
-@section('title', 'Thông báo - NHOMJ')
+@section('title', __('messages.notifications_title'))
 
 @section('content')
 <div class="max-w-2xl mx-auto px-4 py-8">
     <div class="flex items-center justify-between mb-8">
         <div>
-            <h1 class="text-2xl font-bold bg-gradient-to-r from-sky-400 to-purple-400 bg-clip-text text-transparent">Thông báo</h1>
-            <p class="text-slate-500 text-sm mt-1">Luôn cập nhật những tương tác mới nhất</p>
+            <h1 class="text-2xl font-bold bg-gradient-to-r from-sky-400 to-purple-400 bg-clip-text text-transparent">{{ __('messages.notifications_title') }}</h1>
+            <p class="text-slate-500 text-sm mt-1">{{ __('messages.notifications_always_updated') }}</p>
         </div>
         <div class="flex gap-2">
             @if($notifications->count() > 0)
-                <button id="clear-all-notifications" class="p-2 text-slate-400 hover:text-red-400 hover:bg-red-400/10 rounded-xl transition-all" title="Xóa tất cả thông báo">
+                <button id="clear-all-notifications" class="p-2 text-slate-400 hover:text-red-400 hover:bg-red-400/10 rounded-xl transition-all" title="{{ __('messages.notifications_clear_all') }}">
                     <span class="material-symbols-outlined">delete_sweep</span>
                 </button>
                 @if($notifications->where('da_doc', false)->count() > 0)
-                    <button id="mark-all-read" class="p-2 text-slate-400 hover:text-sky-400 hover:bg-sky-400/10 rounded-xl transition-all" title="Đánh dấu tất cả là đã đọc">
+                    <button id="mark-all-read" class="p-2 text-slate-400 hover:text-sky-400 hover:bg-sky-400/10 rounded-xl transition-all" title="{{ __('messages.notifications_mark_all_read') }}">
                         <span class="material-symbols-outlined">done_all</span>
                     </button>
                 @endif
@@ -110,13 +110,13 @@
                             
                             @switch($notification->loai)
                                 @case('thich')
-                                    đã thích bài viết của bạn.
+                                    {{ __('messages.notifications_liked_post') }}
                                     @break
                                 @case('binh_luan')
                                     @if($notification->binhLuan && $notification->binhLuan->binh_luan_cha_id)
-                                        đã trả lời bình luận của bạn.
+                                        {{ __('messages.notifications_replied_comment') }}
                                     @else
-                                        đã bình luận về bài viết của bạn.
+                                        {{ __('messages.notifications_commented_post') }}
                                     @endif
                                     @break
                                 @case('theo_doi')
@@ -128,51 +128,51 @@
                                             ->exists();
                                     @endphp
                                     @if($isPendingRequest)
-                                        đã gửi yêu cầu theo dõi bạn.
+                                        {{ __('messages.notifications_follow_request') }}
                                     @else
-                                        đã bắt đầu theo dõi bạn.
+                                        {{ __('messages.notifications_started_following') }}
                                     @endif
                                     @break
                                 @case('ket_ban')
-                                    đã trở thành bạn bè với bạn.
+                                    {{ __('messages.notifications_became_friends') }}
                                     @break
                                 @case('chia_se')
-                                    đã chia sẻ bài viết của bạn.
+                                    {{ __('messages.notifications_shared_post') }}
                                     @break
                                 @case('tin_nhan')
-                                    đã gửi cho bạn một tin nhắn mới.
+                                    {{ __('messages.notifications_sent_new_message') }}
                                     @break
                                 @case('tin_nhan_nhom')
-                                    đã gửi tin nhắn mới trong nhóm chat.
+                                    {{ __('messages.notifications_new_group_message') }}
                                     @break
                                 @case('tag')
                                     @if($notification->binh_luan_id)
-                                        đã nhắc đến bạn trong một bình luận.
+                                        {{ __('messages.notifications_tagged_comment') }}
                                     @else
-                                        đã nhắc đến bạn trong một bài viết.
+                                        {{ __('messages.notifications_tagged_post') }}
                                     @endif
                                     @break
                                 @case('tag_all')
                                     @if($notification->binh_luan_id)
-                                        đã nhắc đến mọi người trong một bình luận.
+                                        {{ __('messages.notifications_tagged_all_comment') }}
                                     @else
-                                        đã nhắc đến mọi người trong một bài viết.
+                                        {{ __('messages.notifications_tagged_all_post') }}
                                     @endif
                                     @break
                                 @case('ghim_binh_luan')
-                                    đã ghim bình luận của bạn.
+                                    {{ __('messages.notifications_pinned_comment') }}
                                     @break
                                 @case('dang_bai')
-                                    vừa đăng một bài viết mới.
+                                    {{ __('messages.notifications_posted_new') }}
                                     @break
                                 @case('dang_tin')
-                                    vừa đăng một tin mới.
+                                    {{ __('messages.notifications_story_new') }}
                                     @break
                                 @case('he_thong')
-                                    <span class="text-sky-400 font-bold">[Hệ thống]</span> {{ $notification->noi_dung ?? 'Thông báo từ hệ thống.' }}
+                                    <span class="text-sky-400 font-bold">{{ __('messages.notifications_system') }}</span> {{ $notification->noi_dung ?? __('messages.notifications_system_notification') }}
                                     @break
                                 @default
-                                    đã tương tác với bạn.
+                                    {{ __('messages.notifications_interacted') }}
                             @endswitch
                         </div>
                         
@@ -190,13 +190,13 @@
                                         onclick="handleFollowRequest(event, {{ $notification->nguoi_thuc_hien_id }}, 'accept', {{ $notification->id }})" 
                                         class="px-4 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-xs font-bold text-white shadow-lg shadow-emerald-500/20 hover:brightness-110 active:scale-95 transition-all flex items-center gap-1">
                                     <span class="material-symbols-outlined text-sm">done</span>
-                                    Chấp nhận
+                                    {{ __('messages.notifications_accept') }}
                                 </button>
                                 <button type="button" 
                                         onclick="handleFollowRequest(event, {{ $notification->nguoi_thuc_hien_id }}, 'decline', {{ $notification->id }})" 
                                         class="px-4 py-1.5 rounded-xl border border-white/10 bg-white/5 hover:bg-red-500/10 hover:border-red-500/20 text-xs font-bold text-slate-300 hover:text-red-400 active:scale-95 transition-all flex items-center gap-1">
                                     <span class="material-symbols-outlined text-sm">close</span>
-                                    Từ chối
+                                    {{ __('messages.notifications_decline') }}
                                 </button>
                             </div>
                         @endif
@@ -227,11 +227,11 @@
                     {{-- Action Buttons --}}
                     <div class="shrink-0 flex flex-col gap-1">
                         @if(!$notification->da_doc)
-                            <button class="mark-read-btn p-1.5 text-slate-500 hover:text-sky-400 hover:bg-sky-400/10 rounded-lg transition-all opacity-0 group-hover:opacity-100" title="Đánh dấu đã đọc" onclick="markAsRead(event, {{ $notification->id }})">
+                            <button class="mark-read-btn p-1.5 text-slate-500 hover:text-sky-400 hover:bg-sky-400/10 rounded-lg transition-all opacity-0 group-hover:opacity-100" title="{{ __('messages.common_save') }}" onclick="markAsRead(event, {{ $notification->id }})">
                                 <span class="material-symbols-outlined text-[18px]">check_circle</span>
                             </button>
                         @endif
-                        <button class="delete-notification-btn p-1.5 text-slate-500 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all opacity-0 group-hover:opacity-100" title="Xóa thông báo" onclick="deleteNotification(event, {{ $notification->id }})">
+                        <button class="delete-notification-btn p-1.5 text-slate-500 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all opacity-0 group-hover:opacity-100" title="{{ __('messages.notifications_delete') }}" onclick="deleteNotification(event, {{ $notification->id }})">
                             <span class="material-symbols-outlined text-[18px]">delete</span>
                         </button>
                     </div>
@@ -242,8 +242,8 @@
                 <div class="w-24 h-24 rounded-full bg-sky-400/5 flex items-center justify-center mb-6 border border-sky-400/10">
                     <span class="material-symbols-outlined text-5xl text-sky-400/20">notifications_off</span>
                 </div>
-                <h3 class="text-xl font-bold text-slate-300">Không có thông báo nào</h3>
-                <p class="text-slate-500 text-sm mt-2 max-w-xs mx-auto">Chúng tôi sẽ thông báo cho bạn khi có hoạt động mới diễn ra.</p>
+                <h3 class="text-xl font-bold text-slate-300">{{ __('messages.notifications_no_notifications') }}</h3>
+                <p class="text-slate-500 text-sm mt-2 max-w-xs mx-auto">{{ __('messages.notifications_no_notifications_desc') }}</p>
             </div>
         @endforelse
     </div>

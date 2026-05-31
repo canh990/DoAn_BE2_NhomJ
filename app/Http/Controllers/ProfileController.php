@@ -247,7 +247,7 @@ class ProfileController extends Controller
 
             // Xóa các bài đăng thông báo cập nhật ảnh đại diện trước đó
             BaiViet::where('nguoi_dung_id', $user->id)
-                ->where('noi_dung', 'vừa cập nhật ảnh đại diện mới.')
+                ->where('noi_dung', __('messages.profile_update_avatar'))
                 ->delete();
         }
 
@@ -265,7 +265,7 @@ class ProfileController extends Controller
 
             // Xóa các bài đăng thông báo cập nhật ảnh bìa trước đó
             BaiViet::where('nguoi_dung_id', $user->id)
-                ->where('noi_dung', 'vừa cập nhật ảnh bìa mới.')
+                ->where('noi_dung', __('messages.profile_update_cover'))
                 ->delete();
         }
 
@@ -276,7 +276,7 @@ class ProfileController extends Controller
             $post = BaiViet::create([
                 'nguoi_dung_id' => $user->id,
                 'loai' => 'hinh_anh',
-                'noi_dung' => 'vừa cập nhật ảnh đại diện mới.',
+                'noi_dung' => __('messages.profile_update_avatar'),
                 'quyen_rieng_tu' => 'cong_khai',
             ]);
 
@@ -296,7 +296,7 @@ class ProfileController extends Controller
             $post = BaiViet::create([
                 'nguoi_dung_id' => $user->id,
                 'loai' => 'hinh_anh',
-                'noi_dung' => 'vừa cập nhật ảnh bìa mới.',
+                'noi_dung' => __('messages.profile_update_cover'),
                 'quyen_rieng_tu' => 'cong_khai',
             ]);
 
@@ -538,6 +538,7 @@ class ProfileController extends Controller
         $me = auth()->user();
         if ($me->id === $user->id) {
             return response()->json(['message' => 'Bạn không thể tự theo dõi chính mình.'], 400);
+            return response()->json(['message' => __('messages.profile_self_follow_error')], 400);
         }
 
         $trangThai = $user->quyen_rieng_tu === 'rieng_tu' ? 'cho_chap_nhan' : 'da_chap_nhan';

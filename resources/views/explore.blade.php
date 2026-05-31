@@ -1,14 +1,14 @@
 @extends('layouts.app')
 
-@section('title', 'Khám phá')
+@section('title', __('messages.explore_title'))
 
 @section('content')
 <div class="max-w-6xl mx-auto p-4 md:p-8 pb-24">
     <!-- Header & Search Bar -->
     <div class="flex flex-col items-center mb-8 w-full max-w-2xl mx-auto">
         <div class="text-center mb-6">
-            <h1 class="text-3xl font-extrabold tracking-tight text-white">Khám phá</h1>
-            <p class="text-slate-400 mt-1">Tìm kiếm bài viết, hashtag hoặc người dùng từ cộng đồng NHOMJ</p>
+            <h1 class="text-3xl font-extrabold tracking-tight text-white">{{ __('messages.explore_title') }}</h1>
+            <p class="text-slate-400 mt-1">{{ __('messages.explore_search_description') }}</p>
         </div>
 
         <!-- Main Search Form -->
@@ -24,11 +24,11 @@
                     name="search" 
                     id="search-input" 
                     value="{{ $keyword }}" 
-                    placeholder="Nhập từ khóa hoặc thẻ hashtag (Ví dụ: đồ án, #DalatWinter)..." 
+                    placeholder="{{ __('messages.explore_search_placeholder') }}" 
                     class="w-full bg-transparent border-0 outline-none px-3 py-3 text-sm text-white placeholder:text-slate-500 focus:ring-0"
                 >
                 <button type="submit" class="px-6 py-2.5 bg-sky-500 hover:bg-sky-600 text-white font-bold text-sm rounded-xl transition-all duration-300 active:scale-95 shadow-md shadow-sky-500/20 mr-1">
-                    Tìm kiếm
+                    {{ __('messages.explore_search_button') }}
                 </button>
             </div>
         </form>
@@ -38,57 +38,57 @@
     <div class="glass-panel p-5 rounded-2xl border border-white/10 bg-slate-900/60 backdrop-blur-md mb-8 max-w-4xl mx-auto space-y-4">
         <!-- 1. Kiểu nội dung -->
         <div class="flex flex-col sm:flex-row sm:items-center gap-3">
-            <span class="text-xs font-bold text-slate-400 w-32 shrink-0">Kiểu nội dung:</span>
+            <span class="text-xs font-bold text-slate-400 w-32 shrink-0">{{ __('messages.explore_content_type') }}</span>
             <div class="flex flex-wrap gap-2">
                 <button type="button" onclick="selectFilter('type', 'all')" 
                         class="px-4 py-1.5 rounded-full text-xs font-semibold transition-all duration-300 {{ $type === 'all' ? 'bg-sky-500 text-white shadow-md shadow-sky-500/20' : 'bg-slate-800/40 text-slate-400 border border-white/5 hover:bg-slate-800/80 hover:text-slate-300' }}">
-                    Tất cả
+                    {{ __('messages.explore_all') }}
                 </button>
                 <button type="button" onclick="selectFilter('type', 'hashtag')" 
                         class="px-4 py-1.5 rounded-full text-xs font-semibold transition-all duration-300 {{ $type === 'hashtag' ? 'bg-sky-500 text-white shadow-md shadow-sky-500/20' : 'bg-slate-800/40 text-slate-400 border border-white/5 hover:bg-slate-800/80 hover:text-slate-300' }}">
-                    Thẻ Hashtag
+                    {{ __('messages.explore_hashtag') }}
                 </button>
                 <button type="button" onclick="selectFilter('type', 'post')" 
                         class="px-4 py-1.5 rounded-full text-xs font-semibold transition-all duration-300 {{ $type === 'post' ? 'bg-sky-500 text-white shadow-md shadow-sky-500/20' : 'bg-slate-800/40 text-slate-400 border border-white/5 hover:bg-slate-800/80 hover:text-slate-300' }}">
-                    Bài viết
+                    {{ __('messages.explore_post') }}
                 </button>
                 <button type="button" onclick="selectFilter('type', 'user')" 
                         class="px-4 py-1.5 rounded-full text-xs font-semibold transition-all duration-300 {{ $type === 'user' ? 'bg-sky-500 text-white shadow-md shadow-sky-500/20' : 'bg-slate-800/40 text-slate-400 border border-white/5 hover:bg-slate-800/80 hover:text-slate-300' }}">
-                    Người dùng
+                    {{ __('messages.explore_user') }}
                 </button>
             </div>
         </div>
 
         <!-- 2. Thời gian -->
         <div class="flex flex-col sm:flex-row sm:items-center gap-3 border-t border-white/5 pt-3">
-            <span class="text-xs font-bold text-slate-400 w-32 shrink-0">Thời gian:</span>
+            <span class="text-xs font-bold text-slate-400 w-32 shrink-0">{{ __('messages.explore_time_filter') }}</span>
             <div class="flex flex-wrap gap-2">
                 <button type="button" onclick="selectFilter('time', 'all')" 
                         class="px-4 py-1.5 rounded-full text-xs font-semibold transition-all duration-300 {{ $time === 'all' ? 'bg-sky-500 text-white shadow-md shadow-sky-500/20' : 'bg-slate-800/40 text-slate-400 border border-white/5 hover:bg-slate-800/80 hover:text-slate-300' }}">
-                    Tất cả
+                    {{ __('messages.explore_all') }}
                 </button>
                 <button type="button" onclick="selectFilter('time', 'today')" 
                         class="px-4 py-1.5 rounded-full text-xs font-semibold transition-all duration-300 {{ $time === 'today' ? 'bg-sky-500 text-white shadow-md shadow-sky-500/20' : 'bg-slate-800/40 text-slate-400 border border-white/5 hover:bg-slate-800/80 hover:text-slate-300' }}">
-                    Hôm nay
+                    {{ __('messages.today') }}
                 </button>
                 <button type="button" onclick="selectFilter('time', 'week')" 
                         class="px-4 py-1.5 rounded-full text-xs font-semibold transition-all duration-300 {{ $time === 'week' ? 'bg-sky-500 text-white shadow-md shadow-sky-500/20' : 'bg-slate-800/40 text-slate-400 border border-white/5 hover:bg-slate-800/80 hover:text-slate-300' }}">
-                    Tuần này
+                    {{ __('messages.explore_week') }}
                 </button>
             </div>
         </div>
 
         <!-- 3. Mức độ phổ biến -->
         <div class="flex flex-col sm:flex-row sm:items-center gap-3 border-t border-white/5 pt-3">
-            <span class="text-xs font-bold text-slate-400 w-32 shrink-0">Mức độ phổ biến:</span>
+            <span class="text-xs font-bold text-slate-400 w-32 shrink-0">{{ __('messages.explore_popularity_filter') }}</span>
             <div class="flex flex-wrap gap-2">
                 <button type="button" onclick="selectFilter('sort', 'popular')" 
                         class="px-4 py-1.5 rounded-full text-xs font-semibold transition-all duration-300 {{ $sort === 'popular' ? 'bg-sky-500 text-white shadow-md shadow-sky-500/20' : 'bg-slate-800/40 text-slate-400 border border-white/5 hover:bg-slate-800/80 hover:text-slate-300' }}">
-                    Phổ biến
+                    {{ __('messages.explore_popular') }}
                 </button>
                 <button type="button" onclick="selectFilter('sort', 'latest')" 
                         class="px-4 py-1.5 rounded-full text-xs font-semibold transition-all duration-300 {{ $sort === 'latest' ? 'bg-sky-500 text-white shadow-md shadow-sky-500/20' : 'bg-slate-800/40 text-slate-400 border border-white/5 hover:bg-slate-800/80 hover:text-slate-300' }}">
-                    Mới nhất
+                    {{ __('messages.explore_latest') }}
                 </button>
             </div>
         </div>
@@ -101,7 +101,7 @@
             <div class="glass-panel p-5 rounded-2xl border border-white/10 bg-slate-900/60 backdrop-blur-md">
                 <h2 class="text-base font-bold text-white mb-4 flex items-center gap-2">
                     <span class="material-symbols-outlined text-sky-400">trending_up</span>
-                    Hashtag Phổ biến
+                    {{ __('messages.explore_trending_hashtags') }}
                 </h2>
 
                 <div class="space-y-4">
@@ -115,17 +115,17 @@
                             <!-- Tag details -->
                             <div class="min-w-0 flex-1">
                                 <p class="font-bold text-sm text-sky-400 truncate">#{{ $tag['ten'] }}</p>
-                                <p class="text-xs text-slate-400 mt-0.5">{{ $tag['so_bai_viet'] }} bài viết</p>
+                                <p class="text-xs text-slate-400 mt-0.5">{{ $tag['so_bai_viet'] }} {{ __('messages.explore_posts') }}</p>
                             </div>
 
                             <!-- View posts button -->
-                            <button type="button" onclick="viewHashtag('{{ $tag['ten'] }}')" 
+                            <button type="button" onclick="viewHashtag('{{ $tag['ten'] }}')"
                                     class="px-3 py-1.5 bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/20 hover:border-sky-500/30 text-sky-400 text-[11px] font-bold rounded-lg transition-all duration-200 shrink-0">
-                                Xem bài viết
+                                {{ __('messages.explore_view_posts') }}
                             </button>
                         </div>
                     @empty
-                        <p class="text-xs text-slate-500 text-center py-4">Chưa có hashtag nào phổ biến</p>
+                        <p class="text-xs text-slate-500 text-center py-4">{{ __('messages.explore_no_trending') }}</p>
                     @endforelse
                 </div>
             </div>
@@ -138,7 +138,7 @@
                 <div class="glass-panel p-5 rounded-2xl border border-white/10 bg-slate-900/60 backdrop-blur-md space-y-4">
                     <h3 class="text-sm font-bold text-slate-400 flex items-center gap-1.5">
                         <span class="material-symbols-outlined text-slate-400 text-sm">group</span>
-                        Thành viên tìm thấy ({{ $matchedUsers->count() }})
+                        {{ __('messages.explore_members_found') }} ({{ $matchedUsers->count() }})
                     </h3>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         @foreach($matchedUsers as $mUser)
@@ -156,7 +156,7 @@
                                 </div>
                                 <a href="{{ route('profile.public', ['username' => $mUser->ten_dang_nhap]) }}" 
                                    class="px-3 py-1 bg-sky-500/10 text-sky-400 border border-sky-500/20 rounded-full text-xs font-semibold hover:bg-sky-500/20 transition-all shrink-0">
-                                    Hồ sơ
+                                    {{ __('messages.profile_edit_profile') }}
                                 </a>
                             </div>
                         @endforeach
@@ -172,18 +172,18 @@
                             <span class="material-symbols-outlined text-sky-400 text-xl">explore</span>
                         </div>
                         <div>
-                            <h3 class="text-xs font-bold text-sky-300">Khám phá nội dung cho bạn</h3>
-                            <p class="text-[10px] text-slate-400 mt-0.5">Bài viết thịnh hành từ những người lạ dựa trên sở thích: 
+                            <h3 class="text-xs font-bold text-sky-300">{{ __('messages.explore_recommendation_title') }}</h3>
+                            <p class="text-[10px] text-slate-400 mt-0.5">{{ __('messages.explore_recommendation_desc') }} 
                                 @if(!empty($recommendedTagNames))
                                     <span class="text-sky-400 font-semibold">{{ implode(', ', array_map(fn($t) => '#'.$t, $recommendedTagNames)) }}</span>
                                 @else
-                                    <span class="text-sky-400 font-semibold">Tất cả xu hướng</span>
+                                    <span class="text-sky-400 font-semibold">{{ __('messages.explore_all_trends') }}</span>
                                 @endif
                             </p>
                         </div>
                     </div>
                     <div class="text-[10px] bg-sky-400/10 text-sky-400 px-2.5 py-1 rounded-full font-bold border border-sky-400/20 shrink-0">
-                        🔥 THỊNH HÀNH
+                        {{ __('messages.explore_recommendation_badge') }}
                     </div>
                 </div>
             @endif
@@ -205,7 +205,7 @@
                     <div class="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-slate-800/50 text-slate-500 border border-dashed border-slate-700">
                         <span class="material-symbols-outlined text-4xl">search_off</span>
                     </div>
-                    <h3 class="text-xl font-bold text-white">Không tìm thấy bài viết nào</h3>
+                    <h3 class="text-xl font-bold text-white">{{ __('messages.explore_no_results') }}</h3>
                     <p class="mt-2 text-slate-400 max-w-md mx-auto text-xs">Hãy thử thay đổi từ khóa, kiểm tra chính tả hoặc điều chỉnh bộ lọc tìm kiếm ở trên để thử lại.</p>
                 </div>
             @endif

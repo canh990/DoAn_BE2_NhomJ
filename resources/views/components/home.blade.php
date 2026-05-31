@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Bảng tin')
+@section('title', __('messages.home_title'))
 
 @section('content')
 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 max-w-7xl mx-auto p-4 md:p-6 pb-24">
@@ -9,7 +9,7 @@
         <!-- ===== FORM ĐĂNG BÀI ===== -->
         <section class="glass-panel rounded-2xl p-4 shadow-sm relative z-40">
             <div class="flex gap-4">
-                <a href="{{ route('profile') }}" class="shrink-0 hover:opacity-80 transition-opacity" title="Xem trang cá nhân">
+                <a href="{{ route('profile') }}" class="shrink-0 hover:opacity-80 transition-opacity" title="{{ __('messages.nav_profile') }}">
                     <img class="w-12 h-12 rounded-full border border-sky-400/20 object-cover" alt="Avatar" src="{{ Auth::user()->avatar_url }}">
                 </a>
                 <div class="w-full">
@@ -17,7 +17,7 @@
                         @csrf
                         
                         <!-- Textarea không viền, tối ưu không gian -->
-                        <textarea id="post-content" name="noi_dung" maxlength="280" class="w-full bg-transparent border-none focus:ring-0 text-slate-100 placeholder-slate-500 resize-none text-lg leading-relaxed p-0 min-h-[120px]" placeholder="Bạn đang nghĩ gì?" rows="4">{{ old('noi_dung') }}</textarea>
+                        <textarea id="post-content" name="noi_dung" maxlength="280" class="w-full bg-transparent border-none focus:ring-0 text-slate-100 placeholder-slate-500 resize-none text-lg leading-relaxed p-0 min-h-[120px]" placeholder="{{ __('messages.home_type_status') }}" rows="4">{{ old('noi_dung') }}</textarea>
                         
                         @error('noi_dung')
                         <p class="mt-2 text-sm text-red-400">{{ $message }}</p>
@@ -26,7 +26,7 @@
                         <!-- Hiển thị cảm xúc / hoạt động đang chọn -->
                         <div id="feeling-display-container" class="mt-2 hidden items-center gap-2 text-sm text-slate-300 bg-white/5 w-fit px-3 py-1.5 rounded-full border border-white/10">
                             <span class="material-symbols-outlined text-yellow-400 text-sm">mood</span>
-                            <span id="feeling-text">Đang cảm thấy vui</span>
+                            <span id="feeling-text">{{ __('messages.common_loading') }}</span>
                             <button type="button" id="remove-feeling-btn" class="hover:text-red-400 transition-colors ml-1 flex items-center">
                                 <span class="material-symbols-outlined text-sm">close</span>
                             </button>
@@ -36,7 +36,7 @@
                         <div id="location-display-container" class="mt-2 hidden items-center gap-2 text-sm text-slate-300 bg-white/5 w-fit px-3 py-1.5 rounded-full border border-white/10">
                             <span class="material-symbols-outlined text-red-400 text-sm">location_on</span>
                             <span id="location-text">Check-in tại: </span>
-                            <button type="button" id="remove-location-btn" class="hover:text-red-400 transition-colors ml-1 flex items-center" title="Xóa địa điểm">
+                            <button type="button" id="remove-location-btn" class="hover:text-red-400 transition-colors ml-1 flex items-center" title="{{ __('messages.common_delete') }}">
                                 <span class="material-symbols-outlined text-sm">close</span>
                             </button>
                         </div>
@@ -55,7 +55,7 @@
                         <div id="image-preview-container" class="mt-3 hidden">
                             <div id="preview-grid" class="grid gap-2"></div>
                             <button type="button" id="remove-all-images" class="mt-2 text-sm text-red-400 hover:text-red-300 hidden items-center gap-1">
-                                <span class="material-symbols-outlined text-sm">delete</span> Xóa tất cả tệp
+                                <span class="material-symbols-outlined text-sm">delete</span> {{ __('messages.common_delete') }}
                             </button>
                         </div>
 
@@ -71,7 +71,7 @@
                                 type="text"
                                 id="poll-question-input"
                                 name="poll_question"
-                                placeholder="Nhập câu hỏi bình chọn..."
+                                placeholder="{{ __('messages.common_loading') }}"
                                 class="w-full bg-slate-900/60 border border-white/10 focus:border-sky-400/50 rounded-xl px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:ring-0 transition-colors"
                             >
 
@@ -170,11 +170,11 @@
         <div class="flex border-b border-white/10 mb-6 relative z-40">
             <button type="button" id="btn-feed-recommend" 
                     class="feed-tab-btn relative pb-3 px-6 text-sm font-bold transition-all duration-300 {{ ($feedType ?? 'recommend') === 'recommend' ? 'text-cyan-400 border-b-2 border-cyan-400' : 'text-slate-400 hover:text-slate-200 border-b-2 border-transparent' }}">
-                Dành cho bạn
+                For You
             </button>
             <button type="button" id="btn-feed-following" 
                     class="feed-tab-btn relative pb-3 px-6 text-sm font-bold transition-all duration-300 {{ ($feedType ?? 'recommend') === 'following' ? 'text-cyan-400 border-b-2 border-cyan-400' : 'text-slate-400 hover:text-slate-200 border-b-2 border-transparent' }}">
-                Đang theo dõi
+                Following
             </button>
         </div>
 
@@ -194,9 +194,9 @@
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-lg font-bold text-sky-300 flex items-center gap-2">
                     <span class="material-symbols-outlined text-sky-400">perm_media</span>
-                    Phương tiện mới nhất
+                    {{ __('messages.profile_media') }}
                 </h3>
-                <a href="{{ route('explore') }}" class="text-xs text-slate-500 hover:text-sky-300 transition-colors">Khám phá</a>
+                <a href="{{ route('explore') }}" class="text-xs text-slate-500 hover:text-sky-300 transition-colors">{{ __('messages.nav_explore') }}</a>
             </div>
             
             <div class="grid grid-cols-3 gap-2">
@@ -221,7 +221,7 @@
                     </a>
                 @empty
                     <div class="col-span-3 py-10 text-center text-xs text-slate-500 bg-slate-900/50 rounded-xl border border-dashed border-white/10">
-                        Chưa có phương tiện nào.
+                        {{ __('messages.profile_empty_media') }}
                     </div>
                 @endforelse
             </div>
@@ -232,8 +232,8 @@
                         <span class="material-symbols-outlined text-sky-400 text-lg">trending_up</span>
                     </div>
                     <div>
-                        <p class="text-xs font-bold text-sky-300">Xu hướng NHOMJ</p>
-                        <p class="text-[10px] text-slate-500">Xem những gì đang diễn ra</p>
+                        <p class="text-xs font-bold text-sky-300">{{ __('messages.trending_title') }}</p>
+                        <p class="text-[10px] text-slate-500">{{ __('messages.trending_desc') }}</p>
                     </div>
                 </div>
             </div>
@@ -245,7 +245,7 @@
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-sm font-bold text-sky-300 flex items-center gap-2">
                     <span class="material-symbols-outlined text-sky-400 text-lg">person_add</span>
-                    Gợi ý kết bạn
+                    {{ __('messages.suggestion_title') }}
                 </h3>
             </div>
             
@@ -266,7 +266,7 @@
                         <button type="button" 
                                 data-user-id="{{ $sUser->id }}" 
                                 class="btn-suggest-follow px-3 py-1.5 text-[10px] font-bold text-slate-900 bg-cyan-400 hover:bg-cyan-300 rounded-full transition-all duration-300 flex items-center justify-center gap-1 shrink-0 shadow-md shadow-cyan-400/20 active:scale-95">
-                            Theo dõi
+                            {{ __('messages.profile_follow') }}
                         </button>
                     </div>
                 @endforeach
@@ -882,11 +882,11 @@
                 bindPaginationLinks();
             })
             .catch(err => {
-                console.error('Lỗi tải bảng tin:', err);
+                console.error('{{ __('messages.home_feed_error') }}', err);
                 container.innerHTML = `
-                    <div class="glass-panel rounded-2xl p-12 text-center text-rose-400 border border-white/10 bg-slate-900/60">
-                        <span class="material-symbols-outlined text-4xl mb-2">error</span>
-                        <p class="text-sm font-bold">Không thể tải bảng tin. Vui lòng thử lại sau.</p>
+                    <div class=\"glass-panel rounded-2xl p-12 text-center text-rose-400 border border-white/10 bg-slate-900/60\">
+                        <span class=\"material-symbols-outlined text-4xl mb-2\">error</span>
+                        <p class=\"text-sm font-bold\">{{ __('messages.home_feed_error_message') }}</p>
                     </div>
                 `;
                 container.style.opacity = '1';
