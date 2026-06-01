@@ -13,7 +13,7 @@ class PostController extends Controller
 
     public function index()
     {
-        $posts = BaiViet::with(['user', 'media', 'originalPost.user', 'originalPost.media', 'poll.options.votes', 'poll.votes'])
+        $posts = BaiViet::with(['user', 'taggedUsers', 'media', 'originalPost.user', 'originalPost.media', 'poll.options.votes', 'poll.votes'])
             ->withCount(['reactions', 'comments', 'shares'])
             ->with(['reactions' => function ($query) {
                 $query->where('nguoi_dung_id', auth()->id());
@@ -39,7 +39,7 @@ class PostController extends Controller
         $keyword = trim($request->input('search', ''));
 
         // Start base query on BaiViet model
-        $query = BaiViet::with(['user', 'media', 'originalPost.user', 'originalPost.media', 'poll.options.votes', 'poll.votes'])
+        $query = BaiViet::with(['user', 'taggedUsers', 'media', 'originalPost.user', 'originalPost.media', 'poll.options.votes', 'poll.votes'])
             ->withCount(['reactions', 'comments', 'shares'])
             ->with(['reactions' => function ($q) {
                 $q->where('nguoi_dung_id', auth()->id());
@@ -263,7 +263,7 @@ class PostController extends Controller
             return redirect()->route('home')->with('error', 'Bài viết đã bị xóa.');
         }
 
-        $post->load(['user', 'media', 'originalPost.user', 'originalPost.media', 'poll.options.votes', 'poll.votes'])
+        $post->load(['user', 'taggedUsers', 'media', 'originalPost.user', 'originalPost.media', 'poll.options.votes', 'poll.votes'])
             ->loadCount(['reactions', 'comments', 'shares'])
             ->load(['reactions' => function ($query) {
                 $query->where('nguoi_dung_id', auth()->id());
@@ -294,6 +294,8 @@ class PostController extends Controller
             'poll_question' => ['nullable', 'string', 'max:500'],
             'poll_options' => ['nullable', 'array', 'min:2', 'max:6'],
             'poll_options.*' => ['nullable', 'string', 'max:255'],
+            'tagged_users' => ['nullable', 'array'],
+            'tagged_users.*' => ['exists:nguoi_dung,id'],
         ]);
 
         $pollOptions = collect($request->input('poll_options', []))
@@ -369,6 +371,11 @@ class PostController extends Controller
             }
         }
 
+        // Gắn thẻ (tag) người dùng explicit
+        if ($request->has('tagged_users') && is_array($request->input('tagged_users'))) {
+            $post->taggedUsers()->sync($request->input('tagged_users'));
+        }
+
         // Xử lý upload ảnh/video
         if ($request->hasFile('anh')) {
             foreach ($request->file('anh') as $index => $file) {
@@ -390,6 +397,23 @@ class PostController extends Controller
         $user = auth()->user();
         $mentionService = resolve(\App\Services\MentionService::class);
         $taggedUserIds = $mentionService->processMentions($post->noi_dung ?? '', $user, $post);
+
+        // --- THÊM THÔNG BÁO CHO NHỮNG NGƯỜI ĐƯỢC GẮN THẺ (EXPLICIT TAG) ---
+        if ($request->has('tagged_users') && is_array($request->input('tagged_users'))) {
+            $explicitTagIds = $request->input('tagged_users');
+            foreach ($explicitTagIds as $explicitId) {
+                if (!in_array($explicitId, $taggedUserIds) && $explicitId != $user->id) {
+                    \App\Models\ThongBao::create([
+                        'nguoi_dung_id' => $explicitId,
+                        'nguoi_thuc_hien_id' => $user->id,
+                        'loai' => 'tag',
+                        'bai_viet_id' => $post->id,
+                        'ngay_tao' => now(),
+                    ]);
+                    $taggedUserIds[] = $explicitId; // Tránh follower thông báo trùng nếu đã bị tag
+                }
+            }
+        }
 
         // --- TẠO THÔNG BÁO CHO NGƯỜI THEO DÕI ---
         $followers = $user->followers()
@@ -511,7 +535,7 @@ class PostController extends Controller
         $sharesCount = BaiViet::where('bai_goc_id', $originalPost->id)->count();
 
         // Trả về HTML render sẵn của thẻ post-card mới để chèn thẳng vào DOM realtime
-        $html = view('components.post-card', ['post' => $sharedPost->load(['user', 'media', 'originalPost.user', 'originalPost.media'])])->render();
+        $html = view('components.post-card', ['post' => $sharedPost->load(['user', 'taggedUsers', 'media', 'originalPost.user', 'originalPost.media'])])->render();
 
         return response()->json([
             'success' => true,

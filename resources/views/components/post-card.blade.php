@@ -161,15 +161,44 @@
 
             <div class="flex items-start justify-between gap-4">
                 <div class="min-w-0 flex-1">
-                    <!-- Dòng 1: Tên hiển thị + Tích xanh -->
-                    <div class="flex items-center gap-1">
-                        <a href="{{ $authorUsername ? route('profile.public', $authorUsername) : '#' }}" class="truncate font-bold text-on-surface hover:text-sky-300 transition-colors">
+                    <!-- Dòng 1: Tên hiển thị + Tích xanh + Tag -->
+                    <div class="flex flex-wrap items-center gap-1 text-[15px]">
+                        <a href="{{ $authorUsername ? route('profile.public', $authorUsername) : '#' }}" class="font-bold text-on-surface hover:text-sky-300 transition-colors truncate max-w-[200px]">
                             {{ $authorName }}
                         </a>
                         @if ($isVerified)
-                            <span class="material-symbols-outlined text-base text-sky-400 shrink-0" data-icon="verified" style="font-variation-settings: 'FILL' 1;" title="Tài khoản đã xác thực">
+                            <span class="material-symbols-outlined text-[16px] text-sky-400 shrink-0" data-icon="verified" style="font-variation-settings: 'FILL' 1;" title="Tài khoản đã xác thực">
                                 verified
                             </span>
+                        @endif
+
+                        @php
+                            $taggedUsers = data_get($post, 'taggedUsers', collect());
+                            $taggedCount = $taggedUsers->count();
+                        @endphp
+                        @if($taggedCount > 0)
+                            <span class="text-slate-400 mx-0.5 text-[14px]">cùng với</span>
+                            @if($taggedCount === 1)
+                                <a href="{{ route('profile.public', $taggedUsers[0]->ten_dang_nhap) }}" class="font-bold text-on-surface hover:text-sky-300 transition-colors truncate max-w-[150px]">
+                                    {{ $taggedUsers[0]->ten_dang_nhap }}
+                                </a>
+                            @elseif($taggedCount === 2)
+                                <a href="{{ route('profile.public', $taggedUsers[0]->ten_dang_nhap) }}" class="font-bold text-on-surface hover:text-sky-300 transition-colors truncate max-w-[100px]">
+                                    {{ $taggedUsers[0]->ten_dang_nhap }}
+                                </a>
+                                <span class="text-slate-400 text-[14px]">và</span>
+                                <a href="{{ route('profile.public', $taggedUsers[1]->ten_dang_nhap) }}" class="font-bold text-on-surface hover:text-sky-300 transition-colors truncate max-w-[100px]">
+                                    {{ $taggedUsers[1]->ten_dang_nhap }}
+                                </a>
+                            @else
+                                <a href="{{ route('profile.public', $taggedUsers[0]->ten_dang_nhap) }}" class="font-bold text-on-surface hover:text-sky-300 transition-colors truncate max-w-[100px]">
+                                    {{ $taggedUsers[0]->ten_dang_nhap }}
+                                </a>
+                                <span class="text-slate-400 text-[14px]">và</span>
+                                <span class="font-bold text-on-surface hover:text-sky-300 transition-colors cursor-pointer" title="{{ $taggedUsers->skip(1)->pluck('ten_dang_nhap')->implode(', ') }}">
+                                    {{ $taggedCount - 1 }} người khác
+                                </span>
+                            @endif
                         @endif
                     </div>
 

@@ -41,6 +41,13 @@
                             </button>
                         </div>
 
+                        <!-- Hiển thị người được tag -->
+                        <div id="tag-display-container" class="mt-2 hidden flex-wrap items-center gap-1.5 text-sm text-slate-300">
+                            <span class="text-slate-400 text-sm">Cùng với</span>
+                            <div id="tagged-users-list" class="flex flex-wrap gap-1.5 items-center"></div>
+                        </div>
+                        <div id="hidden-tagged-inputs"></div>
+
                         <!-- Input ẩn để lưu dữ liệu -->
                         <input type="hidden" name="cam_xuc" id="input-cam_xuc">
                         <input type="hidden" name="hoat_dong" id="input-hoat_dong">
@@ -102,9 +109,22 @@
                                 <button type="button" class="p-2 text-purple-400 hover:bg-purple-400/10 rounded-full transition-colors" title="Ảnh GIF">
                                     <span class="material-symbols-outlined" data-icon="gif_box">gif_box</span>
                                 </button>
-                                <button type="button" class="p-2 text-emerald-400 hover:bg-emerald-400/10 rounded-full transition-colors" title="Gắn thẻ">
-                                    <span class="material-symbols-outlined" data-icon="label">label</span>
-                                </button>
+                                <div class="relative z-50">
+                                    <button type="button" id="btn-tag" class="p-2 text-emerald-400 hover:bg-emerald-400/10 rounded-full transition-colors" title="Gắn thẻ">
+                                        <span class="material-symbols-outlined" data-icon="label">label</span>
+                                    </button>
+                                    <!-- Dropdown tìm kiếm gắn thẻ -->
+                                    <div id="tag-dropdown" class="hidden absolute top-full left-0 mt-2 w-72 bg-slate-800 border border-white/10 rounded-2xl shadow-2xl overflow-hidden flex-col p-3 text-sm text-left">
+                                        <div class="px-1 py-1 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Gắn thẻ bạn bè</div>
+                                        <div class="flex items-center bg-slate-900/60 border border-white/10 rounded-xl px-3 py-1.5 mb-2 focus-within:border-emerald-400/50 transition-all">
+                                            <span class="material-symbols-outlined text-slate-500 text-sm mr-2">search</span>
+                                            <input id="tag-search-input" type="text" placeholder="Tìm kiếm người dùng..." autocomplete="off" class="bg-transparent border-none focus:ring-0 p-0 text-xs text-slate-100 placeholder:text-slate-500 w-full">
+                                        </div>
+                                        <div id="tag-results-container" class="max-h-40 overflow-y-auto space-y-1 custom-scrollbar">
+                                            <div class="text-[11px] text-slate-500 text-center py-4">Nhập tên hoặc email để tìm kiếm...</div>
+                                        </div>
+                                    </div>
+                                </div>
                                 <div class="relative z-50">
                                     <button type="button" id="btn-feeling" class="p-2 text-yellow-400 hover:bg-yellow-400/10 rounded-full transition-colors" title="Cảm xúc/Hoạt động">
                                         <span class="material-symbols-outlined" data-icon="mood">mood</span>
@@ -677,6 +697,153 @@
                 locationDisplayContainer.classList.remove('flex');
                 updateSubmitButton();
             });
+        }
+
+        // Tag user logic
+        const btnTag = document.getElementById('btn-tag');
+        const tagDropdown = document.getElementById('tag-dropdown');
+        const tagSearchInput = document.getElementById('tag-search-input');
+        const tagResultsContainer = document.getElementById('tag-results-container');
+        const tagDisplayContainer = document.getElementById('tag-display-container');
+        const taggedUsersList = document.getElementById('tagged-users-list');
+        const hiddenTaggedInputs = document.getElementById('hidden-tagged-inputs');
+        let selectedTaggedUsers = [];
+
+        if (btnTag) {
+            btnTag.addEventListener('click', function(e) {
+                e.stopPropagation();
+                tagDropdown.classList.toggle('hidden');
+                if (!tagDropdown.classList.contains('hidden')) {
+                    tagSearchInput.focus();
+                }
+            });
+        }
+
+        document.addEventListener('click', function(e) {
+            if (btnTag && tagDropdown && !btnTag.contains(e.target) && !tagDropdown.contains(e.target)) {
+                tagDropdown.classList.add('hidden');
+            }
+        });
+
+        let tagSearchDebounce = null;
+        if (tagSearchInput) {
+            tagSearchInput.addEventListener('input', function() {
+                clearTimeout(tagSearchDebounce);
+                const query = this.value.trim();
+                if (!query) {
+                    tagResultsContainer.innerHTML = '<div class="text-[11px] text-slate-500 text-center py-4">Nhập tên hoặc email để tìm kiếm...</div>';
+                    return;
+                }
+
+                tagResultsContainer.innerHTML = `
+                    <div class="flex items-center justify-center py-4">
+                        <div class="w-4 h-4 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin"></div>
+                        <span class="text-[11px] text-slate-400 ml-2">Đang tìm kiếm...</span>
+                    </div>
+                `;
+
+                tagSearchDebounce = setTimeout(() => {
+                    fetch(`/search/users?q=${encodeURIComponent(query)}`)
+                        .then(res => res.json())
+                        .then(users => {
+                            if (users.length === 0) {
+                                tagResultsContainer.innerHTML = '<div class="text-[11px] text-slate-500 text-center py-4">Không tìm thấy người dùng.</div>';
+                                return;
+                            }
+
+                            tagResultsContainer.innerHTML = '';
+                            users.forEach(user => {
+                                if (selectedTaggedUsers.find(u => u.id == user.id)) return;
+
+                                const btn = document.createElement('button');
+                                btn.type = 'button';
+                                btn.className = 'w-full text-left px-3 py-2 rounded-xl hover:bg-white/5 flex items-center gap-2 transition-colors border border-transparent hover:border-white/5';
+                                
+                                let avatarUrl = 'https://ui-avatars.com/api/?name=' + user.ten_dang_nhap + '&background=random';
+                                if (user.anh_dai_dien) {
+                                    if (user.anh_dai_dien.startsWith('http')) {
+                                        avatarUrl = user.anh_dai_dien;
+                                    } else {
+                                        avatarUrl = '/storage/' + user.anh_dai_dien;
+                                    }
+                                }
+                                
+                                btn.innerHTML = `
+                                    <img src="${avatarUrl}" class="w-6 h-6 rounded-full object-cover">
+                                    <div class="min-w-0 flex-1">
+                                        <div class="font-semibold text-slate-200 text-xs truncate">${user.ten_dang_nhap}</div>
+                                    </div>
+                                `;
+
+                                btn.addEventListener('click', function() {
+                                    addTaggedUser(user);
+                                });
+
+                                tagResultsContainer.appendChild(btn);
+                            });
+                            
+                            if(tagResultsContainer.innerHTML === '') {
+                                tagResultsContainer.innerHTML = '<div class="text-[11px] text-slate-500 text-center py-4">Không có kết quả mới.</div>';
+                            }
+                        })
+                        .catch(err => {
+                            console.error('Lỗi tìm kiếm user:', err);
+                            tagResultsContainer.innerHTML = '<div class="text-[11px] text-rose-400 text-center py-4">Có lỗi xảy ra.</div>';
+                        });
+                }, 400);
+            });
+        }
+
+        function addTaggedUser(user) {
+            if (selectedTaggedUsers.find(u => u.id == user.id)) return;
+            selectedTaggedUsers.push(user);
+            renderTaggedUsers();
+            
+            tagSearchInput.value = '';
+            tagResultsContainer.innerHTML = '<div class="text-[11px] text-slate-500 text-center py-4">Nhập tên hoặc email để tìm kiếm...</div>';
+            tagDropdown.classList.add('hidden');
+        }
+
+        if (taggedUsersList) {
+            taggedUsersList.addEventListener('click', function(e) {
+                const removeBtn = e.target.closest('.remove-tag-btn');
+                if (removeBtn) {
+                    const id = removeBtn.getAttribute('data-id');
+                    selectedTaggedUsers = selectedTaggedUsers.filter(u => u.id != id);
+                    renderTaggedUsers();
+                }
+            });
+        }
+
+        function renderTaggedUsers() {
+            taggedUsersList.innerHTML = '';
+            hiddenTaggedInputs.innerHTML = '';
+
+            if (selectedTaggedUsers.length === 0) {
+                tagDisplayContainer.classList.add('hidden');
+                tagDisplayContainer.classList.remove('flex');
+            } else {
+                tagDisplayContainer.classList.remove('hidden');
+                tagDisplayContainer.classList.add('flex');
+
+                selectedTaggedUsers.forEach(user => {
+                    const tagEl = document.createElement('div');
+                    tagEl.className = 'flex items-center gap-1 bg-emerald-400/10 text-emerald-400 border border-emerald-400/20 px-2 py-0.5 rounded-md text-xs';
+                    tagEl.innerHTML = `
+                        <span class="font-semibold">${user.ten_dang_nhap}</span>
+                        <button type="button" class="remove-tag-btn hover:text-emerald-300 ml-0.5 flex items-center justify-center" data-id="${user.id}">
+                            <span class="material-symbols-outlined text-[14px]">close</span>
+                        </button>
+                    `;
+                    taggedUsersList.appendChild(tagEl);
+
+                    const inputEl = document.createElement('input');
+                    inputEl.type = 'hidden';
+                    inputEl.name = 'tagged_users[]';
+                    inputEl.value = user.id;
+                    hiddenTaggedInputs.appendChild(inputEl);
+                });
+            }
         }
 
         const btnPoll = document.getElementById('btn-poll');
