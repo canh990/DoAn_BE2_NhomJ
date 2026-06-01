@@ -389,29 +389,37 @@
                                 ? $mediaPath
                                 : asset('storage/' . ltrim($mediaPath, '/'));
                             $mediaLoai = data_get($media, 'loai');
-                            $isVideo = $mediaLoai === 'video' || \Illuminate\Support\Str::endsWith($mediaPath, ['.mp4', '.webm', '.mov']);
+                            $isVideo = $mediaLoai === 'video' || \Illuminate\Support\Str::endsWith(strtolower($mediaPath), ['.mp4', '.webm', '.mov']);
+                            $isPdf = \Illuminate\Support\Str::endsWith(strtolower($mediaPath), ['.pdf']);
                         @endphp
                         <div class="overflow-hidden rounded-xl border border-white/10 bg-slate-900/50 {{ $mediaCount > 1 ? 'aspect-square' : '' }}">
                             @if($isVideo)
                                 <video src="{{ $mediaSrc }}" controls controlsList="nodownload" muted playsinline loop class="w-full h-full {{ $mediaCount == 1 ? 'max-h-[500px] object-contain block mx-auto' : 'object-cover' }}"></video>
+                            @elseif($isPdf)
+                                <embed src="{{ $mediaSrc }}" type="application/pdf" class="w-full h-full {{ $mediaCount == 1 ? 'min-h-[500px]' : 'object-cover' }}">
                             @else
                                 <img src="{{ $mediaSrc }}" 
                                      alt="Post image" 
                                      data-post-id="{{ $postId }}"
-                                     class="post-image-item cursor-pointer hover:opacity-90 transition-opacity w-full h-full {{ $mediaCount == 1 ? 'max-h-[500px] object-contain block mx-auto' : 'object-cover' }}">
+                                     class="post-image-item cursor-pointer hover:opacity-90 transition-opacity w-full h-full {{ $mediaCount == 1 ? 'max-h-[500px] object-contain block mx-auto' : 'object-cover' }}"
+                                     onerror="this.outerHTML='<div class=\\'w-full h-full min-h-[200px] flex flex-col items-center justify-center bg-slate-800 text-slate-400 p-4 border border-dashed border-white/20\\'><span class=\\'material-symbols-outlined text-4xl mb-2\\'>image_not_supported</span><span class=\\'text-sm mb-2\\'>Không thể hiển thị định dạng này</span><a href=\\'{{ $mediaSrc }}\\' download target=\\'_blank\\' class=\\'text-emerald-400 hover:underline text-xs\\'>Tải xuống để xem</a></div>'">
                             @endif
                         </div>
                     @endforeach
                 </div>
             @elseif ($postImage)
                 @php
-                    $isVideo = \Illuminate\Support\Str::endsWith($postImage, ['.mp4', '.webm', '.mov']);
+                    $isVideo = \Illuminate\Support\Str::endsWith(strtolower($postImage), ['.mp4', '.webm', '.mov']);
+                    $isPdf = \Illuminate\Support\Str::endsWith(strtolower($postImage), ['.pdf']);
                 @endphp
                 <div class="mt-3 overflow-hidden rounded-2xl border border-white/10 bg-slate-900/50">
                     @if($isVideo)
                         <video class="w-full h-auto max-h-[500px] object-contain block mx-auto" controls controlsList="nodownload" muted playsinline loop src="{{ $postImage }}"></video>
+                    @elseif($isPdf)
+                        <embed src="{{ $postImage }}" type="application/pdf" class="w-full h-[500px] block mx-auto">
                     @else
-                        <img class="post-image-item cursor-pointer hover:opacity-90 transition-opacity w-full h-auto max-h-[500px] object-contain block mx-auto" data-post-id="{{ $postId }}" src="{{ $postImage }}" alt="Hình ảnh bài viết">
+                        <img class="post-image-item cursor-pointer hover:opacity-90 transition-opacity w-full h-auto max-h-[500px] object-contain block mx-auto" data-post-id="{{ $postId }}" src="{{ $postImage }}" alt="Hình ảnh bài viết"
+                             onerror="this.outerHTML='<div class=\\'w-full h-[300px] flex flex-col items-center justify-center bg-slate-800 text-slate-400 p-4 border border-dashed border-white/20\\'><span class=\\'material-symbols-outlined text-4xl mb-2\\'>image_not_supported</span><span class=\\'text-sm mb-2\\'>Không thể hiển thị định dạng này</span><a href=\\'{{ $postImage }}\\' download target=\\'_blank\\' class=\\'text-emerald-400 hover:underline text-xs\\'>Tải xuống để xem</a></div>'">
                     @endif
                 </div>
             @endif
@@ -524,7 +532,7 @@
                                         <span class="material-symbols-outlined">image</span>
                                     </button>
                                 </div>
-                                <input type="file" name="media[]" multiple accept="image/*,video/*,.gif,.webp,.bmp,.svg,.heic,.heif" class="hidden comment-media-input" onchange="window.handleCommentMediaSelect(this)">
+                                <input type="file" name="media[]" multiple accept="image/*,video/*,.gif,.webp,.bmp,.svg,.heic,.heif,.pdf,.tiff,.tif" class="hidden comment-media-input" onchange="window.handleCommentMediaSelect(this)">
                                 <div class="comment-media-preview hidden mt-3 flex flex-wrap gap-3"></div>
                                 <div class="mt-3 flex items-center justify-between gap-3">
                                     <span class="text-xs text-slate-500" data-comment-action>{{ __('messages.post_comment_new') }}</span>

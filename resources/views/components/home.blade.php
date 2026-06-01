@@ -56,7 +56,7 @@
                         <input type="hidden" name="kinh_do" id="input-kinh_do">
 
                         <!-- Nút chọn file ẩn -->
-                        <input type="file" id="post-image" name="anh[]" accept="image/*,video/*" multiple class="hidden">
+                        <input type="file" id="post-image" name="anh[]" accept="image/*,video/*,.pdf,.tiff,.tif,.heic,.heif,.jpg,.jpeg,.png,.HEIC,.JPG,.JPEG,.PNG" multiple class="hidden">
                         
                         <!-- Vùng hiển thị ảnh/video xem trước -->
                         <div id="image-preview-container" class="mt-3 hidden">
@@ -327,6 +327,26 @@
             submitButton.disabled = !hasText && !hasImage;
         };
 
+        // Hàm kiểm tra định dạng HEIC qua Magic Bytes
+        async function isHeicBlob(blob) {
+            if (blob.name && (blob.name.toLowerCase().endsWith('.heic') || blob.name.toLowerCase().endsWith('.heif'))) return true;
+            if (blob.type === 'image/heic' || blob.type === 'image/heif') return true;
+            
+            try {
+                const buffer = await blob.slice(0, 12).arrayBuffer();
+                const view = new Uint8Array(buffer);
+                if (view[4] === 0x66 && view[5] === 0x74 && view[6] === 0x79 && view[7] === 0x70) { // 'ftyp'
+                    const brand = String.fromCharCode(view[8], view[9], view[10], view[11]);
+                    if (['heic', 'heix', 'mif1', 'msf1'].includes(brand)) {
+                        return true;
+                    }
+                }
+            } catch (e) {
+                console.error('Error checking magic bytes', e);
+            }
+            return false;
+        }
+
         textarea.addEventListener('input', updateCount);
 
         // Image upload handling
@@ -341,14 +361,34 @@
                 const files = Array.from(e.target.files);
                 const validFiles = [];
                 
-                for (const file of files) {
+                const btnLabel = document.querySelector('button[title="Ảnh/Video"] span');
+                if (btnLabel) btnLabel.textContent = 'hourglass_empty'; // Loading indicator
+                
+                for (let file of files) {
                     if (file.type.startsWith('video/')) {
                         const isValidDuration = await checkVideoDuration(file, 120); // 120 giây = 2 phút
                         if (!isValidDuration) {
-                            alert(`Video "${file.name}" vượt quá thời lượng cho phép (tối đa 2 phút).`);
+                            if (typeof window.showToast === 'function') {
+                                window.showToast(`Video "${file.name}" vượt quá thời lượng cho phép (tối đa 2 phút).`, 'error');
+                            } else {
+                                alert(`Video "${file.name}" vượt quá thời lượng cho phép (tối đa 2 phút).`);
+                            }
                             continue;
                         }
                     }
+
+                    // Kiểm tra xem có phải HEIC không (kể cả bị đổi đuôi sang JPG)
+                    const isHeic = await isHeicBlob(file);
+                    if (isHeic && typeof heic2any !== 'undefined') {
+                        try {
+                            const convertedBlob = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.8 });
+                            const newFileName = file.name.replace(/\.(heic|heif|jpg|jpeg|png)$/i, '') + '_converted.jpg';
+                            file = new File([convertedBlob], newFileName, { type: 'image/jpeg' });
+                        } catch (err) {
+                            console.error('Lỗi chuyển đổi HEIC sang JPEG:', err);
+                        }
+                    }
+
                     validFiles.push(file);
                 }
 
@@ -407,10 +447,19 @@
                 div.className = 'relative group rounded-xl overflow-hidden border border-white/10 bg-slate-900/50 ' + (selectedFiles.length > 1 ? 'aspect-square' : '');
                 
                 let mediaElement = '';
+                const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+                
                 if (isVideo) {
                     mediaElement = `<video src="${objectUrl}" class="w-full h-full ${selectedFiles.length > 1 ? 'object-cover' : 'max-h-64 object-contain'}" controls controlsList="nodownload"></video>`;
+                } else if (isPdf) {
+                    mediaElement = `<embed src="${objectUrl}" type="application/pdf" class="w-full h-full ${selectedFiles.length > 1 ? 'object-cover' : 'max-h-64 object-contain'}">`;
                 } else {
-                    mediaElement = `<img src="${objectUrl}" class="w-full h-full ${selectedFiles.length > 1 ? 'object-cover' : 'max-h-64 object-contain'}">`;
+                    const fallbackHtml = `<div class="w-full h-full min-h-[100px] flex flex-col items-center justify-center bg-slate-800/80 text-slate-400 p-4">
+                        <span class="material-symbols-outlined text-3xl mb-1">image_not_supported</span>
+                        <span class="text-[10px] text-center px-2">Trình duyệt không hỗ trợ xem trước định dạng này</span>
+                    </div>`;
+                    
+                    mediaElement = `<img src="${objectUrl}" class="w-full h-full ${selectedFiles.length > 1 ? 'object-cover' : 'max-h-64 object-contain'}" onerror="this.outerHTML='${fallbackHtml.replace(/\n/g, '').replace(/'/g, "\\'")}'">`;
                 }
                 
                 div.innerHTML = `
