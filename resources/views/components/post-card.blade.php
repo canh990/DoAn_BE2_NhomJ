@@ -136,9 +136,17 @@
     $userVotedOptionId = data_get($userVote, 'lua_chon_id');
     $hasVotedPoll = filled($userVotedOptionId);
     $totalPollVotes = $pollVotes->count();
+
+    $isProfilePageOfAuthor = false;
+    if (request()->routeIs('profile')) {
+        $isProfilePageOfAuthor = (auth()->check() && $author && (int) data_get($author, 'id') === (int) auth()->id());
+    } elseif (request()->routeIs('profile.public')) {
+        $routeUsername = request()->route('username');
+        $isProfilePageOfAuthor = ($authorUsername && strtolower($authorUsername) === strtolower($routeUsername));
+    }
 @endphp
 
-<article {{ $attributes->merge(['class' => ($isShared ? 'bg-slate-900/40 p-4 border border-white/5 rounded-xl' : 'glass-panel p-6') . ' group rounded-2xl transition-all hover:border-sky-400/30']) }}>
+<article data-is-profile-page-of-author="{{ $isProfilePageOfAuthor ? '1' : '0' }}" {{ $attributes->merge(['class' => ($isShared ? 'bg-slate-900/40 p-4 border border-white/5 rounded-xl' : 'glass-panel p-6') . ' group rounded-2xl transition-all hover:border-sky-400/30']) }}>
     <div class="flex gap-4">
         <a href="{{ $authorUsername ? route('profile.public', $authorUsername) : '#' }}" class="shrink-0 hover:opacity-80 transition-opacity" title="Xem trang cá nhân của {{ $authorName }}">
             <img
@@ -151,10 +159,10 @@
         <div class="min-w-0 flex-1 space-y-3">
             <!-- Pinned Post Indicator Container -->
             <div class="pinned-indicator-container">
-                @if(data_get($post, 'da_ghim'))
-                    <div class="pinned-indicator flex items-center gap-1 text-xs font-bold text-sky-300 mb-1 select-none">
-                        <span class="mr-0.5">📌</span>
-                        <span>{{ app()->getLocale() === 'en' ? 'Pinned post' : 'Bài viết đã ghim' }}</span>
+                @if(data_get($post, 'da_ghim') && $isProfilePageOfAuthor)
+                    <div class="pinned-indicator inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-sky-500/10 text-sky-400 border border-sky-400/20 mb-2 select-none shadow-sm shadow-sky-500/5">
+                        <span class="mr-0.5 text-[11px]">📌</span>
+                        <span>{{ app()->getLocale() === 'en' ? 'Pinned Post' : 'Bài viết đã ghim' }}</span>
                     </div>
                 @endif
             </div>
@@ -269,7 +277,7 @@
                             </button>
                             <div class="post-dropdown-menu hidden absolute right-0 top-full mt-1 w-40 bg-slate-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden z-20">
                                 @if($postId)
-                                @if(auth()->id() === (int) data_get($post, 'nguoi_dung_id'))
+                                @if(auth()->id() === (int) data_get($post, 'nguoi_dung_id') && $isProfilePageOfAuthor)
                                 <button type="button" 
                                         class="w-full text-left px-4 py-3 text-sm text-sky-400 hover:bg-white/5 flex items-center gap-2 transition-colors border-b border-white/5 btn-toggle-pin" 
                                         data-post-id="{{ $postId }}"
