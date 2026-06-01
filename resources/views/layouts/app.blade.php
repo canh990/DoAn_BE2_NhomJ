@@ -114,6 +114,8 @@
             color: #38bdf8 !important; /* sky-400 blue */
         }
     </style>
+    <!-- Thư viện chuyển đổi HEIC sang JPEG -->
+    <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
 </head>
 <body class="antialiased selection:bg-primary/30 selection:text-primary">
 

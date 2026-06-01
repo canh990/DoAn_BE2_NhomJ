@@ -287,7 +287,7 @@ class PostController extends Controller
             'cam_xuc' => ['nullable', 'string', 'max:100'],
             'hoat_dong' => ['nullable', 'string', 'max:100'],
             'anh' => ['nullable', 'array', 'max:10'], // Tối đa 10 tệp
-            'anh.*' => ['file', 'mimes:jpeg,png,jpg,gif,webp,bmp,svg,heic,heif,mp4,mov,webm,avi,mkv,wmv', 'max:51200'], 
+            'anh.*' => ['file', 'mimes:jpeg,png,jpg,gif,webp,avif,bmp,svg,heic,heif,mp4,mov,webm,avi,mkv,wmv,pdf,tiff,tif', 'max:51200'], 
             'ten_dia_diem' => ['nullable', 'string', 'max:255'],
             'vi_do' => ['nullable', 'numeric'],
             'kinh_do' => ['nullable', 'numeric'],
