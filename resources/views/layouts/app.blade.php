@@ -597,12 +597,13 @@
                         // Update current post card indicator
                         const postCard = pinButton.closest('article');
                         if (postCard) {
+                            const isProfilePageOfAuthor = postCard.dataset.isProfilePageOfAuthor === '1';
                             const indicatorContainer = postCard.querySelector('.pinned-indicator-container');
                             if (indicatorContainer) {
-                                if (nowPinned) {
+                                if (nowPinned && isProfilePageOfAuthor) {
                                     indicatorContainer.innerHTML = `
-                                        <div class="pinned-indicator flex items-center gap-1 text-xs font-bold text-sky-300 mb-1 select-none">
-                                            <span class="mr-0.5">📌</span>
+                                        <div class="pinned-indicator inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-sky-500/10 text-sky-400 border border-sky-400/20 mb-2 select-none shadow-sm shadow-sky-500/5">
+                                            <span class="mr-0.5 text-[11px]">📌</span>
                                             <span>${pinnedText}</span>
                                         </div>
                                     `;
@@ -613,7 +614,7 @@
 
                             // Prepend post card if in profile tab feed
                             const container = document.getElementById('post-list-container');
-                            if (container && nowPinned) {
+                            if (container && nowPinned && isProfilePageOfAuthor) {
                                 // Add smooth fade transition
                                 postCard.style.transition = 'opacity 0.25s ease';
                                 postCard.style.opacity = '0.3';
