@@ -141,9 +141,13 @@
 
                     <form action="{{ route('posts.store') }}" method="POST" enctype="multipart/form-data" id="post-form" class="flex flex-col gap-4">
                         @csrf
-                        <textarea id="post-content" name="noi_dung" maxlength="280" rows="5"
+                        <textarea id="post-content" name="noi_dung" rows="5"
                             class="w-full bg-transparent border-none focus:ring-0 text-slate-100 placeholder-slate-500 resize-none text-base leading-relaxed p-0"
                             placeholder="Bạn đang nghĩ gì?">{{ old('noi_dung') }}</textarea>
+                            
+                        @error('noi_dung')
+                            <p class="text-red-400 text-sm mt-1">{{ $message }}</p>
+                        @enderror
 
                         <!-- Hiển thị cảm xúc / hoạt động đang chọn -->
                         <div id="story-feeling-display" class="mt-2 hidden items-center gap-2 text-sm text-slate-300 bg-white/5 w-fit px-3 py-1.5 rounded-full border border-white/10">
@@ -197,7 +201,7 @@
                                 </button>
                             </div>
                             <div class="flex items-center gap-3">
-                                <span id="post-char-count" class="text-xs font-mono text-slate-500">0/280</span>
+                                <span id="post-char-count" class="text-xs font-mono text-slate-500">0/1000</span>
                                 <button id="post-submit-btn" type="submit"
                                     class="bg-sky-500 text-white px-6 py-2 rounded-full font-bold hover:bg-sky-600 transition-all shadow-lg shadow-sky-500/20 disabled:opacity-40 disabled:cursor-not-allowed">
                                     Đăng
@@ -269,9 +273,19 @@ document.addEventListener('DOMContentLoaded', function () {
         textOverlay.classList.toggle('hidden');
         textOptions.classList.toggle('hidden');
     });
-    draggableText.addEventListener('dblclick', function () {
-        const v = prompt('Nội dung:', this.textContent.trim());
-        if (v !== null) this.textContent = v || 'Nhấn đúp để sửa ✨';
+    draggableText.addEventListener('click', e => e.stopPropagation());
+    draggableText.addEventListener('dblclick', function (e) {
+        e.stopPropagation();
+        this.contentEditable = "true";
+        this.focus();
+        // Bôi đen nội dung (tùy chọn)
+        document.execCommand('selectAll', false, null);
+    });
+    draggableText.addEventListener('blur', function () {
+        this.contentEditable = "false";
+        if (this.textContent.trim() === '') {
+            this.textContent = 'Nhấn đúp để sửa ✨';
+        }
     });
     if (fontSelect) fontSelect.addEventListener('change', () => draggableText.style.fontFamily = fontSelect.value);
     document.querySelectorAll('.color-swatch').forEach(s => s.addEventListener('click', () => draggableText.style.color = s.dataset.color));
@@ -279,6 +293,9 @@ document.addEventListener('DOMContentLoaded', function () {
     // Drag text
     let dragging = false, sx, sy, ox, oy;
     draggableText.addEventListener('mousedown', e => {
+        e.stopPropagation();
+        if (draggableText.isContentEditable) return; // Không cho phép kéo khi đang sửa chữ
+
         dragging = true; sx = e.clientX; sy = e.clientY;
         const r = draggableText.getBoundingClientRect(), cr = canvas.getBoundingClientRect();
         ox = r.left - cr.left; oy = r.top - cr.top;
@@ -361,7 +378,13 @@ document.addEventListener('DOMContentLoaded', function () {
     postRemoveAll.addEventListener('click', () => { selectedFiles = []; syncFileInput(); renderPostPreviews(); });
 
     postContent.addEventListener('input', () => {
-        postCharCount.textContent = postContent.value.length + '/280';
+        let text = postContent.value;
+        if (text.length > 1000) {
+            alert('Bài viết không được vượt quá 1000 ký tự!');
+            postContent.value = text.substring(0, 1000);
+            text = postContent.value;
+        }
+        postCharCount.textContent = text.length + '/1000';
         updatePostBtn();
     });
 
