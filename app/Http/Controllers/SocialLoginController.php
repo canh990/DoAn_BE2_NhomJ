@@ -79,6 +79,8 @@ class SocialLoginController extends Controller
     {
         $oauthId = (string) $socialUser->getId();
         $email = $socialUser->getEmail() ?: $oauthId . '@' . $provider . '.local';
+        // ten_hien_thi: tên thật từ OAuth provider (Google/Facebook)
+        $tenHienThi = $socialUser->getName() ?? null;
         $tenDangNhap = $this->generateUniqueUsername(
             $socialUser->getNickname()
             ?? $socialUser->getName()
@@ -96,12 +98,13 @@ class SocialLoginController extends Controller
 
         if (! $user) {
             return User::create([
-                'ten_dang_nhap' => $tenDangNhap,
-                'email' => $email,
-                'mat_khau_hash' => \Illuminate\Support\Facades\Hash::make(Str::random(40)), // Ensure password is always hashed
-                'da_xac_thuc' => true,
+                'ten_dang_nhap'      => $tenDangNhap,
+                'ten_hien_thi'       => $tenHienThi,
+                'email'              => $email,
+                'mat_khau_hash'      => \Illuminate\Support\Facades\Hash::make(Str::random(40)), // Ensure password is always hashed
+                'da_xac_thuc'        => true,
                 'nha_cung_cap_oauth' => $provider,
-                'id_oauth' => $oauthId,
+                'id_oauth'           => $oauthId,
             ]);
         }
 

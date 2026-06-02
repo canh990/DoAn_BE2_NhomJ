@@ -92,6 +92,21 @@
                 <div class="space-y-2">
                     <label class="text-xs font-bold uppercase tracking-wider text-slate-500 ml-1">Tên hiển thị</label>
                     <div class="relative group">
+                        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-primary transition-colors">badge</span>
+                        <input
+                            name="ten_hien_thi"
+                            type="text"
+                            value="{{ old('ten_hien_thi', $user->ten_hien_thi) }}"
+                            placeholder="Tên thật của bạn (vd: Nguyễn Văn A)"
+                            class="w-full bg-slate-900/50 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-on-surface focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all outline-none">
+                    </div>
+                    @error('ten_hien_thi') <p class="text-xs text-red-400 mt-1">{{ $message }}</p> @enderror
+                    <p class="text-xs text-slate-600 ml-1">Tên này hiển thị với bạn bè. Để trống = dùng tên đăng nhập.</p>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-xs font-bold uppercase tracking-wider text-slate-500 ml-1">Tên đăng nhập (URL)</label>
+                    <div class="relative group">
                         <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-primary transition-colors">person</span>
                         <input
                             name="ten_dang_nhap"
@@ -100,6 +115,7 @@
                             class="w-full bg-slate-900/50 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-on-surface focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all outline-none">
                     </div>
                     @error('ten_dang_nhap') <p class="text-xs text-red-400 mt-1">{{ $message }}</p> @enderror
+                    <p class="text-xs text-slate-600 ml-1">Dùng cho URL: nhomj.studio/<strong class="text-slate-400">{{ $user->ten_dang_nhap }}</strong></p>
                 </div>
 
                 <div class="space-y-2">
