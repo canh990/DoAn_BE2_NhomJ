@@ -27,22 +27,32 @@ class PersonalSettingsController extends Controller
             ->latest('lan_hoat_dong_cuoi')
             ->get();
 
-        // Chuẩn bị dữ liệu cho Popup Giới thiệu (About)
+        // Chuẩn bị dữ liệu cho Popup Giới thiệu (About) từ Database
         $aboutInfo = [
-            'app_name' => 'Hệ thống Quản trị Nội bộ',
-            'version' => 'v1.2.4',
-            'release_date' => '22/05/2026',
-            'company' => 'Công ty TNHH Giải pháp Số',
+            'app_name' => \DB::table('tro_giup')->where('loai', 'info')->where('khoa', 'app_name')->value('tra_loi') ?? 'Hệ thống Quản trị Nội bộ',
+            'version' => \DB::table('tro_giup')->where('loai', 'info')->where('khoa', 'version')->value('tra_loi') ?? 'v1.2.4',
+            'release_date' => \DB::table('tro_giup')->where('loai', 'info')->where('khoa', 'release_date')->value('tra_loi') ?? '22/05/2026',
+            'company' => \DB::table('tro_giup')->where('loai', 'info')->where('khoa', 'company')->value('tra_loi') ?? 'Công ty TNHH Giải pháp Số',
         ];
 
-        // Chuẩn bị dữ liệu cho Popup Hỗ trợ (Support)
+        // Chuẩn bị dữ liệu cho Popup Hỗ trợ (Support) từ Database
         $supportInfo = [
-            'email' => 'it-support@company.com',
-            'hotline' => '1900 1234',
-            'zalo_group' => 'https://zalo.me/g/nhomhotroIT',
+            'email' => \DB::table('tro_giup')->where('loai', 'info')->where('khoa', 'email')->value('tra_loi') ?? 'it-support@company.com',
+            'hotline' => \DB::table('tro_giup')->where('loai', 'info')->where('khoa', 'hotline')->value('tra_loi') ?? '1900 1234',
+            'zalo_group' => \DB::table('tro_giup')->where('loai', 'info')->where('khoa', 'zalo_group')->value('tra_loi') ?? 'https://zalo.me/g/nhomhotroIT',
         ];
 
-        return view('settings', compact('sessions', 'aboutInfo', 'supportInfo'));
+        // Lấy danh sách FAQ tương ứng với ngôn ngữ hiện tại từ Database
+        $locale = app()->getLocale();
+        $faqs = \DB::table('tro_giup')
+            ->where('loai', 'faq')
+            ->where(function($query) use ($locale) {
+                $query->where('ngon_ngu', $locale)
+                      ->orWhere('ngon_ngu', 'all');
+            })
+            ->get();
+
+        return view('settings', compact('sessions', 'aboutInfo', 'supportInfo', 'faqs'));
     }
 
     // Persist theme choice (light|dark) into session
