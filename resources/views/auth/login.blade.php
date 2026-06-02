@@ -99,7 +99,7 @@
                     </div>
                 @endif
 
-                <form method="POST" action="{{ route('login.post') }}" class="space-y-5">
+                <form method="POST" action="{{ route('login.post') }}" class="space-y-5" autocomplete="off">
                     @csrf
 
                     <!-- Email/Phone Input -->
@@ -116,7 +116,7 @@
                                 name="login"
                                 type="text"
                                 value="{{ old('login') }}"
-                                autocomplete="username"
+                                autocomplete="off"
                                 required
                                 class="w-full h-12 bg-surface-container-low border @error('login') border-error @else border-outline-variant @enderror focus:border-primary focus:ring-1 focus:ring-primary/20 rounded-lg pl-12 pr-4 text-on-surface placeholder:text-outline transition-all"
                                 placeholder="name@example.com / 0912345678 / username"
@@ -145,7 +145,7 @@
                                 id="password"
                                 name="password"
                                 type="password"
-                                autocomplete="current-password"
+                                autocomplete="new-password"
                                 required
                                 class="w-full h-12 bg-surface-container-low border @error('password') border-error @else border-outline-variant @enderror focus:border-primary focus:ring-1 focus:ring-primary/20 rounded-lg pl-12 pr-12 text-on-surface placeholder:text-outline transition-all"
                                 placeholder="••••••••"

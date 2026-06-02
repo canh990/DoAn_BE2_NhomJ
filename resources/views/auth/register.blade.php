@@ -49,7 +49,7 @@
                 <h2 class="text-3xl font-bold text-on-surface mb-2">Tạo tài khoản</h2>
                 <p class="text-on-surface-variant">Bắt đầu hành trình của bạn ngay hôm nay</p>
             </div>
-<form action="{{ route('register.post') }}" method="POST" class="space-y-5">
+<form action="{{ route('register.post') }}" method="POST" class="space-y-5" autocomplete="off">
     @csrf
 
     {{-- TÊN ĐĂNG NHẬP --}}
@@ -67,19 +67,51 @@
                 name="ten_dang_nhap"
                 type="text"
                 value="{{ old('ten_dang_nhap') }}"
+                autocomplete="off"
                 required
                 class="w-full h-12 bg-surface-container-low border 
                 @error('ten_dang_nhap') border-error @else border-outline-variant @enderror
                 focus:border-primary focus:ring-1 focus:ring-primary/20 
                 rounded-lg pl-12 pr-4 text-on-surface 
                 placeholder:text-outline transition-all"
-                placeholder="Nhập tên đăng nhập"
+                placeholder="vd: nguyen.van.a (chữ thường, số, dấu chấm)"
             />
         </div>
 
         @error('ten_dang_nhap')
             <p class="text-xs text-error ml-1">{{ $message }}</p>
         @enderror
+    </div>
+
+    {{-- TÊN HIỂN THỊ --}}
+    <div class="space-y-2">
+        <label class="text-xs font-semibold uppercase tracking-wider text-on-surface-variant ml-1">
+            Tên hiển thị <span class="normal-case font-normal text-outline">(tùy chọn)</span>
+        </label>
+
+        <div class="relative group">
+            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary transition-colors">
+                badge
+            </span>
+
+            <input
+                name="ten_hien_thi"
+                type="text"
+                value="{{ old('ten_hien_thi') }}"
+                autocomplete="off"
+                class="w-full h-12 bg-surface-container-low border 
+                @error('ten_hien_thi') border-error @else border-outline-variant @enderror
+                focus:border-primary focus:ring-1 focus:ring-primary/20 
+                rounded-lg pl-12 pr-4 text-on-surface 
+                placeholder:text-outline transition-all"
+                placeholder="Tên thật của bạn (vd: Nguyễn Văn A)"
+            />
+        </div>
+
+        @error('ten_hien_thi')
+            <p class="text-xs text-error ml-1">{{ $message }}</p>
+        @enderror
+        <p class="text-xs text-outline ml-1">Tên này sẽ hiển thị với bạn bè. Nếu bỏ trống, tên đăng nhập sẽ được dùng.</p>
     </div>
 
     {{-- EMAIL --}}
@@ -97,6 +129,7 @@
                 name="email"
                 type="email"
                 value="{{ old('email') }}"
+                autocomplete="off"
                 required
                 class="w-full h-12 bg-surface-container-low border 
                 @error('email') border-error @else border-outline-variant @enderror
@@ -127,6 +160,7 @@
                 name="so_dien_thoai"
                 type="tel"
                 value="{{ old('so_dien_thoai') }}"
+                autocomplete="off"
                 required
                 class="w-full h-12 bg-surface-container-low border 
                 @error('so_dien_thoai') border-error @else border-outline-variant @enderror
@@ -156,6 +190,7 @@
             <input
                 name="mat_khau"
                 type="password"
+                autocomplete="new-password"
                 required
                 class="w-full h-12 bg-surface-container-low border 
                 @error('mat_khau') border-error @else border-outline-variant @enderror

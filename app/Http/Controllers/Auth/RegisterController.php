@@ -189,6 +189,11 @@ class RegisterController extends Controller
                 'regex:/^[a-z0-9._]+$/',
                 'unique:nguoi_dung,ten_dang_nhap'
             ],
+            'ten_hien_thi'  => [
+                'nullable',
+                'string',
+                'max:100',
+            ],
             'email'         => ['required', 'string', 'email', 'max:255', 'unique:nguoi_dung,email'],
             'so_dien_thoai' => ['required', 'string', 'max:11', 'unique:nguoi_dung,so_dien_thoai'],
             'mat_khau'      => [
@@ -202,6 +207,8 @@ class RegisterController extends Controller
             'ten_dang_nhap.required' => 'Vui lòng nhập tên đăng nhập',
             'ten_dang_nhap.unique'   => 'Tên đăng nhập đã tồn tại',
             'ten_dang_nhap.regex'    => 'Tên đăng nhập chỉ chứa chữ thường, số, dấu chấm và gạch dưới',
+
+            'ten_hien_thi.max'       => 'Tên hiển thị không được vượt quá 100 ký tự',
 
             'email.required' => 'Vui lòng nhập email',
             'email.email'    => 'Email không hợp lệ',
@@ -220,6 +227,7 @@ class RegisterController extends Controller
     {
         return User::create([
             'ten_dang_nhap' => $data['ten_dang_nhap'],
+            'ten_hien_thi'  => !empty($data['ten_hien_thi']) ? $data['ten_hien_thi'] : null,
             'email'         => $data['email'],
             'so_dien_thoai' => $data['so_dien_thoai'],
             'mat_khau_hash' => Hash::make($data['mat_khau']),
