@@ -706,7 +706,9 @@
                 const reaction = reactionOption.dataset.reaction;
                 const label = reactionOption.dataset.reactionLabel;
                 const color = reactionOption.dataset.reactionColor;
-                const iconName = reactionOption.dataset.reactionIcon;
+                // Phải dùng getAttribute vì dataset API KHÔNG chuyển đổi dấu gạch ngang trước chữ số
+                // dataset.reaction3d tìm data-reaction3d (sai), getAttribute tìm đúng data-reaction-3d
+                const selected3d = reactionOption.getAttribute('data-reaction-3d');
                 const area = reactionOption.closest('[data-reaction-area]');
                 const form = area.querySelector('.reaction-submit-form');
                 const action = form.action;
@@ -715,6 +717,27 @@
 
                 body.append('_token', token);
                 body.append('loai_cam_xuc', reaction);
+
+                // Cập nhật giao diện lập tức (Optimistic UI Update) & Ẩn picker
+                const picker = area.querySelector('[data-reaction-picker]');
+                if (picker) picker.classList.add('hidden');
+
+                
+                const triggerIconContainer = area.querySelector('[data-reaction-trigger-icon-container]');
+                const triggerLabel = area.querySelector('[data-reaction-trigger-label]');
+                const triggerBtn = area.querySelector('[data-reaction-trigger]');
+                
+                if (triggerIconContainer) {
+                    triggerIconContainer.innerHTML = '<img src="' + selected3d + '" class="w-6 h-6 sm:w-7 sm:h-7 object-contain drop-shadow-md" data-reaction-trigger-img>';
+                }
+                if (triggerBtn) {
+                    triggerBtn.className = 'group flex items-center gap-1.5 rounded-full px-3 py-1.5 sm:px-4 sm:py-2 transition-all duration-300 bg-sky-400/10 text-sky-400';
+                    triggerBtn.dataset.currentReaction = reaction;
+                }
+                if (triggerLabel) {
+                    triggerLabel.textContent = label;
+                    triggerLabel.className = 'text-[13px] sm:text-sm font-semibold tracking-wide ' + color;
+                }
 
                 // Gửi request cập nhật cảm xúc qua AJAX
                 fetch(action, {
@@ -734,41 +757,38 @@
                         }
 
                         // Cập nhật biểu tượng và màu sắc của nút cảm xúc tương ứng realtime
-                        const triggerIcon = area.querySelector('[data-reaction-trigger-icon]');
+                        const triggerIconContainer = area.querySelector('[data-reaction-trigger-icon-container]');
                         const triggerLabel = area.querySelector('[data-reaction-trigger-label]');
                         const triggerBtn = area.querySelector('[data-reaction-trigger]');
                         const countNode = area.querySelector('[data-reaction-count]');
                         const picker = area.querySelector('[data-reaction-picker]');
                         const isRemoved = data.removed;
-                        const newIconName = isRemoved ? 'thumb_up' : iconName;
-                        const newLabel = isRemoved ? 'Thích' : label;
-                        const newColor = isRemoved ? '' : color;
 
-                        if (triggerIcon) {
-                            triggerIcon.textContent = newIconName;
-                            triggerIcon.className = 'material-symbols-outlined ' + newColor;
+                        if (triggerIconContainer) {
                             if (isRemoved) {
-                                triggerIcon.style.fontVariationSettings = '';
+                                triggerIconContainer.innerHTML = '<span class="material-symbols-outlined text-[20px] sm:text-[22px] text-slate-400" data-reaction-trigger-icon>sentiment_satisfied</span>';
                             } else {
-                                triggerIcon.style.fontVariationSettings = "'FILL' 1";
+                                triggerIconContainer.innerHTML = '<img src="' + selected3d + '" class="w-6 h-6 sm:w-7 sm:h-7 object-contain drop-shadow-md" data-reaction-trigger-img>';
                             }
                         }
 
                         if (triggerBtn) {
                             if (isRemoved) {
                                 triggerBtn.className = 'group flex items-center gap-1.5 rounded-full px-3 py-1.5 sm:px-4 sm:py-2 transition-all duration-300 text-slate-400 hover:bg-slate-800/60 hover:text-sky-300';
+                                triggerBtn.dataset.currentReaction = '';
                             } else {
                                 triggerBtn.className = 'group flex items-center gap-1.5 rounded-full px-3 py-1.5 sm:px-4 sm:py-2 transition-all duration-300 bg-sky-400/10 text-sky-400';
+                                triggerBtn.dataset.currentReaction = reaction;
                             }
                         }
 
                         if (triggerLabel) {
                             if (isRemoved) {
                                 triggerLabel.textContent = "{{ __('messages.post_like') }}";
-                                triggerLabel.classList.remove('hidden');
+                                triggerLabel.className = 'text-[13px] sm:text-sm font-semibold tracking-wide text-slate-400';
                             } else {
-                                triggerLabel.textContent = '';
-                                triggerLabel.classList.add('hidden');
+                                triggerLabel.textContent = label;
+                                triggerLabel.className = 'text-[13px] sm:text-sm font-semibold tracking-wide ' + color;
                             }
                         }
 
@@ -790,15 +810,80 @@
                 return;
             }
 
+            if (reactionTrigger) {
+                event.preventDefault();
+                event.stopPropagation();
+                
+                const area = reactionTrigger.closest('[data-reaction-area]');
+                const currentReaction = reactionTrigger.dataset.currentReaction;
+                
+                // Đóng các picker khác nếu có
+                reactionAreas.forEach(function (a) {
+                    if (a !== area) {
+                        const otherPicker = a.querySelector('[data-reaction-picker]');
+                        if (otherPicker) otherPicker.classList.add('hidden');
+                    }
+                });
+                
+                if (currentReaction) {
+                    // CÓ CẢM XÚC: Click sẽ HỦY/GỠ cảm xúc này
+                    const form = area.querySelector('.reaction-submit-form');
+                    const action = form.action;
+                    const token = form.querySelector('input[name="_token"]').value;
+                    const body = new URLSearchParams();
+                    body.append('_token', token);
+                    body.append('loai_cam_xuc', currentReaction);
+                    
+                    // Ẩn picker nếu đang mở
+                    const picker = area.querySelector('[data-reaction-picker]');
+                    if (picker) picker.classList.add('hidden');
+                    
+                    // Optimistic UI Update: Quay về trạng thái Thích mặc định
+                    const triggerIconContainer = area.querySelector('[data-reaction-trigger-icon-container]');
+                    const triggerLabel = area.querySelector('[data-reaction-trigger-label]');
+                    
+                    if (triggerIconContainer) {
+                        triggerIconContainer.innerHTML = '<span class="material-symbols-outlined text-[20px] sm:text-[22px] text-slate-400" data-reaction-trigger-icon>sentiment_satisfied</span>';
+                    }
+                    reactionTrigger.className = 'group flex items-center gap-1.5 rounded-full px-3 py-1.5 sm:px-4 sm:py-2 transition-all duration-300 text-slate-400 hover:bg-slate-800/60 hover:text-sky-300';
+                    if (triggerLabel) {
+                        triggerLabel.textContent = "{{ __('messages.post_like') }}";
+                        triggerLabel.className = 'text-[13px] sm:text-sm font-semibold tracking-wide text-slate-400';
+                    }
+                    reactionTrigger.dataset.currentReaction = '';
+                    
+                    // Gửi request gỡ cảm xúc qua AJAX
+                    fetch(action, {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json',
+                        },
+                        body,
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            const countNode = area.querySelector('[data-reaction-count]');
+                            if (countNode) {
+                                countNode.textContent = data.reactions_count;
+                            }
+                        }
+                    });
+                } else {
+                    // CHƯA CÓ CẢM XÚC: Click sẽ MỞ/TẮT menu chọn cảm xúc (picker)
+                    const picker = area.querySelector('[data-reaction-picker]');
+                    if (picker) {
+                        picker.classList.toggle('hidden');
+                    }
+                }
+                return;
+            }
+
+            // Click ngoài các khu vực area sẽ ẩn picker
             reactionAreas.forEach(function (area) {
                 const picker = area.querySelector('[data-reaction-picker]');
-                if (!picker) {
-                    return;
-                }
-
-                if (reactionTrigger && area.contains(reactionTrigger)) {
-                    picker.classList.toggle('hidden');
-                } else if (!area.contains(event.target)) {
+                if (picker && !area.contains(event.target)) {
                     picker.classList.add('hidden');
                 }
             });
@@ -2087,7 +2172,7 @@
                     }
                 });
             }
-        });
+
     </script>
 
     <!-- MODAL HIỂN THỊ CÁC USER ĐÃ THẢ CẢM XÚC -->

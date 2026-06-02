@@ -88,3 +88,199 @@ input[type="checkbox"].rounded-full:checked {
     background-position: center !important;
     background-repeat: no-repeat !important;
 }
+
+/* Glassmorphism Reaction Picker */
+.reaction-picker-pill {
+    background: rgba(15, 23, 42, 0.75) !important;
+    backdrop-filter: blur(20px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 
+        0 15px 30px rgba(0, 0, 0, 0.4),
+        inset 0 1px 1px rgba(255, 255, 255, 0.1),
+        0 0 25px rgba(0, 0, 0, 0.15) !important;
+    border-radius: 9999px !important;
+    padding: 6px 10px !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 8px !important;
+    min-width: max-content;
+    pointer-events: auto !important;
+}
+
+.reaction-picker-pill.hidden {
+    display: none !important;
+}
+
+/* Sizing for PC / Tablet (responsive threshold) */
+@media (min-width: 640px) {
+    .reaction-picker-pill {
+        padding: 8px 12px !important;
+        gap: 10px !important;
+    }
+    .reaction-bubble {
+        width: 44px !important;
+        height: 44px !important;
+    }
+    .reaction-bubble img {
+        width: 32px !important;
+        height: 32px !important;
+    }
+}
+
+/* Sizing for Mobile (responsive threshold) */
+@media (max-width: 639px) {
+    .reaction-picker-pill {
+        padding: 5px 8px !important;
+        gap: 6px !important;
+        max-width: calc(100vw - 32px) !important;
+    }
+    .reaction-bubble {
+        width: 36px !important;
+        height: 36px !important;
+    }
+    .reaction-bubble img {
+        width: 26px !important;
+        height: 26px !important;
+    }
+}
+
+.reaction-bubble {
+    border-radius: 9999px !important;
+    background: transparent !important;
+    border: none !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+    position: relative !important;
+}
+
+
+
+.reaction-bubble img {
+    object-fit: contain !important;
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+    filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.2)) !important;
+}
+
+/* Hover effects & Scaling */
+.reaction-bubble:hover {
+    transform: translateY(-5px) scale(1.15) !important;
+    z-index: 10 !important;
+}
+
+.reaction-bubble:hover img {
+    transform: scale(1.08) rotate(2deg) !important;
+}
+
+/* Glowing drop-shadows matching emoji themes */
+.reaction-bubble-thich:hover img {
+    filter: drop-shadow(0 0 12px rgba(56, 189, 248, 0.8)) !important;
+    animation: anim-thich 0.6s ease infinite !important;
+}
+@keyframes anim-thich {
+    0%, 100% { transform: scale(1.1) rotate(0deg); }
+    25% { transform: scale(1.2) rotate(-15deg); }
+    75% { transform: scale(1.2) rotate(10deg); }
+}
+
+.reaction-bubble-tim:hover img {
+    filter: drop-shadow(0 0 12px rgba(244, 63, 94, 0.8)) !important;
+    animation: anim-tim 0.8s ease infinite !important;
+}
+@keyframes anim-tim {
+    0%, 100% { transform: scale(1.1); }
+    25%, 75% { transform: scale(1.25); }
+    50% { transform: scale(1.15); }
+}
+
+.reaction-bubble-thuong_thuong:hover img {
+    filter: drop-shadow(0 0 12px rgba(236, 72, 153, 0.8)) !important;
+    animation: anim-thuong 1.5s ease-in-out infinite !important;
+}
+@keyframes anim-thuong {
+    0%, 100% { transform: scale(1.1) rotate(0deg); }
+    25% { transform: scale(1.15) rotate(-10deg); }
+    75% { transform: scale(1.15) rotate(10deg); }
+}
+
+.reaction-bubble-haha:hover img {
+    filter: drop-shadow(0 0 12px rgba(251, 191, 36, 0.8)) !important;
+    animation: anim-haha 0.5s ease-in-out infinite !important;
+}
+@keyframes anim-haha {
+    0%, 100% { transform: scale(1.1) translateY(0); }
+    25%, 75% { transform: scale(1.15) translateY(-4px); }
+    50% { transform: scale(1.1) translateY(0); }
+}
+
+.reaction-bubble-wow:hover img {
+    filter: drop-shadow(0 0 12px rgba(251, 146, 60, 0.8)) !important;
+    animation: anim-wow 0.8s ease-in-out infinite !important;
+}
+@keyframes anim-wow {
+    0%, 100% { transform: scale(1.1); }
+    50% { transform: scale(1.25); }
+}
+
+.reaction-bubble-buon:hover img {
+    filter: drop-shadow(0 0 12px rgba(251, 191, 36, 0.8)) !important;
+    animation: anim-buon 1.5s ease-in-out infinite !important;
+}
+@keyframes anim-buon {
+    0%, 100% { transform: scale(1.1) translateY(0); }
+    50% { transform: scale(1.1) translateY(4px); }
+}
+
+.reaction-bubble-phan_no:hover img {
+    filter: drop-shadow(0 0 12px rgba(239, 68, 68, 0.8)) !important;
+    animation: anim-phanno 0.4s ease-in-out infinite !important;
+}
+@keyframes anim-phanno {
+    0%, 100% { transform: scale(1.1) translateX(0); }
+    25% { transform: scale(1.15) translateX(-3px); }
+    75% { transform: scale(1.15) translateX(3px); }
+}
+
+/* Modern Comment Box Styles */
+.comment-box-glass {
+    background: rgba(15, 21, 36, 0.6) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.05) !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2) !important;
+}
+
+.comment-input-area {
+    background: rgba(10, 14, 26, 0.5) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    transition: all 0.25s ease !important;
+}
+
+.comment-input-area:focus {
+    border-color: rgba(125, 211, 252, 0.4) !important;
+    box-shadow: 0 0 0 2px rgba(125, 211, 252, 0.15) !important;
+    background: rgba(10, 14, 26, 0.7) !important;
+}
+
+.comment-file-badge {
+    background: rgba(255, 255, 255, 0.03) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 12px !important;
+    padding: 8px 12px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    transition: all 0.25s ease !important;
+    position: relative !important;
+    max-width: 200px !important;
+}
+
+.comment-file-badge:hover {
+    background: rgba(255, 255, 255, 0.06) !important;
+    border-color: rgba(125, 211, 252, 0.3) !important;
+}
+

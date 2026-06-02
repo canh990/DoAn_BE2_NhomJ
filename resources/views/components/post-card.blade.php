@@ -108,19 +108,19 @@
     $comments = collect(data_get($post, 'comments', []));
 
     $reactionButtons = [
-        'thich' => ['icon' => 'thumb_up', 'label' => __('messages.react_thich'), 'color' => 'text-sky-400'],
-        'tim' => ['icon' => 'favorite', 'label' => __('messages.react_tim'), 'color' => 'text-rose-400'],
-        'haha' => ['icon' => 'mood', 'label' => __('messages.react_haha'), 'color' => 'text-yellow-300'],
-        'buon' => ['icon' => 'sentiment_dissatisfied', 'label' => __('messages.react_buon'), 'color' => 'text-slate-400'],
-        'phan_no' => ['icon' => 'mood_bad', 'label' => __('messages.react_phan_no'), 'color' => 'text-orange-400'],
-        'wow' => ['icon' => 'emoji_objects', 'label' => __('messages.react_wow'), 'color' => 'text-emerald-400'],
+        'thich' => ['icon' => 'sentiment_satisfied', 'label' => 'Mỉm cười', 'color' => 'text-amber-400', '3d' => 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@latest/assets/Grinning%20face/3D/grinning_face_3d.png'],
+        'tim' => ['icon' => 'favorite', 'label' => 'Tim', 'color' => 'text-rose-400', '3d' => 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@latest/assets/Red%20heart/3D/red_heart_3d.png'],
+        'haha' => ['icon' => 'mood', 'label' => 'Haha', 'color' => 'text-amber-400', '3d' => 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@latest/assets/Face%20with%20tears%20of%20joy/3D/face_with_tears_of_joy_3d.png'],
+        'buon' => ['icon' => 'sentiment_dissatisfied', 'label' => 'Buồn', 'color' => 'text-sky-400', '3d' => 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@latest/assets/Crying%20face/3D/crying_face_3d.png'],
+        'phan_no' => ['icon' => 'mood_bad', 'label' => 'Tức giận', 'color' => 'text-orange-400', '3d' => 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@latest/assets/Angry%20face/3D/angry_face_3d.png'],
+        'wow' => ['icon' => 'emoji_objects', 'label' => 'Bất ngờ', 'color' => 'text-amber-400', '3d' => 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@latest/assets/Astonished%20face/3D/astonished_face_3d.png'],
     ];
 
     $userReaction = optional(data_get($post, 'reactions'))->first()->loai_cam_xuc ?? null;
     $selected = $userReaction ? ($reactionButtons[$userReaction] ?? null) : null;
-    $selectedIcon = $selected['icon'] ?? 'thumb_up';
+    $selectedIcon = $selected['icon'] ?? 'sentiment_satisfied';
     $selectedLabel = $selected['label'] ?? __('messages.post_like');
-    $selectedColor = $selected ? ($selected['color'] ?? 'text-sky-400') : '';
+    $selectedColor = $selected ? ($selected['color'] ?? 'text-slate-400') : '';
 
     $isProfileUpdate = \Illuminate\Support\Str::startsWith($body, 'vừa cập nhật ảnh');
 
@@ -477,14 +477,18 @@
 
                 <!-- Thanh nút bấm hành động (Like, Comment, Share, Bookmark) -->
                 <div class="flex flex-col gap-3 pt-3 mt-1 text-slate-400">
-                    <div class="relative">
+                    <div class="relative z-30">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-1 sm:gap-2">
-                            <button type="button" data-reaction-trigger class="group flex items-center gap-1.5 rounded-full px-3 py-1.5 sm:px-4 sm:py-2 transition-all duration-300 {{ $selected ? 'bg-sky-400/10 text-sky-400' : 'text-slate-400 hover:bg-slate-800/60 hover:text-sky-300' }}">
-                                <div class="relative flex items-center justify-center transition-transform group-hover:scale-110 group-active:scale-95">
-                                    <span class="material-symbols-outlined text-[20px] sm:text-[22px] {{ $selectedColor }}" data-reaction-trigger-icon style="{{ $selected ? 'font-variation-settings: \'FILL\' 1;' : '' }}">{{ $selectedIcon }}</span>
+                            <button type="button" data-reaction-trigger data-current-reaction="{{ $userReaction ?? '' }}" class="group flex items-center gap-1.5 rounded-full px-3 py-1.5 sm:px-4 sm:py-2 transition-all duration-300 {{ $selected ? 'bg-sky-400/10 text-sky-400' : 'text-slate-400 hover:bg-slate-800/60 hover:text-sky-300' }}">
+                                <div class="relative flex items-center justify-center transition-transform group-hover:scale-110 group-active:scale-95 w-6 h-6 sm:w-7 sm:h-7 shrink-0" data-reaction-trigger-icon-container>
+                                    @if ($selected)
+                                        <img src="{{ $selected['3d'] }}" class="w-6 h-6 sm:w-7 sm:h-7 object-contain drop-shadow-md" data-reaction-trigger-img>
+                                    @else
+                                        <span class="material-symbols-outlined text-[20px] sm:text-[22px] {{ $selectedColor }}" data-reaction-trigger-icon style="{{ $selected ? "font-variation-settings: 'FILL' 1;" : '' }}">{{ $selectedIcon }}</span>
+                                    @endif
                                 </div>
-                                <span class="text-[13px] sm:text-sm font-semibold tracking-wide {{ $selected ? 'hidden' : '' }}" data-reaction-trigger-label>{{ $selected ? '' : $selectedLabel }}</span>
+                                <span class="text-[13px] sm:text-sm font-semibold tracking-wide {{ $selected ? $selectedColor : '' }}" data-reaction-trigger-label>{{ $selected ? $selected['label'] : $selectedLabel }}</span>
                             </button>
 
                             <button type="button" data-comment-toggle class="group flex items-center gap-1.5 rounded-full px-3 py-1.5 sm:px-4 sm:py-2 text-slate-400 transition-all duration-300 hover:bg-slate-800/60 hover:text-sky-300">
@@ -512,14 +516,25 @@
                         </div>
                     </div>
 
-                    <div data-reaction-picker class="hidden absolute left-0 bottom-full z-10 mb-2 w-auto rounded-[32px] border border-white/10 bg-slate-950/95 p-2 shadow-[0_12px_35px_rgba(0,0,0,0.25)] backdrop-blur-sm transition-all duration-200">
-                        <div class="flex items-center gap-2">
-                            @foreach($reactionButtons as $type => $button)
-                                <button type="button" data-reaction-option data-reaction="{{ $type }}" data-reaction-label="{{ $button['label'] }}" data-reaction-color="{{ $button['color'] }}" data-reaction-icon="{{ $button['icon'] }}" class="flex items-center justify-center rounded-full bg-slate-900 p-2.5 text-center text-slate-300 transition duration-200 hover:-translate-y-1 hover:bg-sky-400/10 hover:text-sky-300" title="{{ $button['label'] }}">
-                                    <span class="material-symbols-outlined {{ $button['color'] }} text-xl">{{ $button['icon'] }}</span>
+                    <div data-reaction-picker class="hidden absolute left-0 bottom-full z-50 mb-3 reaction-picker-pill select-none">
+                        @foreach($reactionButtons as $type => $button)
+                            <div class="relative group/bubble">
+                                <!-- Nhãn tiêu đề giống Facebook xuất hiện khi hover -->
+                                <span class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2.5 py-1 text-[11px] font-bold text-white bg-slate-950/90 border border-white/10 rounded-lg opacity-0 pointer-events-none transition-all duration-200 translate-y-1.5 group-hover/bubble:opacity-100 group-hover/bubble:translate-y-0 shadow-lg whitespace-nowrap z-[60]">
+                                    {{ $button['label'] }}
+                                </span>
+                                <button type="button" 
+                                        data-reaction-option 
+                                        data-reaction="{{ $type }}" 
+                                        data-reaction-label="{{ $button['label'] }}" 
+                                        data-reaction-color="{{ $button['color'] }}" 
+                                        data-reaction-3d="{{ $button['3d'] }}"
+                                        class="reaction-bubble reaction-bubble-{{ $type }}" 
+                                        title="{{ $button['label'] }}">
+                                    <img src="{{ $button['3d'] }}" alt="{{ $button['label'] }}">
                                 </button>
-                            @endforeach
-                        </div>
+                            </div>
+                        @endforeach
                     </div>
 
                     @if($hasPersistedPost)
