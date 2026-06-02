@@ -38,17 +38,15 @@ class LoginController extends Controller
             $field = 'so_dien_thoai';
         } else {
             throw ValidationException::withMessages([
-                'login' => 'Vui lòng nhập đúng định dạng email hoặc số điện thoại.',
+                'auth_error' => 'Vui lòng nhập đúng định dạng email hoặc số điện thoại.',
             ]);
         }
 
         if (! Auth::attempt([$field => $login, 'password' => $password], $remember)) {
             throw ValidationException::withMessages([
-                'login' => 'Thông tin đăng nhập hoặc mật khẩu không đúng.',
+                'auth_error' => 'Thông tin đăng nhập hoặc mật khẩu không đúng.',
             ]);
         }
-
-        // $request->session()->regenerate();
 
         $request->session()->regenerate();
 
@@ -166,6 +164,8 @@ class LoginController extends Controller
             'session_token' => $token
         ]);
 
+        \App\Models\NhatKyHoatDong::log($user->id, 'dang_nhap');
+
         return redirect()->intended(route('home'));
     }
 
@@ -184,6 +184,10 @@ class LoginController extends Controller
 
                 'la_phien_hien_tai' => false,
             ]);
+        }
+
+        if (Auth::check()) {
+            \App\Models\NhatKyHoatDong::log(Auth::id(), 'dang_xuat');
         }
 
         Auth::logout();

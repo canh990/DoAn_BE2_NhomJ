@@ -42,10 +42,12 @@ class User extends Authenticatable
         'con_hoat_dong',
         'nha_cung_cap_oauth',
         'id_oauth',
+        'remember_token',
     ];
 
     protected $hidden = [
         'mat_khau_hash',
+        'remember_token',
     ];
 
     protected $appends = [
@@ -58,9 +60,10 @@ class User extends Authenticatable
         return $this->mat_khau_hash;
     }
 
+    // ✅ Bật remember token để hỗ trợ "Ghi nhớ đăng nhập"
     public function getRememberTokenName()
     {
-        return null;
+        return 'remember_token';
     }
     // Trả về tên hiển thị: ưu tiên ten_hien_thi, fallback về ten_dang_nhap
     public function getNameAttribute()

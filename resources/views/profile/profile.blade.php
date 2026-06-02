@@ -325,7 +325,7 @@ $profileUrl = route('profile.public', ['username' => $user->ten_dang_nhap]);
                     {{-- Tab Nhật ký hoạt động --}}
                     <div id="tab-content-nhat-ky" class="tab-content hidden animate-fade-in">
                         <div class="glass-panel rounded-3xl p-6 space-y-6">
-                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-white/5 pb-5">
+                            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-white/5 pb-5">
                                 <div>
                                     <h3 class="text-xl font-bold text-sky-300 flex items-center gap-2">
                                         <span class="material-symbols-outlined">history</span>
@@ -333,113 +333,91 @@ $profileUrl = route('profile.public', ['username' => $user->ten_dang_nhap]);
                                     </h3>
                                     <p class="text-slate-400 text-xs mt-1">Lịch sử các hoạt động cá nhân được bảo mật hoàn toàn.</p>
                                 </div>
-                                {{-- Sub tabs switcher with premium design, overflow scrolling and flex --}}
-                                <div class="flex p-1.5 rounded-2xl bg-slate-900/50 border border-white/5 overflow-x-auto no-scrollbar w-full sm:w-auto">
+                                <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                                    {{-- Dropdown lọc thời gian --}}
+                                    <div class="relative w-full sm:w-auto">
+                                        <select id="activity-time-filter" onchange="filterActivityByTime()" style="appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: none !important;" class="w-full sm:w-auto bg-[#0b0f19] border border-white/10 rounded-xl pl-4 pr-10 py-2.5 text-xs font-bold text-slate-300 hover:text-white focus:outline-none focus:border-sky-400 transition-all cursor-pointer">
+                                            <option value="all">Tất cả thời gian</option>
+                                            <option value="today">Hôm nay</option>
+                                            <option value="7_days">7 ngày qua</option>
+                                            <option value="30_days">30 ngày qua</option>
+                                        </select>
+                                        <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-[18px]">expand_more</span>
+                                    </div>
+                                    
+                                    {{-- Sub tabs switcher with premium design, overflow scrolling and flex --}}
+                                    <div class="flex p-1.5 rounded-2xl bg-slate-900/50 border border-white/5 overflow-x-auto no-scrollbar w-full sm:w-auto">
                                     <button type="button" onclick="switchActivitySubTab('liked')" id="btn-sub-liked" class="sub-tab-btn flex-1 sm:flex-none whitespace-nowrap px-5 py-2.5 rounded-xl text-sm font-bold transition-all text-sky-400 bg-sky-400/10 shadow-sm">
-                                        Đã thích ({{ $likedPosts->count() }})
+                                        Đã thích ({{ $likedCount ?? 0 }})
                                     </button>
                                     <button type="button" onclick="switchActivitySubTab('commented')" id="btn-sub-commented" class="sub-tab-btn flex-1 sm:flex-none whitespace-nowrap px-5 py-2.5 rounded-xl text-sm font-bold transition-all text-slate-400 hover:text-slate-200 hover:bg-white/5 ml-1">
-                                        Bình luận ({{ $myComments->count() }})
+                                        Bình luận ({{ $commentsCount ?? 0 }})
                                     </button>
                                     <button type="button" onclick="switchActivitySubTab('saved')" id="btn-sub-saved" class="sub-tab-btn flex-1 sm:flex-none whitespace-nowrap px-5 py-2.5 rounded-xl text-sm font-bold transition-all text-slate-400 hover:text-slate-200 hover:bg-white/5 ml-1">
-                                        Đã lưu ({{ $savedPosts->count() }})
+                                        Đã lưu ({{ $savedCount ?? 0 }})
                                     </button>
                                 </div>
                             </div>
+                        </div>
 
                             {{-- Sub Tab: Liked Posts --}}
-                            <div id="sub-content-liked" class="sub-activity-content space-y-4">
-                                @forelse($likedPosts as $post)
-                                    @php
-                                        $firstMedia = $post->media->first();
-                                        $mediaUrl = $firstMedia ? (\Illuminate\Support\Str::startsWith($firstMedia->duong_dan, ['http://', 'https://']) ? $firstMedia->duong_dan : asset('storage/' . ltrim($firstMedia->duong_dan, '/'))) : null;
-                                        $isVideo = $firstMedia && ($firstMedia->loai === 'video' || \Illuminate\Support\Str::endsWith($firstMedia->duong_dan, ['.mp4', '.webm', '.mov']));
-                                    @endphp
-                                    <a href="{{ route('posts.show', $post->id) }}" class="flex items-center gap-4 p-4 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/5 transition-all group">
-                                        <div class="w-10 h-10 rounded-full bg-rose-500/10 text-rose-500 flex items-center justify-center shrink-0">
-                                            <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">favorite</span>
+                            <div id="sub-content-liked" data-loaded-filter="all" class="sub-activity-content space-y-4">
+                                <div class="activity-list space-y-4">
+                                    @include('profile.partials.activity_liked', ['likedPosts' => $likedPosts])
+                                    @if(($likedCount ?? 0) === 0)
+                                        <div class="text-center py-12 text-slate-500">
+                                            <span class="material-symbols-outlined text-4xl mb-2">favorite</span>
+                                            <p class="text-sm">Bạn chưa thích bài viết nào.</p>
                                         </div>
-                                        <div class="flex-1 min-w-0">
-                                            <p class="text-sm font-semibold text-white truncate">Bạn đã thích bài viết của {{ $post->user->name }}</p>
-                                            <p class="text-xs text-slate-400 mt-1 line-clamp-1 italic">"{{ $post->noi_dung }}"</p>
-                                        </div>
-                                        @if($firstMedia)
-                                            <div class="w-12 h-12 rounded-xl overflow-hidden shrink-0 border border-white/10">
-                                                @if($isVideo)
-                                                    <video src="{{ $mediaUrl }}" class="w-full h-full object-cover" muted></video>
-                                                @else
-                                                    <img src="{{ $mediaUrl }}" class="w-full h-full object-cover">
-                                                @endif
-                                            </div>
-                                        @endif
-                                    </a>
-                                @empty
-                                    <div class="text-center py-12 text-slate-500">
-                                        <span class="material-symbols-outlined text-4xl mb-2">favorite</span>
-                                        <p class="text-sm">Bạn chưa thích bài viết nào.</p>
+                                    @endif
+                                </div>
+                                @if(($likedCount ?? 0) > 10)
+                                    <div class="text-center pt-2 btn-load-more-container">
+                                        <button type="button" onclick="loadMoreActivity('liked')" id="btn-load-more-liked" data-page="2" class="px-6 py-2.5 rounded-xl text-sm font-semibold text-slate-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/5 transition-all">
+                                            Xem thêm
+                                        </button>
                                     </div>
-                                @endforelse
+                                @endif
                             </div>
 
                             {{-- Sub Tab: Comment History --}}
-                            <div id="sub-content-commented" class="sub-activity-content space-y-4 hidden">
-                                @forelse($myComments as $comment)
-                                    @if($comment->post)
-                                    <a href="{{ route('posts.show', $comment->bai_viet_id) }}#comment-{{ $comment->id }}" class="flex items-start gap-4 p-4 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/5 transition-all group">
-                                        <div class="w-10 h-10 rounded-full bg-sky-500/10 text-sky-400 flex items-center justify-center shrink-0">
-                                            <span class="material-symbols-outlined text-[20px]">chat_bubble</span>
+                            <div id="sub-content-commented" data-loaded-filter="all" class="sub-activity-content space-y-4 hidden">
+                                <div class="activity-list space-y-4">
+                                    @include('profile.partials.activity_comments', ['myComments' => $myComments])
+                                    @if(($commentsCount ?? 0) === 0)
+                                        <div class="text-center py-12 text-slate-500">
+                                            <span class="material-symbols-outlined text-4xl mb-2">chat_bubble</span>
+                                            <p class="text-sm">Bạn chưa có bình luận nào.</p>
                                         </div>
-                                        <div class="flex-1 min-w-0">
-                                            <p class="text-sm font-semibold text-white">Bạn đã bình luận trên bài viết của {{ $comment->post->user->name ?? 'Người dùng' }}</p>
-                                            <div class="mt-2 p-3 rounded-xl bg-slate-950/40 text-xs text-slate-300 border border-white/5 italic">
-                                                "{{ $comment->noi_dung }}"
-                                            </div>
-                                            <span class="text-[10px] text-slate-500 block mt-2">{{ $comment->ngay_tao ? \Carbon\Carbon::parse($comment->ngay_tao)->diffForHumans() : '' }}</span>
-                                        </div>
-                                    </a>
                                     @endif
-                                @empty
-                                    <div class="text-center py-12 text-slate-500">
-                                        <span class="material-symbols-outlined text-4xl mb-2">chat_bubble</span>
-                                        <p class="text-sm">Bạn chưa có bình luận nào.</p>
+                                </div>
+                                @if(($commentsCount ?? 0) > 10)
+                                    <div class="text-center pt-2 btn-load-more-container">
+                                        <button type="button" onclick="loadMoreActivity('commented')" id="btn-load-more-commented" data-page="2" class="px-6 py-2.5 rounded-xl text-sm font-semibold text-slate-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/5 transition-all">
+                                            Xem thêm
+                                        </button>
                                     </div>
-                                @endforelse
+                                @endif
                             </div>
 
                             {{-- Sub Tab: Saved Posts --}}
-                            <div id="sub-content-saved" class="sub-activity-content space-y-4 hidden">
-                                @forelse($savedPosts as $saved)
-                                    @if($saved->post)
-                                    @php
-                                        $firstMedia = $saved->post->media->first();
-                                        $mediaUrl = $firstMedia ? (\Illuminate\Support\Str::startsWith($firstMedia->duong_dan, ['http://', 'https://']) ? $firstMedia->duong_dan : asset('storage/' . ltrim($firstMedia->duong_dan, '/'))) : null;
-                                        $isVideo = $firstMedia && ($firstMedia->loai === 'video' || \Illuminate\Support\Str::endsWith($firstMedia->duong_dan, ['.mp4', '.webm', '.mov']));
-                                    @endphp
-                                    <a href="{{ route('posts.show', $saved->bai_viet_id) }}" class="flex items-center gap-4 p-4 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/5 transition-all group">
-                                        <div class="w-10 h-10 rounded-full bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0">
-                                            <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">bookmark</span>
+                            <div id="sub-content-saved" data-loaded-filter="all" class="sub-activity-content space-y-4 hidden">
+                                <div class="activity-list space-y-4">
+                                    @include('profile.partials.activity_saved', ['savedPosts' => $savedPosts])
+                                    @if(($savedCount ?? 0) === 0)
+                                        <div class="text-center py-12 text-slate-500">
+                                            <span class="material-symbols-outlined text-4xl mb-2">bookmark</span>
+                                            <p class="text-sm">Bạn chưa lưu bài viết nào.</p>
                                         </div>
-                                        <div class="flex-1 min-w-0">
-                                            <p class="text-sm font-semibold text-white truncate">Bài viết đã lưu của {{ $saved->post->user->name ?? 'Người dùng' }}</p>
-                                            <p class="text-xs text-slate-400 mt-1 line-clamp-1 italic">"{{ $saved->post->noi_dung }}"</p>
-                                        </div>
-                                        @if($firstMedia)
-                                            <div class="w-12 h-12 rounded-xl overflow-hidden shrink-0 border border-white/10">
-                                                @if($isVideo)
-                                                    <video src="{{ $mediaUrl }}" class="w-full h-full object-cover" muted></video>
-                                                @else
-                                                    <img src="{{ $mediaUrl }}" class="w-full h-full object-cover">
-                                                @endif
-                                            </div>
-                                        @endif
-                                    </a>
                                     @endif
-                                @empty
-                                    <div class="text-center py-12 text-slate-500">
-                                        <span class="material-symbols-outlined text-4xl mb-2">bookmark</span>
-                                        <p class="text-sm">Bạn chưa lưu bài viết nào.</p>
+                                </div>
+                                @if(($savedCount ?? 0) > 10)
+                                    <div class="text-center pt-2 btn-load-more-container">
+                                        <button type="button" onclick="loadMoreActivity('saved')" id="btn-load-more-saved" data-page="2" class="px-6 py-2.5 rounded-xl text-sm font-semibold text-slate-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/5 transition-all">
+                                            Xem thêm
+                                        </button>
                                     </div>
-                                @endforelse
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -669,6 +647,168 @@ $profileUrl = route('profile.public', ['username' => $user->ten_dang_nhap]);
         const activeDiv = document.getElementById(`sub-content-${subtab}`);
         if (activeDiv) {
             activeDiv.classList.remove('hidden');
+        }
+
+        // Chỉ đồng bộ dữ liệu nếu bộ lọc đang chọn khác với bộ lọc đã tải cho tab này
+        const timeFilter = document.getElementById('activity-time-filter')?.value || 'all';
+        if (activeDiv && activeDiv.getAttribute('data-loaded-filter') !== timeFilter) {
+            filterActivityByTime();
+        }
+    }
+
+    window.filterActivityByTime = async function() {
+        // Tìm tab đang hoạt động hiện tại
+        let activeTab = 'liked';
+        document.querySelectorAll('.sub-tab-btn').forEach(btn => {
+            if (btn.classList.contains('text-sky-400')) {
+                activeTab = btn.id.replace('btn-sub-', '');
+            }
+        });
+        
+        const container = document.querySelector(`#sub-content-${activeTab} .activity-list`);
+        if (!container) return;
+
+        const timeFilter = document.getElementById('activity-time-filter')?.value || 'all';
+        const activeDiv = document.getElementById(`sub-content-${activeTab}`);
+        
+        // Hiển thị hiệu ứng skeleton/loading đẹp mắt
+        container.innerHTML = `
+            <div class="flex flex-col items-center justify-center py-12 text-center text-slate-500 animate-pulse">
+                <span class="material-symbols-outlined text-4xl mb-2 animate-spin" style="display: inline-block;">progress_activity</span>
+                <p class="text-sm">Đang lọc hoạt động...</p>
+            </div>
+        `;
+        
+        // Xóa nút "Xem thêm" cũ nếu có
+        const loadMoreBtnContainer = document.querySelector(`#sub-content-${activeTab} .btn-load-more-container`);
+        if (loadMoreBtnContainer) {
+            loadMoreBtnContainer.remove();
+        }
+
+        try {
+            const fetchType = activeTab === 'commented' ? 'comments' : activeTab;
+            const response = await fetch(`/profile/activity/${fetchType}?page=1&time_filter=${timeFilter}`, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                
+                // Thay thế dữ liệu trang 1
+                container.innerHTML = data.html;
+
+                // Lưu trạng thái bộ lọc đã tải thành công cho tab
+                if (activeDiv) {
+                    activeDiv.setAttribute('data-loaded-filter', timeFilter);
+                }
+                
+                // Đồng bộ số đếm mới lên tiêu đề tab
+                if (data.likedCount !== undefined) {
+                    document.getElementById('btn-sub-liked').innerHTML = `Đã thích (${data.likedCount})`;
+                }
+                if (data.commentsCount !== undefined) {
+                    document.getElementById('btn-sub-commented').innerHTML = `Bình luận (${data.commentsCount})`;
+                }
+                if (data.savedCount !== undefined) {
+                    document.getElementById('btn-sub-saved').innerHTML = `Đã lưu (${data.savedCount})`;
+                }
+                
+                // Xử lý hiển thị nút Xem thêm
+                if (data.hasMore) {
+                    activeDiv.insertAdjacentHTML('beforeend', `
+                        <div class="text-center pt-2 btn-load-more-container">
+                            <button type="button" onclick="loadMoreActivity('${activeTab}')" id="btn-load-more-${activeTab}" data-page="2" class="px-6 py-2.5 rounded-xl text-sm font-semibold text-slate-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/5 transition-all">
+                                Xem thêm
+                            </button>
+                        </div>
+                    `);
+                }
+                
+                // Nếu dữ liệu trống, hiển thị thông báo trống tương ứng vào thẳng trong container
+                const currentCount = activeTab === 'liked' ? data.likedCount : (activeTab === 'commented' ? data.commentsCount : data.savedCount);
+                if (currentCount === 0 || !data.html.trim()) {
+                    let icon = 'favorite';
+                    let text = 'Bạn chưa thích bài viết nào trong khoảng thời gian này.';
+                    if (activeTab === 'commented') {
+                        icon = 'chat_bubble';
+                        text = 'Bạn chưa có bình luận nào trong khoảng thời gian này.';
+                    } else if (activeTab === 'saved') {
+                        icon = 'bookmark';
+                        text = 'Bạn chưa lưu bài viết nào trong khoảng thời gian này.';
+                    }
+                    
+                    container.innerHTML = `
+                        <div class="text-center py-12 text-slate-500 animate-fade-in">
+                            <span class="material-symbols-outlined text-4xl mb-2">${icon}</span>
+                            <p class="text-sm">${text}</p>
+                        </div>
+                    `;
+                }
+            } else {
+                container.innerHTML = `<p class="text-center py-12 text-red-400">Không thể tải hoạt động. Vui lòng thử lại.</p>`;
+            }
+        } catch (error) {
+            console.error('Lỗi khi lọc hoạt động:', error);
+            container.innerHTML = `<p class="text-center py-12 text-red-400">Có lỗi xảy ra. Vui lòng thử lại.</p>`;
+        }
+    }
+
+    window.loadMoreActivity = async function(type) {
+        const btn = document.getElementById(`btn-load-more-${type}`);
+        if (!btn) return;
+        
+        const page = btn.getAttribute('data-page');
+        const container = document.querySelector(`#sub-content-${type} .activity-list`);
+        const timeFilter = document.getElementById('activity-time-filter')?.value || 'all';
+        
+        btn.disabled = true;
+        btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-[16px] mr-1" style="display: inline-block; vertical-align: middle;">progress_activity</span> Đang tải...';
+        
+        try {
+            const fetchType = type === 'commented' ? 'comments' : type;
+            const response = await fetch(`/profile/activity/${fetchType}?page=${page}&time_filter=${timeFilter}`, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                
+                // Nối HTML mới vào danh sách
+                container.insertAdjacentHTML('beforeend', data.html);
+                
+                // Đồng bộ số đếm mới lên tiêu đề tab
+                if (data.likedCount !== undefined) {
+                    document.getElementById('btn-sub-liked').innerHTML = `Đã thích (${data.likedCount})`;
+                }
+                if (data.commentsCount !== undefined) {
+                    document.getElementById('btn-sub-commented').innerHTML = `Bình luận (${data.commentsCount})`;
+                }
+                if (data.savedCount !== undefined) {
+                    document.getElementById('btn-sub-saved').innerHTML = `Đã lưu (${data.savedCount})`;
+                }
+
+                if (data.hasMore) {
+                    btn.setAttribute('data-page', parseInt(page) + 1);
+                    btn.disabled = false;
+                    btn.innerHTML = 'Xem thêm';
+                } else {
+                    // Xóa container nút Xem thêm nếu đã hết
+                    btn.closest('.btn-load-more-container').remove();
+                }
+            } else {
+                btn.disabled = false;
+                btn.innerHTML = 'Thử lại';
+            }
+        } catch (error) {
+            console.error('Lỗi khi tải nhật ký hoạt động:', error);
+            btn.disabled = false;
+            btn.innerHTML = 'Thử lại';
         }
     }
 </script>

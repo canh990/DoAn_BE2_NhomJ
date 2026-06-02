@@ -123,6 +123,8 @@ class RegisterController extends Controller
             'otp_het_han' => null,
         ]);
 
+        \App\Models\NhatKyHoatDong::log($user->id, 'dang_ky');
+
         return redirect()->route('home')
             ->with('success', 'Xác thực email thành công! Chào mừng bạn đến với NHOMJ.');
     }
