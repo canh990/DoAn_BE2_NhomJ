@@ -17,7 +17,7 @@
                         @csrf
                         
                         <!-- Textarea không viền, tối ưu không gian -->
-                        <textarea id="post-content" name="noi_dung" maxlength="280" class="w-full bg-transparent border-none focus:ring-0 text-slate-100 placeholder-slate-500 resize-none text-lg leading-relaxed p-0 min-h-[120px]" placeholder="{{ __('messages.home_type_status') }}" rows="4">{{ old('noi_dung') }}</textarea>
+                        <textarea id="post-content" name="noi_dung" class="w-full bg-transparent border-none focus:ring-0 text-slate-100 placeholder-slate-500 resize-none text-lg leading-relaxed p-0 min-h-[120px]" placeholder="{{ __('messages.home_type_status') }}" rows="4">{{ old('noi_dung') }}</textarea>
                         
                         @error('noi_dung')
                         <p class="mt-2 text-sm text-red-400">{{ $message }}</p>
@@ -175,7 +175,7 @@
 
                         <!-- Bộ đếm ký tự và nút Submit -->
                             <div class="flex items-center justify-end gap-4 border-t border-white/5 pt-3 sm:border-t-0 sm:pt-0">
-                                <span id="post-char-count" class="text-xs font-mono text-slate-500">0/280</span>
+                                <span id="post-char-count" class="text-xs font-mono text-slate-500">0/1000</span>
                                 <button id="post-submit-button" type="submit" class="bg-sky-500 text-white px-8 py-2 rounded-full font-bold hover:bg-sky-600 transition-all shadow-lg shadow-sky-500/20 disabled:opacity-50 disabled:cursor-not-allowed">
                                     {{ __('messages.home_post') }}
                                 </button>
@@ -313,7 +313,18 @@
 
         if (textarea && counter && submitButton) {
 
-        const maxLength = Number(textarea.getAttribute('maxlength')) || 280;
+        const maxLength = 1000;
+
+        textarea.addEventListener('input', function(e) {
+            if (this.value.length > maxLength) {
+                if (typeof window.showToast === 'function') {
+                    window.showToast('Nội dung bài viết không được vượt quá 1000 ký tự!', 'error');
+                } else {
+                    alert('Nội dung bài viết không được vượt quá 1000 ký tự!');
+                }
+                this.value = this.value.substring(0, maxLength);
+            }
+        });
 
         const updateCount = function() {
             const length = textarea.value.length;

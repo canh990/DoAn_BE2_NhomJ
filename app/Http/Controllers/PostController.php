@@ -283,7 +283,7 @@ class PostController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'noi_dung' => ['nullable', 'string', 'max:2000'],
+            'noi_dung' => ['nullable', 'string', 'max:1000'],
             'cam_xuc' => ['nullable', 'string', 'max:100'],
             'hoat_dong' => ['nullable', 'string', 'max:100'],
             'anh' => ['nullable', 'array', 'max:10'], // Tối đa 10 tệp
@@ -296,6 +296,8 @@ class PostController extends Controller
             'poll_options.*' => ['nullable', 'string', 'max:255'],
             'tagged_users' => ['nullable', 'array'],
             'tagged_users.*' => ['exists:nguoi_dung,id'],
+        ], [
+            'noi_dung.max' => 'Nội dung bài viết không được vượt quá 1000 ký tự.',
         ]);
 
         $pollOptions = collect($request->input('poll_options', []))
@@ -444,7 +446,9 @@ class PostController extends Controller
         }
 
         $validated = $request->validate([
-            'noi_dung' => ['required', 'string', 'max:280'],
+            'noi_dung' => ['required', 'string', 'max:1000'],
+        ], [
+            'noi_dung.max' => 'Nội dung bài viết không được vượt quá 1000 ký tự.',
         ]);
 
         $post->update([
