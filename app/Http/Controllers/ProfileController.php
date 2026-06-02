@@ -237,6 +237,11 @@ class ProfileController extends Controller
                 'max:50',
                 Rule::unique('nguoi_dung', 'ten_dang_nhap')->ignore($user->id),
             ],
+            'ten_hien_thi' => [
+                'nullable',
+                'string',
+                'max:100',
+            ],
             'so_dien_thoai' => [
                 'nullable',
                 'string',
@@ -254,6 +259,7 @@ class ProfileController extends Controller
             'ngay_sinh.date' => 'Ngày sinh không đúng định dạng ngày tháng.',
             'ngay_sinh.before_or_equal' => 'Ngày,Tháng,Năm sinh không thể lớn hơn hiện tại.',
             'ten_dang_nhap.unique' => 'Tên đăng nhập này đã được sử dụng.',
+            'ten_hien_thi.max' => 'Tên hiển thị không được vượt quá 100 ký tự.',
             'so_dien_thoai.unique' => 'Số điện thoại này đã được sử dụng.',
             'anh_dai_dien.image' => 'Ảnh đại diện phải là một tệp hình ảnh.',
             'anh_dai_dien.mimes' => 'Ảnh đại diện chỉ chấp nhận định dạng: jpg, jpeg, png, webp.',

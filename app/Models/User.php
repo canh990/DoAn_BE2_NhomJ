@@ -26,6 +26,7 @@ class User extends Authenticatable
 
     protected $fillable = [
         'ten_dang_nhap',
+        'ten_hien_thi',
         'email',
         'so_dien_thoai',
         'mat_khau_hash',
@@ -61,10 +62,10 @@ class User extends Authenticatable
     {
         return null;
     }
-    // Nếu bạn muốn dùng 'ten_dang_nhap' làm tên hiển thị chính
+    // Trả về tên hiển thị: ưu tiên ten_hien_thi, fallback về ten_dang_nhap
     public function getNameAttribute()
     {
-        return $this->ten_dang_nhap;
+        return $this->ten_hien_thi ?: $this->ten_dang_nhap;
     }
 
     // Người theo dõi tôi
@@ -151,7 +152,7 @@ class User extends Authenticatable
     public function getAvatarUrlAttribute()
     {
         if (!$this->anh_dai_dien) {
-            return 'https://ui-avatars.com/api/?name=' . urlencode($this->ten_dang_nhap) . '&background=random';
+            return 'https://ui-avatars.com/api/?name=' . urlencode($this->ten_hien_thi ?: $this->ten_dang_nhap) . '&background=random';
         }
         
         if (filter_var($this->anh_dai_dien, FILTER_VALIDATE_URL)) {
