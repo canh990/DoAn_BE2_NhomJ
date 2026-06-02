@@ -10,7 +10,7 @@
         <form id="edit-post-form" method="POST" class="p-4 flex flex-col gap-4">
             @csrf
             @method('PUT')
-            <textarea id="edit-post-content" name="noi_dung" rows="5" class="w-full bg-slate-900/50 border border-sky-400/20 rounded-xl focus:ring-1 focus:ring-sky-400 text-slate-100 placeholder-slate-500 resize-none p-3" required></textarea>
+            <textarea id="edit-post-content" name="noi_dung" maxlength="1000" rows="5" class="w-full bg-slate-900/50 border border-sky-400/20 rounded-xl focus:ring-1 focus:ring-sky-400 text-slate-100 placeholder-slate-500 resize-none p-3" required></textarea>
             <div class="flex justify-end gap-3 pt-2">
                 <button type="button" id="cancel-edit-btn" class="px-5 py-2 text-sm font-semibold text-slate-300 hover:text-white hover:bg-white/5 rounded-xl transition-colors">Hủy</button>
                 <button type="submit" class="px-5 py-2 text-sm font-semibold bg-sky-500 hover:bg-sky-400 text-white rounded-xl shadow-lg shadow-sky-500/20 transition-all active:scale-95">Lưu thay đổi</button>
