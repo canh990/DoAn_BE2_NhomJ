@@ -15,8 +15,14 @@ class ProfileController extends Controller
     {
         $user = auth()->user()->loadCount(['followers', 'following']);
 
-        $posts = $user->posts()
-            ->with(['user', 'media', 'originalPost.user', 'originalPost.media', 'poll.options.votes', 'poll.votes'])
+        $posts = BaiViet::query()
+            ->where(function ($query) use ($user) {
+                $query->where('nguoi_dung_id', $user->id)
+                      ->orWhereHas('taggedUsers', function ($q) use ($user) {
+                          $q->where('nguoi_dung.id', $user->id);
+                      });
+            })
+            ->with(['user', 'taggedUsers', 'media', 'originalPost.user', 'originalPost.media', 'poll.options.votes', 'poll.votes'])
             ->withCount(['reactions', 'comments', 'shares'])
             ->with(['reactions' => function ($query) {
                 $query->where('nguoi_dung_id', auth()->id());
@@ -38,7 +44,16 @@ class ProfileController extends Controller
             ->latest('ngay_tao')
             ->get();
 
-        $userMedia = \App\Models\MediaBaiViet::whereIn('bai_viet_id', $user->posts()->pluck('id'))
+        $postIds = BaiViet::query()
+            ->where(function ($query) use ($user) {
+                $query->where('nguoi_dung_id', $user->id)
+                      ->orWhereHas('taggedUsers', function ($q) use ($user) {
+                          $q->where('nguoi_dung.id', $user->id);
+                      });
+            })
+            ->pluck('id');
+
+        $userMedia = \App\Models\MediaBaiViet::whereIn('bai_viet_id', $postIds)
             ->latest('ngay_tao')
             ->get();
 
@@ -107,8 +122,14 @@ class ProfileController extends Controller
             return redirect()->route('home')->with('error', 'Bạn không thể xem trang cá nhân của người này.');
         }
 
-        $posts = $user->posts()
-            ->with(['user', 'media', 'originalPost.user', 'originalPost.media', 'poll.options.votes', 'poll.votes'])
+        $posts = BaiViet::query()
+            ->where(function ($query) use ($user) {
+                $query->where('nguoi_dung_id', $user->id)
+                      ->orWhereHas('taggedUsers', function ($q) use ($user) {
+                          $q->where('nguoi_dung.id', $user->id);
+                      });
+            })
+            ->with(['user', 'taggedUsers', 'media', 'originalPost.user', 'originalPost.media', 'poll.options.votes', 'poll.votes'])
             ->withCount(['reactions', 'comments', 'shares'])
             ->with(['reactions' => function ($query) {
                 $query->where('nguoi_dung_id', auth()->id());
@@ -130,7 +151,16 @@ class ProfileController extends Controller
             ->latest('ngay_tao')
             ->get();
 
-        $userMedia = \App\Models\MediaBaiViet::whereIn('bai_viet_id', $user->posts()->pluck('id'))
+        $postIds = BaiViet::query()
+            ->where(function ($query) use ($user) {
+                $query->where('nguoi_dung_id', $user->id)
+                      ->orWhereHas('taggedUsers', function ($q) use ($user) {
+                          $q->where('nguoi_dung.id', $user->id);
+                      });
+            })
+            ->pluck('id');
+
+        $userMedia = \App\Models\MediaBaiViet::whereIn('bai_viet_id', $postIds)
             ->latest('ngay_tao')
             ->get();
 
