@@ -71,6 +71,10 @@ class DatabaseSeeder extends Seeder
         $this->command->info('📱 Đang tạo phiên đăng nhập thiết bị...');
         $this->call(PhienDangNhapSeeder::class);
 
+        // 14. Tạo dữ liệu Help Center (Trợ giúp & FAQ)
+        $this->command->info('🌐 Đang tạo dữ liệu Help Center...');
+        $this->call(TroGiupSeeder::class);
+
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
         $this->command->info('🎉 ĐÃ SEED TOÀN BỘ CƠ SỞ DỮ LIỆU THÀNH CÔNG!');

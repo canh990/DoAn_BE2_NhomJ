@@ -323,18 +323,24 @@
                             </div>
                             <!-- Khối câu hỏi tự động dạng danh sách nút bấm xếp dọc -->
                             <div class="flex flex-col gap-2 w-full">
-                                <button type="button" class="faq-btn text-left text-xs bg-white/5 hover:bg-primary/10 border border-white/10 hover:border-primary/20 text-slate-300 hover:text-primary transition-all duration-200 p-2.5 rounded-xl active:scale-[0.98] outline-none">
-                                    {{ __('messages.chatbot_faq_report') }}
-                                </button>
-                                <button type="button" class="faq-btn text-left text-xs bg-white/5 hover:bg-primary/10 border border-white/10 hover:border-primary/20 text-slate-300 hover:text-primary transition-all duration-200 p-2.5 rounded-xl active:scale-[0.98] outline-none">
-                                    {{ __('messages.chatbot_faq_lost_acc') }}
-                                </button>
-                                <button type="button" class="faq-btn text-left text-xs bg-white/5 hover:bg-primary/10 border border-white/10 hover:border-primary/20 text-slate-300 hover:text-primary transition-all duration-200 p-2.5 rounded-xl active:scale-[0.98] outline-none">
-                                    {{ __('messages.chatbot_faq_forgot_pwd') }}
-                                </button>
-                                <button type="button" class="faq-btn text-left text-xs bg-white/5 hover:bg-primary/10 border border-white/10 hover:border-primary/20 text-slate-300 hover:text-primary transition-all duration-200 p-2.5 rounded-xl active:scale-[0.98] outline-none">
-                                    {{ __('messages.chatbot_faq_2fa') }}
-                                </button>
+                                @forelse($faqs ?? [] as $faq)
+                                    <button type="button" class="faq-btn text-left text-xs bg-white/5 hover:bg-primary/10 border border-white/10 hover:border-primary/20 text-slate-300 hover:text-primary transition-all duration-200 p-2.5 rounded-xl active:scale-[0.98] outline-none">
+                                        {{ $faq->cau_hoi }}
+                                    </button>
+                                @empty
+                                    <button type="button" class="faq-btn text-left text-xs bg-white/5 hover:bg-primary/10 border border-white/10 hover:border-primary/20 text-slate-300 hover:text-primary transition-all duration-200 p-2.5 rounded-xl active:scale-[0.98] outline-none">
+                                        {{ __('messages.chatbot_faq_report') }}
+                                    </button>
+                                    <button type="button" class="faq-btn text-left text-xs bg-white/5 hover:bg-primary/10 border border-white/10 hover:border-primary/20 text-slate-300 hover:text-primary transition-all duration-200 p-2.5 rounded-xl active:scale-[0.98] outline-none">
+                                        {{ __('messages.chatbot_faq_lost_acc') }}
+                                    </button>
+                                    <button type="button" class="faq-btn text-left text-xs bg-white/5 hover:bg-primary/10 border border-white/10 hover:border-primary/20 text-slate-300 hover:text-primary transition-all duration-200 p-2.5 rounded-xl active:scale-[0.98] outline-none">
+                                        {{ __('messages.chatbot_faq_forgot_pwd') }}
+                                    </button>
+                                    <button type="button" class="faq-btn text-left text-xs bg-white/5 hover:bg-primary/10 border border-white/10 hover:border-primary/20 text-slate-300 hover:text-primary transition-all duration-200 p-2.5 rounded-xl active:scale-[0.98] outline-none">
+                                        {{ __('messages.chatbot_faq_2fa') }}
+                                    </button>
+                                @endforelse
                             </div>
                         </div>
                     </div>
@@ -628,6 +634,9 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     const botReplies = {
+        @foreach($faqs ?? [] as $faq)
+            "{!! addslashes(trim($faq->cau_hoi)) !!}": "{!! addslashes(trim($faq->tra_loi)) !!}",
+        @endforeach
         "{{ __('messages.chatbot_faq_report') }}": "{{ __('messages.chatbot_reply_report') }}",
         "{{ __('messages.chatbot_faq_lost_acc') }}": "{{ __('messages.chatbot_reply_lost_acc') }}",
         "{{ __('messages.chatbot_faq_forgot_pwd') }}": "{{ __('messages.chatbot_reply_forgot_pwd') }}",
