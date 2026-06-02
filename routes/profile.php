@@ -41,6 +41,14 @@ Route::middleware('auth')->group(function () {
         ->name('user.block');
     Route::post('/user/{user}/unblock', [ProfileController::class, 'unblockUser'])
         ->name('user.unblock');
+
+    // Các Route AJAX tải thêm Nhật ký hoạt động
+    Route::get('/profile/activity/liked', [ProfileController::class, 'activityLiked'])
+        ->name('profile.activity.liked');
+    Route::get('/profile/activity/comments', [ProfileController::class, 'activityComments'])
+        ->name('profile.activity.comments');
+    Route::get('/profile/activity/saved', [ProfileController::class, 'activitySaved'])
+        ->name('profile.activity.saved');
 });
 
 Route::get('/profile/{username}/followers', [ProfileController::class, 'followers'])

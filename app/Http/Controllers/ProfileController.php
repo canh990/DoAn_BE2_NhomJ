@@ -63,15 +63,36 @@ class ProfileController extends Controller
         $mutualFriendIds = $followerIds->intersect($followingIds);
         $mutualFriends = User::whereIn('id', $mutualFriendIds)->get();
 
-        $likedPosts = auth()->check()
-            ? BaiViet::query()
-                ->whereHas('reactions', function ($query) {
-                    $query->where('nguoi_dung_id', auth()->id());
-                })
+        $likedCount = auth()->check()
+            ? \App\Models\CamXuc::where('nguoi_dung_id', auth()->id())
+                ->whereNotNull('bai_viet_id')
+                ->whereHas('baiViet', function($q) { $q->where('da_xoa', false); })
+                ->count()
+            : 0;
+            
+        $commentsCount = auth()->check()
+            ? \App\Models\BinhLuan::where('nguoi_dung_id', auth()->id())
                 ->where('da_xoa', false)
-                ->with(['user', 'media'])
-                ->latest()
-                ->take(20)
+                ->whereHas('post', function($q) { $q->where('da_xoa', false); })
+                ->count()
+            : 0;
+
+        $savedCount = auth()->check()
+            ? \App\Models\BaiVietDaLuu::where('nguoi_dung_id', auth()->id())
+                ->whereHas('post', function($q) { $q->where('da_xoa', false); })
+                ->count()
+            : 0;
+
+        $likedPosts = auth()->check()
+            ? \App\Models\CamXuc::query()
+                ->where('nguoi_dung_id', auth()->id())
+                ->whereNotNull('bai_viet_id')
+                ->whereHas('baiViet', function ($query) {
+                    $query->where('da_xoa', false);
+                })
+                ->with(['baiViet.user', 'baiViet.media'])
+                ->latest('ngay_tao')
+                ->take(10)
                 ->get()
             : collect();
 
@@ -79,18 +100,24 @@ class ProfileController extends Controller
             ? \App\Models\BinhLuan::query()
                 ->where('nguoi_dung_id', auth()->id())
                 ->where('da_xoa', false)
+                ->whereHas('post', function ($query) {
+                    $query->where('da_xoa', false);
+                })
                 ->with(['post.user'])
                 ->latest('ngay_tao')
-                ->take(20)
+                ->take(10)
                 ->get()
             : collect();
 
         $savedPosts = auth()->check()
             ? \App\Models\BaiVietDaLuu::query()
                 ->where('nguoi_dung_id', auth()->id())
+                ->whereHas('post', function ($query) {
+                    $query->where('da_xoa', false);
+                })
                 ->with(['post.user', 'post.media'])
                 ->latest('ngay_tao')
-                ->take(20)
+                ->take(10)
                 ->get()
             : collect();
             
@@ -103,6 +130,9 @@ class ProfileController extends Controller
             'likedPosts' => $likedPosts,
             'myComments' => $myComments,
             'savedPosts' => $savedPosts,
+            'likedCount' => $likedCount,
+            'commentsCount' => $commentsCount,
+            'savedCount' => $savedCount,
         ]);
     }
 
@@ -172,15 +202,36 @@ class ProfileController extends Controller
         $mutualFriendIds = $followerIds->intersect($followingIds);
         $mutualFriends = User::whereIn('id', $mutualFriendIds)->get();
         
-        $likedPosts = $isOwnProfile
-            ? BaiViet::query()
-                ->whereHas('reactions', function ($query) {
-                    $query->where('nguoi_dung_id', auth()->id());
-                })
+        $likedCount = $isOwnProfile
+            ? \App\Models\CamXuc::where('nguoi_dung_id', auth()->id())
+                ->whereNotNull('bai_viet_id')
+                ->whereHas('baiViet', function($q) { $q->where('da_xoa', false); })
+                ->count()
+            : 0;
+            
+        $commentsCount = $isOwnProfile
+            ? \App\Models\BinhLuan::where('nguoi_dung_id', auth()->id())
                 ->where('da_xoa', false)
-                ->with(['user', 'media'])
-                ->latest()
-                ->take(20)
+                ->whereHas('post', function($q) { $q->where('da_xoa', false); })
+                ->count()
+            : 0;
+
+        $savedCount = $isOwnProfile
+            ? \App\Models\BaiVietDaLuu::where('nguoi_dung_id', auth()->id())
+                ->whereHas('post', function($q) { $q->where('da_xoa', false); })
+                ->count()
+            : 0;
+
+        $likedPosts = $isOwnProfile
+            ? \App\Models\CamXuc::query()
+                ->where('nguoi_dung_id', auth()->id())
+                ->whereNotNull('bai_viet_id')
+                ->whereHas('baiViet', function ($query) {
+                    $query->where('da_xoa', false);
+                })
+                ->with(['baiViet.user', 'baiViet.media'])
+                ->latest('ngay_tao')
+                ->take(10)
                 ->get()
             : collect();
 
@@ -188,18 +239,24 @@ class ProfileController extends Controller
             ? \App\Models\BinhLuan::query()
                 ->where('nguoi_dung_id', auth()->id())
                 ->where('da_xoa', false)
+                ->whereHas('post', function ($query) {
+                    $query->where('da_xoa', false);
+                })
                 ->with(['post.user'])
                 ->latest('ngay_tao')
-                ->take(20)
+                ->take(10)
                 ->get()
             : collect();
 
         $savedPosts = $isOwnProfile
             ? \App\Models\BaiVietDaLuu::query()
                 ->where('nguoi_dung_id', auth()->id())
+                ->whereHas('post', function ($query) {
+                    $query->where('da_xoa', false);
+                })
                 ->with(['post.user', 'post.media'])
                 ->latest('ngay_tao')
-                ->take(20)
+                ->take(10)
                 ->get()
             : collect();
 
@@ -212,6 +269,9 @@ class ProfileController extends Controller
             'likedPosts' => $likedPosts,
             'myComments' => $myComments,
             'savedPosts' => $savedPosts,
+            'likedCount' => $likedCount,
+            'commentsCount' => $commentsCount,
+            'savedCount' => $savedCount,
         ]);
     }
 
@@ -346,6 +406,8 @@ class ProfileController extends Controller
             // Thông báo cho người theo dõi
             $this->notifyFollowers($user, $post);
         }
+
+        \App\Models\NhatKyHoatDong::log($user->id, 'cap_nhat_ho_so');
 
         return redirect()
             ->route('profile')
@@ -849,5 +911,163 @@ class ProfileController extends Controller
         }
 
         return back()->with('success', 'Đã bỏ chặn người dùng thành công.');
+    }
+
+    /**
+     * Helper: Áp dụng bộ lọc thời gian vào câu truy vấn.
+     */
+    private function applyTimeFilter($query, $timeFilter, $column = 'ngay_tao')
+    {
+        if ($timeFilter === 'today') {
+            return $query->where($column, '>=', now()->startOfDay());
+        } elseif ($timeFilter === '7_days') {
+            return $query->where($column, '>=', now()->subDays(7));
+        } elseif ($timeFilter === '30_days') {
+            return $query->where($column, '>=', now()->subDays(30));
+        }
+        return $query;
+    }
+
+    /**
+     * AJAX: Tải thêm bài viết đã thích phân trang.
+     */
+    public function activityLiked(Request $request)
+    {
+        $timeFilter = $request->input('time_filter', 'all');
+
+        $likedCountQuery = \App\Models\CamXuc::query()
+            ->where('nguoi_dung_id', auth()->id())
+            ->whereNotNull('bai_viet_id')
+            ->whereHas('baiViet', function($q) { $q->where('da_xoa', false); });
+        $likedCount = $this->applyTimeFilter($likedCountQuery, $timeFilter)->count();
+
+        $commentsCountQuery = \App\Models\BinhLuan::query()
+            ->where('nguoi_dung_id', auth()->id())
+            ->where('da_xoa', false)
+            ->whereHas('post', function($q) { $q->where('da_xoa', false); });
+        $commentsCount = $this->applyTimeFilter($commentsCountQuery, $timeFilter)->count();
+
+        $savedCountQuery = \App\Models\BaiVietDaLuu::query()
+            ->where('nguoi_dung_id', auth()->id())
+            ->whereHas('post', function($q) { $q->where('da_xoa', false); });
+        $savedCount = $this->applyTimeFilter($savedCountQuery, $timeFilter)->count();
+
+        $likedPostsQuery = \App\Models\CamXuc::query()
+            ->where('nguoi_dung_id', auth()->id())
+            ->whereNotNull('bai_viet_id')
+            ->whereHas('baiViet', function ($query) {
+                $query->where('da_xoa', false);
+            })
+            ->with(['baiViet.user', 'baiViet.media'])
+            ->latest('ngay_tao');
+        
+        $likedPosts = $this->applyTimeFilter($likedPostsQuery, $timeFilter)->paginate(10);
+
+        if ($request->ajax() || $request->wantsJson()) {
+            $html = view('profile.partials.activity_liked', compact('likedPosts'))->render();
+            return response()->json([
+                'html' => $html,
+                'hasMore' => $likedPosts->hasMorePages(),
+                'likedCount' => $likedCount,
+                'commentsCount' => $commentsCount,
+                'savedCount' => $savedCount
+            ]);
+        }
+        return abort(404);
+    }
+
+    /**
+     * AJAX: Tải thêm bình luận phân trang.
+     */
+    public function activityComments(Request $request)
+    {
+        $timeFilter = $request->input('time_filter', 'all');
+
+        $likedCountQuery = \App\Models\CamXuc::query()
+            ->where('nguoi_dung_id', auth()->id())
+            ->whereNotNull('bai_viet_id')
+            ->whereHas('baiViet', function($q) { $q->where('da_xoa', false); });
+        $likedCount = $this->applyTimeFilter($likedCountQuery, $timeFilter)->count();
+
+        $commentsCountQuery = \App\Models\BinhLuan::query()
+            ->where('nguoi_dung_id', auth()->id())
+            ->where('da_xoa', false)
+            ->whereHas('post', function($q) { $q->where('da_xoa', false); });
+        $commentsCount = $this->applyTimeFilter($commentsCountQuery, $timeFilter)->count();
+
+        $savedCountQuery = \App\Models\BaiVietDaLuu::query()
+            ->where('nguoi_dung_id', auth()->id())
+            ->whereHas('post', function($q) { $q->where('da_xoa', false); });
+        $savedCount = $this->applyTimeFilter($savedCountQuery, $timeFilter)->count();
+
+        $myCommentsQuery = \App\Models\BinhLuan::query()
+            ->where('nguoi_dung_id', auth()->id())
+            ->where('da_xoa', false)
+            ->whereHas('post', function ($query) {
+                $query->where('da_xoa', false);
+            })
+            ->with(['post.user'])
+            ->latest('ngay_tao');
+
+        $myComments = $this->applyTimeFilter($myCommentsQuery, $timeFilter)->paginate(10);
+
+        if ($request->ajax() || $request->wantsJson()) {
+            $html = view('profile.partials.activity_comments', compact('myComments'))->render();
+            return response()->json([
+                'html' => $html,
+                'hasMore' => $myComments->hasMorePages(),
+                'likedCount' => $likedCount,
+                'commentsCount' => $commentsCount,
+                'savedCount' => $savedCount
+            ]);
+        }
+        return abort(404);
+    }
+
+    /**
+     * AJAX: Tải thêm bài viết đã lưu phân trang.
+     */
+    public function activitySaved(Request $request)
+    {
+        $timeFilter = $request->input('time_filter', 'all');
+
+        $likedCountQuery = \App\Models\CamXuc::query()
+            ->where('nguoi_dung_id', auth()->id())
+            ->whereNotNull('bai_viet_id')
+            ->whereHas('baiViet', function($q) { $q->where('da_xoa', false); });
+        $likedCount = $this->applyTimeFilter($likedCountQuery, $timeFilter)->count();
+
+        $commentsCountQuery = \App\Models\BinhLuan::query()
+            ->where('nguoi_dung_id', auth()->id())
+            ->where('da_xoa', false)
+            ->whereHas('post', function($q) { $q->where('da_xoa', false); });
+        $commentsCount = $this->applyTimeFilter($commentsCountQuery, $timeFilter)->count();
+
+        $savedCountQuery = \App\Models\BaiVietDaLuu::query()
+            ->where('nguoi_dung_id', auth()->id())
+            ->whereHas('post', function($q) { $q->where('da_xoa', false); });
+        $savedCount = $this->applyTimeFilter($savedCountQuery, $timeFilter)->count();
+
+        $savedPostsQuery = \App\Models\BaiVietDaLuu::query()
+            ->where('nguoi_dung_id', auth()->id())
+            ->whereHas('post', function ($query) {
+                $query->where('da_xoa', false);
+            })
+            ->with(['post.user', 'post.media'])
+            ->latest('ngay_tao');
+
+        $savedPosts = $this->applyTimeFilter($savedPostsQuery, $timeFilter)->paginate(10);
+
+        if ($request->ajax() || $request->wantsJson()) {
+            $html = view('profile.partials.activity_saved', compact('savedPosts'))->render();
+            return response()->json([
+                'html' => $html,
+                'hasMore' => $savedPosts->hasMorePages(),
+                'likedCount' => $likedCount,
+                'commentsCount' => $commentsCount,
+                'savedCount' => $savedCount
+            ]);
+        }
+        return abort(404);
     }
 }

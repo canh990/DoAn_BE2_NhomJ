@@ -75,16 +75,6 @@
                     <p class="text-on-surface-variant text-sm">Vui lòng nhập thông tin để truy cập tài khoản của bạn.</p>
                 </div>
 
-                {{-- Hiển thị lỗi validation --}}
-                @if ($errors->any())
-                    <div class="mb-6 p-4 rounded-lg bg-error-container border border-error/30">
-                        <ul class="text-sm text-on-error-container space-y-1">
-                            @foreach ($errors->all() as $error)
-                                <li>• {{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                @endif
 
                 {{-- Hiển thị thông báo session (vd: đăng xuất thành công) --}}
                 @if (session('status'))
@@ -102,6 +92,13 @@
                 <form method="POST" action="{{ route('login.post') }}" class="space-y-5" autocomplete="off">
                     @csrf
 
+                    <!-- Thông báo lỗi đăng nhập (Sai mật khẩu, Sai định dạng, v.v.) hiển thị trên email -->
+                    @error('auth_error')
+                        <div class="mb-4 p-3 rounded-lg bg-error-container border border-error/30 text-sm text-on-error-container">
+                            {{ $message }}
+                        </div>
+                    @enderror
+
                     <!-- Email/Phone Input -->
                     <div class="space-y-2">
                         <label for="login" class="text-xs font-semibold uppercase tracking-wider text-on-surface-variant ml-1">
@@ -118,7 +115,7 @@
                                 value="{{ old('login') }}"
                                 autocomplete="off"
                                 required
-                                class="w-full h-12 bg-surface-container-low border @error('login') border-error @else border-outline-variant @enderror focus:border-primary focus:ring-1 focus:ring-primary/20 rounded-lg pl-12 pr-4 text-on-surface placeholder:text-outline transition-all"
+                                class="w-full h-12 bg-surface-container-low border @if($errors->has('login') || $errors->has('auth_error')) border-error @else border-outline-variant @endif focus:border-primary focus:ring-1 focus:ring-primary/20 rounded-lg pl-12 pr-4 text-on-surface placeholder:text-outline transition-all"
                                 placeholder="name@example.com / 0912345678 / username"
                             />
                         </div>
