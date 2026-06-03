@@ -39,7 +39,7 @@ class ForgotPasswordController extends Controller
             ['nguoi_dung_id' => $user->id],
             [
                 'ma_otp' => $otp,
-                'het_han' => Carbon::now()->addMinutes(5),
+                'het_han' => Carbon::now()->addMinutes(10),
                 'da_su_dung' => false,
                 'ngay_tao' => Carbon::now()
             ]
