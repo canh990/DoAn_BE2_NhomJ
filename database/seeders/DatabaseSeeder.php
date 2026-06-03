@@ -67,6 +67,8 @@ class DatabaseSeeder extends Seeder
         // 12. Tạo cài đặt người dùng
         $this->command->info('⚙️ Đang tạo cài đặt người dùng...');
         $this->call(CaiDatNguoiDungSeeder::class);
+        $this->call(DarkModeSeeder::class);
+        $this->call(MultilingualSeeder::class);
 
         // 13. Tạo phiên đăng nhập (Quản lý thiết bị)
         $this->command->info('📱 Đang tạo phiên đăng nhập thiết bị...');
