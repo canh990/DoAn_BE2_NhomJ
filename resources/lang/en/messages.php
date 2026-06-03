@@ -256,4 +256,9 @@ return [
     'chat_today' => 'Today',
     'chat_no_users' => 'No other users available to chat.',
     'chat_select_user' => 'Select a user to start chatting.',
+    'home_for_you' => 'For You',
+    'home_following' => 'Following',
+    'suggestion_mutual_friends' => ':count mutual friends',
+    'suggestion_lives_in' => 'Lives in :location',
+    'suggestion_recommended' => 'Recommended for you',
 ];

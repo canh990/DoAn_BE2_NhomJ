@@ -190,11 +190,11 @@
         <div class="flex border-b border-white/10 mb-6 relative z-40">
             <button type="button" id="btn-feed-recommend" 
                     class="feed-tab-btn relative pb-3 px-6 text-sm font-bold transition-all duration-300 {{ ($feedType ?? 'recommend') === 'recommend' ? 'text-cyan-400 border-b-2 border-cyan-400' : 'text-slate-400 hover:text-slate-200 border-b-2 border-transparent' }}">
-                For You
+                {{ __('messages.home_for_you') }}
             </button>
             <button type="button" id="btn-feed-following" 
                     class="feed-tab-btn relative pb-3 px-6 text-sm font-bold transition-all duration-300 {{ ($feedType ?? 'recommend') === 'following' ? 'text-cyan-400 border-b-2 border-cyan-400' : 'text-slate-400 hover:text-slate-200 border-b-2 border-transparent' }}">
-                Following
+                {{ __('messages.home_following') }}
             </button>
         </div>
 
