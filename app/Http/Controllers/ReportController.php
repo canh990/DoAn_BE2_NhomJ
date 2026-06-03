@@ -8,6 +8,7 @@ use App\Models\BinhLuan;
 use App\Models\User;
 use App\Models\ThongBao;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ReportController extends Controller
 {
@@ -40,6 +41,25 @@ class ReportController extends Controller
 
             if ($targetCount !== 1) {
                 return response()->json(['success' => false, 'message' => 'Dữ liệu báo cáo không hợp lệ.'], 400);
+            }
+
+            // Check duplicate reports
+            $duplicateQuery = BaoCao::where('nguoi_bao_cao_id', $currentUser->id)
+                ->where('trang_thai', 'cho_xu_ly');
+
+            if (!empty($validated['bai_viet_id'])) {
+                $duplicateQuery->where('bai_viet_id', $validated['bai_viet_id']);
+            } elseif (!empty($validated['binh_luan_id'])) {
+                $duplicateQuery->where('binh_luan_id', $validated['binh_luan_id']);
+            } elseif (!empty($validated['nguoi_dung_bi_bao_cao_id'])) {
+                $duplicateQuery->where('nguoi_dung_bi_bao_cao_id', $validated['nguoi_dung_bi_bao_cao_id']);
+            }
+
+            if ($duplicateQuery->exists()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Bạn đã gửi báo cáo cho nội dung này rồi và đang chờ hệ thống xử lý.'
+                ], 422);
             }
 
             // Determine the target user to notify
@@ -93,4 +113,115 @@ class ReportController extends Controller
             return response()->json(['success' => false, 'message' => $th->getMessage()], 500);
         }
     }
+
+    /**
+     * Admin view list of reports.
+     */
+    public function adminIndex(Request $request)
+    {
+        if (auth()->user()->role !== 'admin') {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $query = BaoCao::with(['nguoiBaoCao', 'nguoiBiBaoCao', 'baiViet.user', 'binhLuan.user'])
+            ->latest('ngay_tao');
+
+        // Apply filters
+        if ($request->filled('type')) {
+            $type = $request->input('type');
+            if ($type === 'bai_viet') {
+                $query->whereNotNull('bai_viet_id');
+            } elseif ($type === 'binh_luan') {
+                $query->whereNotNull('binh_luan_id');
+            } elseif ($type === 'nguoi_dung') {
+                $query->whereNotNull('nguoi_dung_bi_bao_cao_id');
+            }
+        }
+
+        if ($request->filled('status')) {
+            $query->where('trang_thai', $request->input('status'));
+        }
+
+        $reports = $query->paginate(15)->withQueryString();
+
+        return view('admin.reports', compact('reports'));
+    }
+
+    /**
+     * Admin processes a report (mark resolved or ignore).
+     */
+    public function adminAction(Request $request, BaoCao $report, $action)
+    {
+        if (auth()->user()->role !== 'admin') {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
+
+        if (!in_array($action, ['da_xu_ly', 'bo_qua'])) {
+            return response()->json(['success' => false, 'message' => 'Hành động không hợp lệ.'], 400);
+        }
+
+        $report->update(['trang_thai' => $action]);
+
+        return response()->json([
+            'success' => true,
+            'message' => $action === 'da_xu_ly' ? 'Đã đánh dấu xử lý thành công.' : 'Đã bỏ qua báo cáo này.'
+        ]);
+    }
+
+    /**
+     * Admin deletes violating content and resolves the report.
+     */
+    public function adminDeleteContent(Request $request, BaoCao $report)
+    {
+        if (auth()->user()->role !== 'admin') {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
+
+        \DB::beginTransaction();
+        try {
+            if ($report->bai_viet_id) {
+                $post = $report->baiViet;
+                if ($post) {
+                    if ($post->media) {
+                        foreach ($post->media as $media) {
+                            if (Storage::disk('public')->exists($media->duong_dan)) {
+                                Storage::disk('public')->delete($media->duong_dan);
+                            }
+                            $media->delete();
+                        }
+                    }
+                    $post->da_xoa = true;
+                    $post->save();
+
+                    BaoCao::where('bai_viet_id', $post->id)->update(['trang_thai' => 'da_xu_ly']);
+                }
+            } elseif ($report->binh_luan_id) {
+                $comment = $report->binhLuan;
+                if ($comment) {
+                    $comment->delete();
+                    BaoCao::where('binh_luan_id', $comment->id)->update(['trang_thai' => 'da_xu_ly']);
+                }
+            } elseif ($report->nguoi_dung_bi_bao_cao_id) {
+                $user = $report->nguoiBiBaoCao;
+                if ($user) {
+                    $user->con_hoat_dong = false;
+                    $user->save();
+
+                    BaoCao::where('nguoi_dung_bi_bao_cao_id', $user->id)->update(['trang_thai' => 'da_xu_ly']);
+                }
+            }
+
+            $report->update(['trang_thai' => 'da_xu_ly']);
+
+            \DB::commit();
+            return response()->json([
+                'success' => true,
+                'message' => 'Đã xóa nội dung vi phạm và cập nhật trạng thái báo cáo.'
+            ]);
+        } catch (\Throwable $th) {
+            \DB::rollBack();
+            return response()->json(['success' => false, 'message' => $th->getMessage()], 500);
+        }
+    }
 }
+

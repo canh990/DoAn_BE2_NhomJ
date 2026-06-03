@@ -43,6 +43,7 @@ class User extends Authenticatable
         'nha_cung_cap_oauth',
         'id_oauth',
         'remember_token',
+        'role',
     ];
 
     protected $hidden = [
