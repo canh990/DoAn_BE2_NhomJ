@@ -52,7 +52,12 @@ class PersonalSettingsController extends Controller
             })
             ->get();
 
-        return view('settings', compact('sessions', 'aboutInfo', 'supportInfo', 'faqs'));
+        // Lấy dung lượng bộ nhớ đệm hiện tại của người dùng
+        $dungLuongCache = \DB::table('cai_dat_nguoi_dung')
+            ->where('nguoi_dung_id', auth()->id())
+            ->value('dung_luong_cache') ?? 0.0;
+
+        return view('settings', compact('sessions', 'aboutInfo', 'supportInfo', 'faqs', 'dungLuongCache'));
     }
 
     // Persist theme choice (light|dark) into session
@@ -85,6 +90,10 @@ class PersonalSettingsController extends Controller
 
     public function clearCache(Request $request)
     {
+        \DB::table('cai_dat_nguoi_dung')
+            ->where('nguoi_dung_id', auth()->id())
+            ->update(['dung_luong_cache' => 0.0]);
+
         return back()->with('success', 'Đã xóa bộ nhớ đệm thành công!');
     }
 

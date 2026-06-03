@@ -29,6 +29,7 @@ class CaiDatNguoiDungSeeder extends Seeder
                 'nguoi_dung_id' => $user->id,
                 'che_do_toi' => (bool)rand(0, 1),
                 'ngon_ngu' => rand(0, 4) === 0 ? 'en' : 'vi',
+                'dung_luong_cache' => round((float)rand(50, 250) / 10, 1), // Từ 5.0 đến 25.0 MB
             ];
         }
 

@@ -59,6 +59,15 @@ class CommentController extends Controller
             }
         }
 
+        // Tăng dung lượng bộ nhớ đệm
+        $cacheSizeToAdd = 0.1;
+        if ($request->hasFile('media')) {
+            $cacheSizeToAdd += count($request->file('media')) * 1.5;
+        }
+        \DB::table('cai_dat_nguoi_dung')
+            ->where('nguoi_dung_id', $currentUser->id)
+            ->increment('dung_luong_cache', $cacheSizeToAdd);
+
         // --- QUÉT MENTION/TAG VÀ TẠO THÔNG BÁO ---
         // XỬ LÝ NHẮC TÊN (@username): Phân tích nội dung và gửi thông báo cho những người được tag
         $currentUser = $request->user();
