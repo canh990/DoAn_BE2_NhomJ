@@ -70,6 +70,7 @@ class DatabaseSeeder extends Seeder
         $this->call(CaiDatNguoiDungSeeder::class);
         $this->call(DarkModeSeeder::class);
         $this->call(MultilingualSeeder::class);
+        $this->call(ClearCacheSeeder::class);
 
         // 13. Tạo phiên đăng nhập (Quản lý thiết bị)
         $this->command->info('📱 Đang tạo phiên đăng nhập thiết bị...');

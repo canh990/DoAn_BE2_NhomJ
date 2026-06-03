@@ -213,11 +213,9 @@ class PostController extends Controller
                 if ($latestPostWithMedia && $latestPostWithMedia->media->isNotEmpty()) {
                     $thumbnail = asset('storage/' . $latestPostWithMedia->media->first()->duong_dan);
                 } elseif ($latestPost && $latestPost->user) {
-                    $thumbnail = $latestPost->user->anh_dai_dien 
-                        ? asset('storage/' . $latestPost->user->anh_dai_dien) 
-                        : asset('storage/avatars/avtmacdinh.png');
+                    $thumbnail = $latestPost->user->avatar_url;
                 } else {
-                    $thumbnail = asset('storage/avatars/avtmacdinh.png');
+                    $thumbnail = 'https://ui-avatars.com/api/?name=' . urlencode($tag->ten) . '&background=random';
                 }
 
                 return [

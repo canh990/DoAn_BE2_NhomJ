@@ -123,7 +123,7 @@ class CommentController extends Controller
                     'content' => $comment->formatted_content,
                     'created_at' => $comment->ngay_tao->diffForHumans(),
                     'user_name' => $comment->user?->name ?? 'Người dùng',
-                    'user_avatar' => $comment->user && $comment->user->anh_dai_dien ? asset('storage/' . $comment->user->anh_dai_dien) : asset('storage/avatars/avtmacdinh.png'),
+                    'user_avatar' => $comment->user ? $comment->user->avatar_url : 'https://ui-avatars.com/api/?name=User&background=random',
                     'media' => $comment->media->map(function($m) {
                         return [
                             'id' => $m->id,

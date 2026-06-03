@@ -256,4 +256,9 @@ return [
     'chat_today' => 'Hôm nay',
     'chat_no_users' => 'Chưa có người dùng khác để chat.',
     'chat_select_user' => 'Chọn một người dùng để bắt đầu chat.',
+    'home_for_you' => 'Dành cho bạn',
+    'home_following' => 'Đang theo dõi',
+    'suggestion_mutual_friends' => 'Có :count bạn chung',
+    'suggestion_lives_in' => 'Sống tại :location',
+    'suggestion_recommended' => 'Gợi ý cho bạn',
 ];
