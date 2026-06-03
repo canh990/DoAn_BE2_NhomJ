@@ -83,6 +83,12 @@
                     </div>
                 @endif
 
+                @if (session('success'))
+                    <div class="mb-6 p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-sm text-emerald-400">
+                        {{ session('success') }}
+                    </div>
+                @endif
+
                 @if (session('error'))
                     <div class="mb-6 p-4 rounded-lg bg-error-container border border-error/30 text-sm text-on-error-container">
                         {{ session('error') }}

@@ -10,6 +10,8 @@ use App\Helpers\DeviceHelper;
 use App\Models\PhienDangNhap;
 use Illuminate\Support\Str;
 
+use App\Models\User;
+
 class LoginController extends Controller
 {
     public function showLoginForm()
@@ -42,11 +44,26 @@ class LoginController extends Controller
             ]);
         }
 
-        if (! Auth::attempt([$field => $login, 'password' => $password], $remember)) {
+        // Tìm người dùng bao gồm cả tài khoản đã xóa mềm
+        $user = User::withTrashed()->where($field, $login)->first();
+
+        if (!$user || !\Illuminate\Support\Facades\Hash::check($password, $user->mat_khau_hash)) {
             throw ValidationException::withMessages([
                 'auth_error' => 'Thông tin đăng nhập hoặc mật khẩu không đúng.',
             ]);
         }
+
+        // Khôi phục tài khoản nếu bị xóa mềm (Soft Deleted) hoặc vô hiệu hóa
+        if ($user->trashed()) {
+            $user->restore();
+            $user->update(['con_hoat_dong' => true]);
+            session()->flash('success', 'Tài khoản của bạn đã được khôi phục thành công!');
+        } elseif (!$user->con_hoat_dong) {
+            $user->update(['con_hoat_dong' => true]);
+            session()->flash('success', 'Tài khoản của bạn đã được khôi phục thành công!');
+        }
+
+        Auth::login($user, $remember);
 
         $request->session()->regenerate();
 

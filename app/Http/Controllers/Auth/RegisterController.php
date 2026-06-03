@@ -207,6 +207,8 @@ class RegisterController extends Controller
             ],
         ], [
             'ten_dang_nhap.required' => 'Vui lòng nhập tên đăng nhập',
+            'ten_dang_nhap.min'      => 'Tên đăng nhập phải từ 4 đến 30 ký tự',
+            'ten_dang_nhap.max'      => 'Tên đăng nhập phải từ 4 đến 30 ký tự',
             'ten_dang_nhap.unique'   => 'Tên đăng nhập đã tồn tại',
             'ten_dang_nhap.regex'    => 'Tên đăng nhập chỉ chứa chữ thường, số, dấu chấm và gạch dưới',
 

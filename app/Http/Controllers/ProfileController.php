@@ -327,6 +327,8 @@ class ProfileController extends Controller
             'anh_bia.image' => 'Ảnh bìa phải là một tệp hình ảnh.',
             'anh_bia.mimes' => 'Ảnh bìa chỉ chấp nhận định dạng: jpg, jpeg, png, webp.',
             'anh_bia.max' => 'Kích thước ảnh bìa không được vượt quá 4MB.',
+            'tieu_su.max' => 'Tiểu sử không được vượt quá 1000 ký tự.',
+            'quyen_rieng_tu.in' => 'Quyền riêng tư đã chọn không hợp lệ.',
         ]);
 
         // Xử lý ảnh đại diện
@@ -802,8 +804,12 @@ class ProfileController extends Controller
                 'otp_deactivate.size' => 'Mã OTP phải có 6 chữ số.',
             ]);
 
-            if ($request->otp_deactivate !== $user->otp_code || !$user->otp_het_han || \Carbon\Carbon::now()->greaterThan($user->otp_het_han)) {
-                return back()->withErrors(['otp_deactivate' => 'Mã OTP không hợp lệ hoặc đã hết hạn.']);
+            if (!$user->otp_het_han || \Carbon\Carbon::now()->greaterThan($user->otp_het_han)) {
+                return back()->withErrors(['otp_deactivate' => 'Mã OTP đã hết hạn.']);
+            }
+
+            if ($request->otp_deactivate !== $user->otp_code) {
+                return back()->withErrors(['otp_deactivate' => 'Mã OTP không chính xác.']);
             }
 
             // Xóa OTP sau khi dùng
@@ -843,8 +849,12 @@ class ProfileController extends Controller
                 'otp_delete.size' => 'Mã OTP phải có 6 chữ số.',
             ]);
 
-            if ($request->otp_delete !== $user->otp_code || !$user->otp_het_han || \Carbon\Carbon::now()->greaterThan($user->otp_het_han)) {
-                return back()->withErrors(['otp_delete' => 'Mã OTP không hợp lệ hoặc đã hết hạn.']);
+            if (!$user->otp_het_han || \Carbon\Carbon::now()->greaterThan($user->otp_het_han)) {
+                return back()->withErrors(['otp_delete' => 'Mã OTP đã hết hạn.']);
+            }
+
+            if ($request->otp_delete !== $user->otp_code) {
+                return back()->withErrors(['otp_delete' => 'Mã OTP không chính xác.']);
             }
 
             // Xóa OTP sau khi dùng
@@ -853,13 +863,13 @@ class ProfileController extends Controller
 
         auth()->logout();
         
-        // Permanent delete
-        $user->forceDelete();
+        // Soft delete (sử dụng delete() vì Model đã có trait SoftDeletes)
+        $user->delete();
         
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('login')->with('success', 'Tài khoản của bạn đã được xóa vĩnh viễn khỏi hệ thống.');
+        return redirect()->route('login')->with('success', 'Tài khoản của bạn đã được lên lịch xóa và sẽ bị xóa vĩnh viễn sau 30 ngày. Bạn có thể đăng nhập lại trong thời gian này để khôi phục.');
     }
 
     public function blockUser(Request $request, User $user)

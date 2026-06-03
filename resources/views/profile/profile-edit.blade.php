@@ -602,6 +602,7 @@
             btn.disabled = false;
             btn.innerHTML = originalText;
             console.error('Lỗi bỏ chặn:', error);
+            if (window.showToast) window.showToast('Lỗi kết nối đến máy chủ.', 'error');
         }
     }
 

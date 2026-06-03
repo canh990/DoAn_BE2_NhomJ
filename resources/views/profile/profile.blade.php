@@ -294,7 +294,6 @@ $profileUrl = route('profile.public', ['username' => $user->ten_dang_nhap]);
                                             <div class="relative shrink-0">
                                                 <img src="{{ $friend->avatar_url }}" alt="{{ $friend->name }}"
                                                      class="h-12 w-12 rounded-full object-cover border-2 border-blue-500/40 group-hover:border-blue-500/80 transition-all">
-                                                <span class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-400 border-2 border-[#0f1524]"></span>
                                             </div>
                                             <div class="min-w-0 flex-1">
                                                 <h4 class="font-bold text-on-surface truncate flex items-center gap-1">
@@ -620,9 +619,13 @@ $profileUrl = route('profile.public', ['username' => $user->ten_dang_nhap]);
                             this.className = "rounded-xl border border-sky-400/20 glass-panel px-6 py-2 font-semibold transition-all hover:bg-white/10 text-sky-300 flex items-center justify-center gap-1.5 shadow-lg";
                         }
                         followersCount.innerText = new Intl.NumberFormat().format(data.followers_count);
+                    } else {
+                        const err = await response.json().catch(() => ({}));
+                        if (window.showToast) window.showToast(err.message || 'Có lỗi xảy ra khi thực hiện theo dõi.', 'error');
                     }
                 } catch (error) {
                     console.error('Lỗi khi thực hiện theo dõi:', error);
+                    if (window.showToast) window.showToast('Lỗi kết nối đến máy chủ.', 'error');
                 }
             });
         }
