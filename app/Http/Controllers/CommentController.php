@@ -17,8 +17,10 @@ class CommentController extends Controller
             'media.*' => ['file', 'mimes:jpeg,png,jpg,gif,webp,bmp,svg,heic,heif,mp4,mov,webm,avi,mkv,wmv', 'max:51200'],
         ]);
 
+        $currentUser = $request->user();
+
         // KIỂM TRA CHẶN: Tránh lỗi bình luận chéo khi người dùng đã chặn nhau
-        if ($request->user()->hasAnyBlockRelationship($post->nguoi_dung_id)) {
+        if ($currentUser->hasAnyBlockRelationship($post->nguoi_dung_id)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Bạn không thể bình luận trên bài viết này.',
@@ -38,7 +40,7 @@ class CommentController extends Controller
 
         $comment = BinhLuan::create([
             'bai_viet_id' => $post->id,
-            'nguoi_dung_id' => $request->user()->id,
+            'nguoi_dung_id' => $currentUser->id,
             'binh_luan_cha_id' => $validated['binh_luan_cha_id'] ?? null,
             'noi_dung' => $validated['noi_dung'] ?? '',
             'da_xoa' => false,
@@ -70,7 +72,6 @@ class CommentController extends Controller
 
         // --- QUÉT MENTION/TAG VÀ TẠO THÔNG BÁO ---
         // XỬ LÝ NHẮC TÊN (@username): Phân tích nội dung và gửi thông báo cho những người được tag
-        $currentUser = $request->user();
         $mentionService = resolve(\App\Services\MentionService::class);
         $taggedUserIds = $mentionService->processMentions($comment->noi_dung ?? '', $currentUser, $post, $comment);
 
