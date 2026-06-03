@@ -306,9 +306,23 @@
                             </div>
                         </div>
                     @else
-                        <button class="shrink-0 text-slate-500 transition-colors hover:text-sky-300 p-2 rounded-full hover:bg-white/5" type="button" aria-label="Tùy chọn bài viết">
-                            <span class="material-symbols-outlined" data-icon="more_horiz">more_horiz</span>
-                        </button>
+                        <div class="relative shrink-0">
+                            <button type="button" class="post-dropdown-trigger text-slate-500 transition-colors hover:text-sky-300 p-2 rounded-full hover:bg-white/5" aria-label="Tùy chọn bài viết">
+                                <span class="material-symbols-outlined" data-icon="more_horiz">more_horiz</span>
+                            </button>
+                            <div class="post-dropdown-menu hidden absolute right-0 top-full mt-1 w-40 bg-slate-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden z-20">
+                                @if($postId)
+                                <button type="button" class="w-full text-left px-4 py-3 text-sm text-amber-400 hover:bg-white/5 flex items-center gap-2 transition-colors border-b border-white/5" onclick="window.openReportModal({ bai_viet_id: {{ $postId }} })">
+                                    <span class="material-symbols-outlined text-[18px]">report</span>
+                                    Báo cáo bài viết
+                                </button>
+                                @endif
+                                <button type="button" class="w-full text-left px-4 py-3 text-sm text-sky-400 hover:bg-white/5 flex items-center gap-2 transition-colors" onclick="window.openReportModal({ nguoi_dung_bi_bao_cao_id: {{ (int) data_get($post, 'nguoi_dung_id') }} })">
+                                    <span class="material-symbols-outlined text-[18px]">person</span>
+                                    Báo cáo người dùng
+                                </button>
+                            </div>
+                        </div>
                     @endif
                 @endif
             </div>

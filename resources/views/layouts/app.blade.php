@@ -233,9 +233,15 @@
                 <span class="text-lg font-medium">{{ __('messages.bookmarks') }}</span>
             </a>
             <a href="{{ route('settings.index') }}" class="flex items-center gap-4 px-4 py-3 rounded-full transition-all hover:bg-white/10 group">
-    <span class="material-symbols-outlined" data-icon="settings">settings</span>
-    <span class="text-lg font-medium">{{ __('messages.settings_title') }}</span>
-</a>
+                <span class="material-symbols-outlined" data-icon="settings">settings</span>
+                <span class="text-lg font-medium">{{ __('messages.settings_title') }}</span>
+            </a>
+            @if(auth()->check() && auth()->user()->role === 'admin')
+            <a href="{{ route('admin.reports.index') }}" class="flex items-center gap-4 px-4 py-3 rounded-full transition-all text-amber-400 hover:bg-white/10 group {{ request()->routeIs('admin.reports.index') ? 'bg-amber-400/10' : '' }}">
+                <span class="material-symbols-outlined text-amber-400" data-icon="shield">shield</span>
+                <span class="text-lg font-medium">Báo cáo vi phạm</span>
+            </a>
+            @endif
         </nav>
         <button class="mt-4 w-full py-3 bg-sky-400/20 border border-sky-400/30 text-sky-300 font-bold rounded-xl hover:bg-sky-400/30 transition-all active:scale-95">
             {{ __('messages.new_post') }}
@@ -1586,6 +1592,7 @@
     <x-edit-modal />
     <x-share-modal />
     <x-confirm-modal />
+    <x-report-modal />
 
     <x-post-modal />
     <x-toast />

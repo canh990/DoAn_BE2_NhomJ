@@ -38,6 +38,10 @@
                 <div class="mt-3 flex items-center gap-3 text-xs text-slate-400">
                     <button type="button" data-comment-reply-button data-comment-id="{{ $comment->id }}" data-comment-user="{{ $comment->user?->name ?? 'Người dùng' }}" class="hover:text-sky-300">Trả lời</button>
 
+                    @if(auth()->check() && auth()->id() !== $comment->nguoi_dung_id)
+                        <button type="button" class="hover:text-amber-400 transition-colors" onclick="window.openReportModal({ binh_luan_id: {{ $comment->id }} })">Báo cáo</button>
+                    @endif
+
                     @if(auth()->check() && (auth()->id() === $comment->nguoi_dung_id || auth()->id() === optional($comment->post)->nguoi_dung_id))
                         <button type="button" class="hover:text-red-400 transition-colors" onclick="if(confirm('Bạn chắc chắn muốn xóa bình luận này? Thao tác này sẽ xoá luôn các ảnh/video đính kèm.')) {
                             fetch('{{ route('comments.destroy', $comment->id) }}', {

@@ -38,3 +38,18 @@ Route::get('/post-card', function () {
 
     return view('post-card-preview', compact('post', 'user'));
 })->name('post-card.preview');
+
+// --- CHỨC NĂNG BÁO CÁO (REPORT) & QUẢN TRỊ (ADMIN) ---
+use App\Http\Controllers\ReportController;
+
+Route::middleware('auth')->group(function () {
+    Route::post('/reports', [ReportController::class, 'store'])->name('reports.store');
+    
+    Route::prefix('admin')->group(function () {
+        Route::get('/reports', [ReportController::class, 'adminIndex'])->name('admin.reports.index');
+        Route::post('/reports/{report}/action/{action}', [ReportController::class, 'adminAction'])->name('admin.reports.action');
+        Route::delete('/reports/{report}/delete-content', [ReportController::class, 'adminDeleteContent'])->name('admin.reports.delete_content');
+    });
+});
+
+
