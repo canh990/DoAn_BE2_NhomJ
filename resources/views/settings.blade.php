@@ -129,7 +129,7 @@
                 <div class="text-center py-4">
 
                     <div class="text-3xl font-bold text-on-surface">
-                        128.5 MB
+                        {{ number_format($dungLuongCache ?? 0.0, 1) }} MB
                     </div>
 
                     <p class="text-xs text-on-surface-variant mt-1">
@@ -140,9 +140,12 @@
 
             </div>
 
-            <button class="w-full py-3 bg-white/10 hover:bg-white/20 border border-white/10 text-on-surface font-medium rounded-lg transition-all active:scale-95 text-sm">
-                {{ __('messages.clear_cache') }}
-            </button>
+            <form action="{{ route('cache.clear') }}" method="POST" class="w-full">
+                @csrf
+                <button type="submit" class="w-full py-3 bg-white/10 hover:bg-white/20 border border-white/10 text-on-surface font-medium rounded-lg transition-all active:scale-95 text-sm">
+                    {{ __('messages.clear_cache') }}
+                </button>
+            </form>
         </div>
 
         {{-- Devices --}}

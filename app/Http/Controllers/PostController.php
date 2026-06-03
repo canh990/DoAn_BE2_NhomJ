@@ -433,6 +433,18 @@ class PostController extends Controller
         }
         // ---------------------------------------
 
+        // Tăng dung lượng bộ nhớ đệm
+        $cacheSizeToAdd = 0.5;
+        if ($isPoll) {
+            $cacheSizeToAdd += 0.3;
+        }
+        if ($request->hasFile('anh')) {
+            $cacheSizeToAdd += count($request->file('anh')) * 2.0;
+        }
+        \DB::table('cai_dat_nguoi_dung')
+            ->where('nguoi_dung_id', auth()->id())
+            ->increment('dung_luong_cache', $cacheSizeToAdd);
+
         return redirect()
             ->route('home')
             ->with('success', 'Bài viết đã được đăng thành công.');

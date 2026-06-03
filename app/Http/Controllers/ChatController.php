@@ -394,6 +394,16 @@ class ChatController extends Controller
         ]);
 
         $this->storeAttachments($message, $request);
+
+        // Tăng dung lượng bộ nhớ đệm
+        $cacheSizeToAdd = 0.05;
+        if ($request->hasFile('attachments')) {
+            $cacheSizeToAdd += count($request->file('attachments')) * 2.0;
+        }
+        \DB::table('cai_dat_nguoi_dung')
+            ->where('nguoi_dung_id', $senderId)
+            ->increment('dung_luong_cache', $cacheSizeToAdd);
+
         $conversation->touch();
         $this->forgetTypingUser($conversation, $senderId);
 
