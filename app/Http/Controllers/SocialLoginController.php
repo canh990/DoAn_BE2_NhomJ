@@ -88,7 +88,7 @@ class SocialLoginController extends Controller
             ?? $provider . '_' . $oauthId
         );
 
-        $user = User::query()
+        $user = User::withTrashed()
             ->where(function ($query) use ($provider, $oauthId) {
                 $query->where('nha_cung_cap_oauth', $provider)
                     ->where('id_oauth', $oauthId);
@@ -109,6 +109,16 @@ class SocialLoginController extends Controller
         }
 
         $updates = [];
+
+        // Nếu người dùng đã bị xóa mềm (Soft Deleted) hoặc vô hiệu hóa, khôi phục lại tài khoản khi đăng nhập OAuth
+        if ($user->trashed()) {
+            $user->restore();
+            $updates['con_hoat_dong'] = true;
+            session()->flash('success', 'Tài khoản của bạn đã được khôi phục thành công!');
+        } elseif (!$user->con_hoat_dong) {
+            $updates['con_hoat_dong'] = true;
+            session()->flash('success', 'Tài khoản của bạn đã được khôi phục thành công!');
+        }
 
         if (blank($user->nha_cung_cap_oauth)) {
             $updates['nha_cung_cap_oauth'] = $provider;
@@ -146,7 +156,7 @@ class SocialLoginController extends Controller
         $username = Str::limit($base, 45, '');
         $counter = 1;
 
-        while (User::where('ten_dang_nhap', $username)->exists()) {
+        while (User::withTrashed()->where('ten_dang_nhap', $username)->exists()) {
             $suffix = '_' . $counter;
             $username = Str::limit($base, 50 - strlen($suffix), '') . $suffix;
             $counter++;

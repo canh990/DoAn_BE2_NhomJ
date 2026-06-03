@@ -106,9 +106,13 @@
                 if (container) {
                     container.innerHTML = `<span class="px-3 py-1 bg-emerald-500/10 text-emerald-400 text-xs font-bold rounded-lg border border-emerald-500/20">Người theo dõi</span>`;
                 }
+            } else {
+                const err = await response.json().catch(() => ({}));
+                if (window.showToast) window.showToast(err.message || 'Có lỗi xảy ra khi chấp nhận theo dõi.', 'error');
             }
         } catch (error) {
             console.error('Lỗi:', error);
+            if (window.showToast) window.showToast('Lỗi kết nối đến máy chủ.', 'error');
         }
     }
 
@@ -135,9 +139,13 @@
                     card.style.pointerEvents = 'none';
                     setTimeout(() => card.remove(), 500);
                 }
+            } else {
+                const err = await response.json().catch(() => ({}));
+                if (window.showToast) window.showToast(err.message || 'Có lỗi xảy ra khi từ chối theo dõi.', 'error');
             }
         } catch (error) {
             console.error('Lỗi:', error);
+            if (window.showToast) window.showToast('Lỗi kết nối đến máy chủ.', 'error');
         }
     }
 
@@ -168,9 +176,13 @@
                             this.classList.remove('text-slate-300');
                             this.classList.add('text-sky-300');
                         }
+                    } else {
+                        const err = await response.json().catch(() => ({}));
+                        if (window.showToast) window.showToast(err.message || 'Có lỗi xảy ra khi thực hiện theo dõi.', 'error');
                     }
                 } catch (error) {
                     console.error('Lỗi khi thực hiện theo dõi:', error);
+                    if (window.showToast) window.showToast('Lỗi kết nối đến máy chủ.', 'error');
                 }
             });
         });

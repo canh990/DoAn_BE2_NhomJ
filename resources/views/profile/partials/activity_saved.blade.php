@@ -13,7 +13,7 @@
                 <p class="text-sm font-semibold text-white truncate">Bài viết đã lưu của {{ $saved->post->user->name ?? 'Người dùng' }}</p>
                 <p class="text-xs text-slate-400 mt-1 line-clamp-1 italic">"{{ $saved->post->noi_dung }}"</p>
                 <span class="text-[10px] text-slate-500 block mt-1">
-                    {{ $saved->ngay_tao ? \Carbon\Carbon::parse($saved->ngay_tao)->diffForHumans() : '' }}
+                    {{ $saved->ngay_tao ? \Carbon\Carbon::parse($saved->ngay_tao, 'Asia/Ho_Chi_Minh')->diffForHumans() : '' }}
                 </span>
             </div>
             @if($firstMedia)

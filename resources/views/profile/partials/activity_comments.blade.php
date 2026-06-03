@@ -10,7 +10,7 @@
                     "{{ $comment->noi_dung }}"
                 </div>
                 <span class="text-[10px] text-slate-500 block mt-2">
-                    {{ $comment->ngay_tao ? \Carbon\Carbon::parse($comment->ngay_tao)->diffForHumans() : '' }}
+                    {{ $comment->ngay_tao ? \Carbon\Carbon::parse($comment->ngay_tao, 'Asia/Ho_Chi_Minh')->diffForHumans() : '' }}
                 </span>
             </div>
         </a>
