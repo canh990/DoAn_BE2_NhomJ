@@ -145,7 +145,7 @@
                             <div class="flex items-center justify-between p-3 bg-white/5 border border-white/5 rounded-xl">
                                 <div class="flex items-center gap-3">
                                     <img class="w-10 h-10 rounded-full border border-sky-400/20 object-cover shrink-0" 
-                                         src="{{ $mUser->anh_dai_dien ? asset('storage/' . $mUser->anh_dai_dien) : asset('storage/avatars/avtmacdinh.png') }}" 
+                                         src="{{ $mUser->avatar_url }}" 
                                          alt="{{ $mUser->ten_dang_nhap }}">
                                     <div class="min-w-0">
                                         <a href="{{ route('profile.public', ['username' => $mUser->ten_dang_nhap]) }}" class="font-bold text-white hover:text-sky-400 transition-colors text-sm truncate block">

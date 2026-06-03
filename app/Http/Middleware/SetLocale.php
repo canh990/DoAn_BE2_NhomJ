@@ -24,8 +24,8 @@ class SetLocale
                         ->where('nguoi_dung_id', auth()->id())
                         ->first();
                     if ($setting) {
-                        if (!session()->has('personal_locale') && in_array($setting->ngon_ngu, ['vi', 'en'])) {
-                            session(['personal_locale' => $setting->ngon_ngu]);
+                        if (!session()->has('personal_locale')) {
+                            session(['personal_locale' => 'vi']);
                         }
                         if (!session()->has('personal_theme')) {
                             session(['personal_theme' => $setting->che_do_toi ? 'dark' : 'light']);
@@ -37,9 +37,11 @@ class SetLocale
             }
         }
 
-        if (session()->has('personal_locale')) {
-            App::setLocale(session('personal_locale'));
+        if (!session()->has('personal_locale')) {
+            session(['personal_locale' => 'vi']);
         }
+
+        App::setLocale(session('personal_locale'));
 
         return $next($request);
     }

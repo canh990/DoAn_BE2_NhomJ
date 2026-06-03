@@ -123,7 +123,7 @@ class HomeController extends Controller
                     foreach ($mutualFriendsQuery as $item) {
                         if (isset($mutualUsers[$item->id])) {
                             $suUser = $mutualUsers[$item->id];
-                            $suUser->suggestion_reason = "Có {$item->mutual_count} bạn chung";
+                            $suUser->suggestion_reason = __('messages.suggestion_mutual_friends', ['count' => $item->mutual_count]);
                             $suggestedUsers->put($suUser->id, $suUser);
                         }
                     }
@@ -140,7 +140,7 @@ class HomeController extends Controller
                     ->get();
 
                 foreach ($locationUsers as $lUser) {
-                    $lUser->suggestion_reason = "Sống tại " . $user->noi_o;
+                    $lUser->suggestion_reason = __('messages.suggestion_lives_in', ['location' => $user->noi_o]);
                     $suggestedUsers->put($lUser->id, $lUser);
                 }
             }
@@ -155,7 +155,7 @@ class HomeController extends Controller
                     ->get();
 
                 foreach ($randomUsers as $rUser) {
-                    $rUser->suggestion_reason = "Gợi ý cho bạn";
+                    $rUser->suggestion_reason = __('messages.suggestion_recommended');
                     $suggestedUsers->put($rUser->id, $rUser);
                 }
             }

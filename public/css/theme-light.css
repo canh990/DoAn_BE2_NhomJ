@@ -716,3 +716,14 @@ html.light [data-comment-box] textarea::placeholder {
 html.light [data-comment-replies] .bg-white\/10 {
   background-color: #e0e0e0 !important;
 }
+
+/* Fix share post modal input text & background color in light mode */
+html.light #share-post-content {
+  background-color: #f1f3f4 !important;
+  color: #202124 !important;
+  -webkit-text-fill-color: #202124 !important;
+  border-color: #dadce0 !important;
+}
+html.light #share-post-content::placeholder {
+  color: #70757a !important;
+}
