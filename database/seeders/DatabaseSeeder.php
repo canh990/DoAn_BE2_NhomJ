@@ -30,7 +30,6 @@ class DatabaseSeeder extends Seeder
         // 3. Tạo bài viết, hình ảnh, video, bình chọn, phiếu bầu
         $this->command->info('📝 Đang tạo bài viết và bình chọn...');
         $this->call(BaiVietSeeder::class);
-        $this->call(NewsfeedSeeder::class);
 
         // 4. Tạo bình luận gốc và trả lời
         $this->command->info('💬 Đang tạo bình luận...');
