@@ -108,7 +108,7 @@
     $comments = collect(data_get($post, 'comments', []));
 
     $reactionButtons = [
-        'thich' => ['icon' => 'sentiment_satisfied', 'label' => 'Mỉm cười', 'color' => 'text-amber-400', '3d' => 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@latest/assets/Grinning%20face/3D/grinning_face_3d.png'],
+        'thich' => ['icon' => 'thumb_up', 'label' => 'Thích', 'color' => 'text-sky-400', '3d' => ''],
         'tim' => ['icon' => 'favorite', 'label' => 'Tim', 'color' => 'text-rose-400', '3d' => 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@latest/assets/Red%20heart/3D/red_heart_3d.png'],
         'haha' => ['icon' => 'mood', 'label' => 'Haha', 'color' => 'text-amber-400', '3d' => 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@latest/assets/Face%20with%20tears%20of%20joy/3D/face_with_tears_of_joy_3d.png'],
         'buon' => ['icon' => 'sentiment_dissatisfied', 'label' => 'Buồn', 'color' => 'text-sky-400', '3d' => 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@latest/assets/Crying%20face/3D/crying_face_3d.png'],
@@ -118,9 +118,18 @@
 
     $userReaction = optional(data_get($post, 'reactions'))->first()->loai_cam_xuc ?? null;
     $selected = $userReaction ? ($reactionButtons[$userReaction] ?? null) : null;
-    $selectedIcon = $selected['icon'] ?? 'sentiment_satisfied';
+    $selectedIcon = $selected['icon'] ?? 'thumb_up';
     $selectedLabel = $selected['label'] ?? __('messages.post_like');
     $selectedColor = $selected ? ($selected['color'] ?? 'text-slate-400') : '';
+    $reactionButtonClasses = [
+        'thich' => 'bg-sky-400/10 text-sky-400 shadow-sm shadow-sky-500/20',
+        'tim' => 'bg-rose-400/10 text-rose-400 shadow-sm shadow-rose-500/20',
+        'haha' => 'bg-amber-400/10 text-amber-400 shadow-sm shadow-amber-500/20',
+        'buon' => 'bg-slate-400/10 text-slate-400 shadow-sm shadow-slate-500/20',
+        'phan_no' => 'bg-orange-400/10 text-orange-400 shadow-sm shadow-orange-500/20',
+        'wow' => 'bg-amber-400/10 text-amber-400 shadow-sm shadow-amber-500/20',
+    ];
+    $selectedButtonClass = $selected && isset($reactionButtonClasses[$userReaction]) ? $reactionButtonClasses[$userReaction] : 'text-slate-400 hover:bg-slate-800/60 hover:text-sky-300';
 
     $isProfileUpdate = \Illuminate\Support\Str::startsWith($body, 'vừa cập nhật ảnh');
 
@@ -480,12 +489,16 @@
                     <div class="relative z-30">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-1 sm:gap-2">
-                            <button type="button" data-reaction-trigger data-current-reaction="{{ $userReaction ?? '' }}" class="group flex items-center gap-1.5 rounded-full px-3 py-1.5 sm:px-4 sm:py-2 transition-all duration-300 {{ $selected ? 'bg-sky-400/10 text-sky-400' : 'text-slate-400 hover:bg-slate-800/60 hover:text-sky-300' }}">
+                            <button type="button" data-reaction-trigger data-current-reaction="{{ $userReaction ?? '' }}" class="group flex items-center gap-1.5 rounded-full px-3 py-1.5 sm:px-4 sm:py-2 transition-all duration-300 {{ $selectedButtonClass }}">
                                 <div class="relative flex items-center justify-center transition-transform group-hover:scale-110 group-active:scale-95 w-6 h-6 sm:w-7 sm:h-7 shrink-0" data-reaction-trigger-icon-container>
-                                    @if ($selected)
-                                        <img src="{{ $selected['3d'] }}" class="w-6 h-6 sm:w-7 sm:h-7 object-contain drop-shadow-md" data-reaction-trigger-img>
+                                    @if ($selected && $userReaction === 'thich')
+                                        <span class="inline-flex items-center justify-center w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-sky-500/20 text-sky-400" data-reaction-trigger-icon>
+                                            <span class="material-symbols-outlined text-[20px] sm:text-[22px]" style="font-variation-settings: 'FILL' 1;">thumb_up</span>
+                                        </span>
+                                    @elseif ($selected)
+                                        <img src="{{ $selected['3d'] }}" class="w-6 h-6 sm:w-7 sm:h-7 object-contain drop-shadow-md" data-reaction-trigger-img onerror="this.outerHTML = '<span class=&quot;material-symbols-outlined text-[20px] sm:text-[22px] {{ $selectedColor }} bg-white/5 rounded-full p-1.5&quot; data-reaction-trigger-icon style=&quot;font-variation-settings: \'FILL\' 1;&quot;>{{ $selectedIcon }}</span>'">
                                     @else
-                                        <span class="material-symbols-outlined text-[20px] sm:text-[22px] {{ $selectedColor }}" data-reaction-trigger-icon style="{{ $selected ? "font-variation-settings: 'FILL' 1;" : '' }}">{{ $selectedIcon }}</span>
+                                        <span class="material-symbols-outlined text-[20px] sm:text-[22px] {{ $selectedColor }}" data-reaction-trigger-icon>{{ $selectedIcon }}</span>
                                     @endif
                                 </div>
                                 <span class="text-[13px] sm:text-sm font-semibold tracking-wide {{ $selected ? $selectedColor : '' }}" data-reaction-trigger-label>{{ $selected ? $selected['label'] : $selectedLabel }}</span>
@@ -528,10 +541,15 @@
                                         data-reaction="{{ $type }}" 
                                         data-reaction-label="{{ $button['label'] }}" 
                                         data-reaction-color="{{ $button['color'] }}" 
+                                        data-reaction-icon="{{ $button['icon'] }}" 
                                         data-reaction-3d="{{ $button['3d'] }}"
                                         class="reaction-bubble reaction-bubble-{{ $type }}" 
                                         title="{{ $button['label'] }}">
-                                    <img src="{{ $button['3d'] }}" alt="{{ $button['label'] }}">
+                                    @if ($type === 'thich')
+                                        <span class="material-symbols-outlined text-[26px] sm:text-[28px] {{ $button['color'] }}" style="font-variation-settings: 'FILL' 1;">thumb_up</span>
+                                    @else
+                                        <img src="{{ $button['3d'] }}" alt="{{ $button['label'] }}">
+                                    @endif
                                 </button>
                             </div>
                         @endforeach

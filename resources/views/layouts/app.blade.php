@@ -706,6 +706,7 @@
                 const reaction = reactionOption.dataset.reaction;
                 const label = reactionOption.dataset.reactionLabel;
                 const color = reactionOption.dataset.reactionColor;
+                const selectedIcon = reactionOption.dataset.reactionIcon;
                 // Phải dùng getAttribute vì dataset API KHÔNG chuyển đổi dấu gạch ngang trước chữ số
                 // dataset.reaction3d tìm data-reaction3d (sai), getAttribute tìm đúng data-reaction-3d
                 const selected3d = reactionOption.getAttribute('data-reaction-3d');
@@ -726,12 +727,24 @@
                 const triggerIconContainer = area.querySelector('[data-reaction-trigger-icon-container]');
                 const triggerLabel = area.querySelector('[data-reaction-trigger-label]');
                 const triggerBtn = area.querySelector('[data-reaction-trigger]');
+                const reactionButtonTheme = {
+                    'text-sky-400': 'bg-sky-400/10 text-sky-400 shadow-sm shadow-sky-500/20',
+                    'text-rose-400': 'bg-rose-400/10 text-rose-400 shadow-sm shadow-rose-500/20',
+                    'text-amber-400': 'bg-amber-400/10 text-amber-400 shadow-sm shadow-amber-500/20',
+                    'text-orange-400': 'bg-orange-400/10 text-orange-400 shadow-sm shadow-orange-500/20',
+                    'text-slate-400': 'bg-slate-400/10 text-slate-400 shadow-sm shadow-slate-500/20',
+                };
+                const selectedButtonClass = reactionButtonTheme[color] || 'bg-sky-400/10 text-sky-400 shadow-sm shadow-sky-500/20';
                 
                 if (triggerIconContainer) {
-                    triggerIconContainer.innerHTML = '<img src="' + selected3d + '" class="w-6 h-6 sm:w-7 sm:h-7 object-contain drop-shadow-md" data-reaction-trigger-img>';
+                    if (reaction === 'thich') {
+                        triggerIconContainer.innerHTML = '<span class="inline-flex items-center justify-center w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-sky-500/20 text-sky-400" data-reaction-trigger-icon><span class="material-symbols-outlined text-[20px] sm:text-[22px]" style="font-variation-settings: \'FILL\' 1;">thumb_up</span></span>';
+                    } else {
+                        triggerIconContainer.innerHTML = '<img src="' + selected3d + '" class="w-6 h-6 sm:w-7 sm:h-7 object-contain drop-shadow-md" data-reaction-trigger-img onerror="this.outerHTML = &quot;<span class=&quot;material-symbols-outlined text-[20px] sm:text-[22px] ' + color + ' bg-white/5 rounded-full p-1.5&quot; data-reaction-trigger-icon style=&quot;font-variation-settings: \'FILL\' 1;&quot;>' + selectedIcon + '</span>&quot;">';
+                    }
                 }
                 if (triggerBtn) {
-                    triggerBtn.className = 'group flex items-center gap-1.5 rounded-full px-3 py-1.5 sm:px-4 sm:py-2 transition-all duration-300 bg-sky-400/10 text-sky-400';
+                    triggerBtn.className = 'group flex items-center gap-1.5 rounded-full px-3 py-1.5 sm:px-4 sm:py-2 transition-all duration-300 transform hover:scale-105 active:scale-95 ' + selectedButtonClass;
                     triggerBtn.dataset.currentReaction = reaction;
                 }
                 if (triggerLabel) {
@@ -766,18 +779,29 @@
 
                         if (triggerIconContainer) {
                             if (isRemoved) {
-                                triggerIconContainer.innerHTML = '<span class="material-symbols-outlined text-[20px] sm:text-[22px] text-slate-400" data-reaction-trigger-icon>sentiment_satisfied</span>';
+                                triggerIconContainer.innerHTML = '<span class="material-symbols-outlined text-[20px] sm:text-[22px] text-slate-400" data-reaction-trigger-icon>thumb_up</span>';
+                            } else if (reaction === 'thich') {
+                                triggerIconContainer.innerHTML = '<span class="inline-flex items-center justify-center w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-sky-500/20 text-sky-400" data-reaction-trigger-icon><span class="material-symbols-outlined text-[20px] sm:text-[22px]" style="font-variation-settings: \'FILL\' 1;">thumb_up</span></span>';
                             } else {
-                                triggerIconContainer.innerHTML = '<img src="' + selected3d + '" class="w-6 h-6 sm:w-7 sm:h-7 object-contain drop-shadow-md" data-reaction-trigger-img>';
+                                triggerIconContainer.innerHTML = '<img src="' + selected3d + '" class="w-6 h-6 sm:w-7 sm:h-7 object-contain drop-shadow-md" data-reaction-trigger-img onerror="this.outerHTML = &quot;<span class=&quot;material-symbols-outlined text-[20px] sm:text-[22px] ' + color + ' bg-white/5 rounded-full p-1.5&quot; data-reaction-trigger-icon style=&quot;font-variation-settings: \'FILL\' 1;&quot;>' + selectedIcon + '</span>&quot;">';
                             }
                         }
+
+                        const reactionButtonTheme = {
+                            'text-sky-400': 'bg-sky-400/10 text-sky-400 shadow-sm shadow-sky-500/20',
+                            'text-rose-400': 'bg-rose-400/10 text-rose-400 shadow-sm shadow-rose-500/20',
+                            'text-amber-400': 'bg-amber-400/10 text-amber-400 shadow-sm shadow-amber-500/20',
+                            'text-orange-400': 'bg-orange-400/10 text-orange-400 shadow-sm shadow-orange-500/20',
+                            'text-slate-400': 'bg-slate-400/10 text-slate-400 shadow-sm shadow-slate-500/20',
+                        };
+                        const selectedButtonClass = reactionButtonTheme[color] || 'bg-sky-400/10 text-sky-400 shadow-sm shadow-sky-500/20';
 
                         if (triggerBtn) {
                             if (isRemoved) {
                                 triggerBtn.className = 'group flex items-center gap-1.5 rounded-full px-3 py-1.5 sm:px-4 sm:py-2 transition-all duration-300 text-slate-400 hover:bg-slate-800/60 hover:text-sky-300';
                                 triggerBtn.dataset.currentReaction = '';
                             } else {
-                                triggerBtn.className = 'group flex items-center gap-1.5 rounded-full px-3 py-1.5 sm:px-4 sm:py-2 transition-all duration-300 bg-sky-400/10 text-sky-400';
+                                triggerBtn.className = 'group flex items-center gap-1.5 rounded-full px-3 py-1.5 sm:px-4 sm:py-2 transition-all duration-300 transform hover:scale-105 active:scale-95 ' + selectedButtonClass;
                                 triggerBtn.dataset.currentReaction = reaction;
                             }
                         }
@@ -843,7 +867,7 @@
                     const triggerLabel = area.querySelector('[data-reaction-trigger-label]');
                     
                     if (triggerIconContainer) {
-                        triggerIconContainer.innerHTML = '<span class="material-symbols-outlined text-[20px] sm:text-[22px] text-slate-400" data-reaction-trigger-icon>sentiment_satisfied</span>';
+                        triggerIconContainer.innerHTML = '<span class="material-symbols-outlined text-[20px] sm:text-[22px] text-slate-400" data-reaction-trigger-icon>thumb_up</span>';
                     }
                     reactionTrigger.className = 'group flex items-center gap-1.5 rounded-full px-3 py-1.5 sm:px-4 sm:py-2 transition-all duration-300 text-slate-400 hover:bg-slate-800/60 hover:text-sky-300';
                     if (triggerLabel) {

@@ -124,7 +124,7 @@ class ReactionController extends Controller
 
                 // Cấu hình các metadata hiển thị tương ứng với từng loại cảm xúc (Icon, Label, CSS Class)
                 $reactionLabels = [
-                    'thich' => ['icon' => 'sentiment_satisfied', 'label' => 'Mỉm cười', 'color' => 'text-yellow-300', 'bg' => 'bg-yellow-500/20'],
+                    'thich' => ['icon' => 'thumb_up', 'label' => 'Thích', 'color' => 'text-sky-400', 'bg' => 'bg-sky-500/20'],
                     'tim' => ['icon' => 'favorite', 'label' => 'Yêu thích', 'color' => 'text-rose-400', 'bg' => 'bg-rose-500/20'],
                     'haha' => ['icon' => 'mood', 'label' => 'Haha', 'color' => 'text-yellow-300', 'bg' => 'bg-yellow-500/20'],
                     'buon' => ['icon' => 'sentiment_dissatisfied', 'label' => 'Buồn', 'color' => 'text-slate-400', 'bg' => 'bg-slate-500/20'],
