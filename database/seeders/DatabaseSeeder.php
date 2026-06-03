@@ -55,6 +55,7 @@ class DatabaseSeeder extends Seeder
         // 9. Tạo cuộc trò chuyện và tin nhắn
         $this->command->info('💬 Đang tạo tin nhắn chat...');
         $this->call(Chat1To1Seeder::class);
+        $this->call(ChatGroupSeeder::class);
 
         // 10. Tạo thông báo
         $this->command->info('🔔 Đang tạo thông báo...');
