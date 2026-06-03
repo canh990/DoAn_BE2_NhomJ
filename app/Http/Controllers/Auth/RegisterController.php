@@ -197,7 +197,7 @@ class RegisterController extends Controller
                 'max:100',
             ],
             'email'         => ['required', 'string', 'email', 'max:255', 'unique:nguoi_dung,email'],
-            'so_dien_thoai' => ['required', 'string', 'max:11', 'unique:nguoi_dung,so_dien_thoai'],
+            'so_dien_thoai' => ['required', 'string', 'regex:/^[0-9]+$/', 'max:11', 'unique:nguoi_dung,so_dien_thoai'],
             'mat_khau'      => [
                 'required', 
                 'string', 
@@ -219,6 +219,7 @@ class RegisterController extends Controller
             'email.unique'   => 'Email đã tồn tại',
 
             'so_dien_thoai.required' => 'Vui lòng nhập số điện thoại',
+            'so_dien_thoai.regex'    => 'Số điện thoại chỉ được chứa các chữ số',
             'so_dien_thoai.unique'   => 'Số điện thoại đã tồn tại',
 
             'mat_khau.required' => 'Vui lòng nhập mật khẩu',
