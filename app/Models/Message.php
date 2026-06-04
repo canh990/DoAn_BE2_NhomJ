@@ -28,6 +28,7 @@ class Message extends Model
         return $this->belongsTo(User::class, 'nguoi_gui_id');
     }
 
+    // THÊM ĐOẠN NÀY
     public function media()
     {
         return $this->hasMany(MessageMedia::class, 'tin_nhan_id');

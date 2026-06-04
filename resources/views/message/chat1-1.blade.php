@@ -207,19 +207,19 @@
                                         <div class="{{ $chatMessage->noi_dung ? 'mt-3' : '' }} space-y-3">
                                             @foreach ($chatMessage->media as $media)
                                                 @if ($media->loai === 'hinh_anh')
-                                                    <a href="{{ asset($media->duong_dan) }}" target="_blank" class="block overflow-hidden rounded-2xl border border-white/10">
-                                                        <img src="{{ asset($media->duong_dan) }}" alt="{{ $attachmentName($media) }}" class="max-h-80 w-full object-cover">
+                                                    <a href="{{ asset('storage/' . $media->duong_dan) }}" target="_blank" class="block overflow-hidden rounded-2xl border border-white/10">
+                                                        <img src="{{ asset('storage/' . $media->duong_dan) }}" alt="{{ $attachmentName($media) }}" class="max-h-80 w-full object-cover">
                                                     </a>
                                                 @elseif ($media->loai === 'video')
                                                     <video controls class="max-h-80 w-full rounded-2xl border border-white/10 bg-black">
-                                                        <source src="{{ asset($media->duong_dan) }}">
+                                                        <source src="{{ asset('storage/' . $media->duong_dan) }}">
                                                     </video>
                                                 @elseif ($media->loai === 'am_thanh')
                                                     <audio controls class="w-72 max-w-full">
-                                                        <source src="{{ asset($media->duong_dan) }}">
+                                                        <source src="{{ asset('storage/' . $media->duong_dan) }}">
                                                     </audio>
                                                 @else
-                                                    <a href="{{ asset($media->duong_dan) }}" target="_blank" class="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[.05] px-4 py-3 text-sm font-bold hover:bg-white/[.08]">
+                                                    <a href="{{ asset('storage/' . $media->duong_dan) }}" target="_blank" class="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[.05] px-4 py-3 text-sm font-bold hover:bg-white/[.08]">
                                                         <span class="grid h-9 w-9 place-items-center rounded-xl bg-sky-300 text-[#07111f]">F</span>
                                                         <span class="min-w-0 truncate">{{ $attachmentName($media) }}</span>
                                                     </a>

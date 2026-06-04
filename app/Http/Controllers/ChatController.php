@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
+use App\Models\MessageMedia;
+use Illuminate\Support\Facades\Storage;
 
 class ChatController extends Controller
 {
@@ -111,6 +113,7 @@ class ChatController extends Controller
     public function storeUserMessage(Request $request, User $user)
     {
         $data = $this->validateMessageInput($request);
+
 
         $currentUser = Auth::user();
         abort_if($user->id === $currentUser->id, 422);
@@ -238,9 +241,7 @@ class ChatController extends Controller
             return;
         }
 
-        $directory = public_path('uploads/message-media');
-        File::ensureDirectoryExists($directory);
-
+        // Use Laravel Storage facade to store files in the public disk (storage/app/public)
         foreach ($request->file('attachments') as $file) {
             if (! $file->isValid()) {
                 continue;
@@ -248,27 +249,38 @@ class ChatController extends Controller
 
             $mediaType = $this->mediaType($file->getMimeType());
             $extension = $file->getClientOriginalExtension();
-            $filename = Str::uuid().($extension ? '.'.$extension : '');
-            $file->move($directory, $filename);
+            $filename = Str::uuid() . ($extension ? '.' . $extension : '');
+
+            // Store the file and retrieve the relative path
+            $path = $file->storeAs('uploads/message-media', $filename, 'public');
 
             $message->media()->create([
                 'loai' => $mediaType,
-                'duong_dan' => 'uploads/message-media/'.$filename,
+                // Store path relative to the storage/public directory
+                'duong_dan' => $path,
             ]);
         }
     }
 
     private function mediaType(?string $mimeType): string
     {
-        if (Str::startsWith((string) $mimeType, 'image/')) {
+        $mimeType = (string) $mimeType;
+
+        if (Str::startsWith($mimeType, 'image/')) {
             return 'hinh_anh';
         }
 
-        if (Str::startsWith((string) $mimeType, 'video/')) {
+        if (Str::startsWith($mimeType, 'video/')) {
             return 'video';
         }
 
-        if (Str::startsWith((string) $mimeType, 'audio/')) {
+        if (Str::startsWith($mimeType, 'audio/')) {
+            return 'am_thanh';
+        }
+
+        // Trường hợp ít gặp: một số trình duyệt gửi audio/webm hoặc application/octet-stream
+        // nhưng thực tế file vẫn là âm thanh/video.
+        if (str_contains($mimeType, 'webm') && str_contains($mimeType, 'audio')) {
             return 'am_thanh';
         }
 
@@ -283,7 +295,7 @@ class ChatController extends Controller
             'content' => $message->noi_dung,
             'attachments' => $message->media->map(fn ($media) => [
                 'type' => $media->loai,
-                'url' => asset($media->duong_dan),
+                'url' => asset('storage/' . $media->duong_dan),
                 'name' => basename($media->duong_dan),
             ])->values(),
             'time' => optional($message->ngay_tao)->format('H:i'),

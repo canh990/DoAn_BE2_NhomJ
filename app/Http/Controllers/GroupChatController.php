@@ -7,7 +7,7 @@ use App\Models\Message;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class GroupChatController extends Controller
@@ -157,8 +157,12 @@ class GroupChatController extends Controller
             return;
         }
 
-        $directory = public_path('uploads/message-media');
-        File::ensureDirectoryExists($directory);
+        // Use the public disk to store attachments in a dedicated directory.
+        $disk = \Illuminate\Support\Facades\Storage::disk('public');
+        $directory = 'uploads/message-media';
+        if (! $disk->exists($directory)) {
+            $disk->makeDirectory($directory);
+        }
 
         foreach ($request->file('attachments') as $file) {
             if (! $file->isValid()) {
@@ -167,12 +171,14 @@ class GroupChatController extends Controller
 
             $mediaType = $this->mediaType($file->getMimeType());
             $extension = $file->getClientOriginalExtension();
-            $filename = Str::uuid().($extension ? '.'.$extension : '');
-            $file->move($directory, $filename);
+            $filename = (string) \Illuminate\Support\Str::uuid() . ($extension ? '.' . $extension : '');
+            // Store the file on the public disk.
+            $path = $disk->putFileAs($directory, $file, $filename);
 
+            // $path returns the relative path like 'uploads/message-media/uuid.ext'
             $message->media()->create([
                 'loai' => $mediaType,
-                'duong_dan' => 'uploads/message-media/'.$filename,
+                'duong_dan' => $path,
             ]);
         }
     }
@@ -203,7 +209,7 @@ class GroupChatController extends Controller
             'content' => $message->noi_dung,
             'attachments' => $message->media->map(fn ($media) => [
                 'type' => $media->loai,
-                'url' => asset($media->duong_dan),
+                'url' => asset('storage/' . $media->duong_dan),
                 'name' => basename($media->duong_dan),
             ])->values(),
             'time' => optional($message->ngay_tao)->format('H:i'),
