@@ -43,6 +43,12 @@ Route::middleware('auth')->group(function () {
     Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])
         ->name('comments.destroy');
 
+    Route::post('/comments/{comment}/reaction', [\App\Http\Controllers\ReactionController::class, 'storeCommentReaction'])
+        ->name('comments.react');
+
+    Route::get('/comments/{comment}/reactors', [\App\Http\Controllers\ReactionController::class, 'commentReactors'])
+        ->name('comments.reactors');
+
     Route::put('/posts/{post}', [PostController::class, 'update'])
         ->name('posts.update');
 
