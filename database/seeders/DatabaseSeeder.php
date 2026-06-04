@@ -85,6 +85,9 @@ class DatabaseSeeder extends Seeder
         // 15. Tạo dữ liệu Khám phá (Explore & Hashtags)
         $this->call(ExploreSeeder::class);
 
+        // 16. Tạo dữ liệu Tìm kiếm Hashtags (Search Hashtags)
+        $this->call(SearchHashtagsSeeder::class);
+
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
         $this->command->info('🎉 ĐÃ SEED TOÀN BỘ CƠ SỞ DỮ LIỆU THÀNH CÔNG!');
