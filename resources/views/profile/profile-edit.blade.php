@@ -193,6 +193,7 @@
                         placeholder="Hãy chia sẻ điều gì đó về bản thân..."
                         class="w-full bg-slate-900/50 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-on-surface focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all outline-none resize-none">{{ old('tieu_su', $user->tieu_su) }}</textarea>
                 </div>
+                @error('tieu_su') <p class="text-xs text-red-400 mt-1">{{ $message }}</p> @enderror
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -227,6 +228,7 @@
                             @endif
                         </select>
                     </div>
+                    @error('noi_o') <p class="text-xs text-red-400 mt-1">{{ $message }}</p> @enderror
                 </div>
             </div>
 
@@ -262,6 +264,7 @@
                             <p class="text-xs text-on-surface-variant">Yêu cầu phê duyệt người theo dõi.</p>
                         </div>
                     </div>
+                    @error('quyen_rieng_tu') <p class="text-xs text-red-400 mt-2 ml-1">{{ $message }}</p> @enderror
                 </div>
             </div>
 
