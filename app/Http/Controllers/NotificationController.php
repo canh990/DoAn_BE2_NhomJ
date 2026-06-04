@@ -10,7 +10,7 @@ class NotificationController extends Controller
     public function index()
     {
         $notifications = auth()->user()->thongBaos()
-            ->with(['nguoiThucHien', 'baiViet.media', 'binhLuan'])
+            ->with(['nguoiThucHien', 'baiViet.media', 'binhLuan', 'reaction', 'commentReaction'])
             ->latest('ngay_tao')
             ->paginate(20);
 

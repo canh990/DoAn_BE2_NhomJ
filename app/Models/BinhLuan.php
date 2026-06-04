@@ -32,6 +32,12 @@ class BinhLuan extends Model
     protected static function booted()
     {
         static::deleting(function ($comment) {
+            // Xóa tất cả các bình luận con qua Eloquent để kích hoạt sự kiện deleting của chúng và xóa file vật lý
+            foreach ($comment->children as $child) {
+                $child->delete();
+            }
+
+            // Xóa file vật lý media của bình luận này
             foreach ($comment->media as $media) {
                 if (\Illuminate\Support\Facades\Storage::disk('public')->exists($media->duong_dan)) {
                     \Illuminate\Support\Facades\Storage::disk('public')->delete($media->duong_dan);
@@ -68,5 +74,10 @@ class BinhLuan extends Model
     public function media(): HasMany
     {
         return $this->hasMany(MediaBinhLuan::class, 'binh_luan_id');
+    }
+
+    public function reactions(): HasMany
+    {
+        return $this->hasMany(CamXuc::class, 'binh_luan_id');
     }
 }

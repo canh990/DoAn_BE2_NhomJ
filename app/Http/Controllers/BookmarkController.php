@@ -16,11 +16,22 @@ class BookmarkController extends Controller
     {
         $user = $request->user();
 
+        // Lấy danh sách ID người dùng có quan hệ chặn với người dùng hiện tại
+        $blockedUserIds = DB::table('chan')
+            ->where('nguoi_chan_id', $user->id)
+            ->orWhere('nguoi_bi_chan_id', $user->id)
+            ->get()
+            ->map(function($row) use ($user) {
+                return $row->nguoi_chan_id == $user->id ? $row->nguoi_bi_chan_id : $row->nguoi_chan_id;
+            })
+            ->toArray();
+
         // Lấy danh sách bài viết đã lưu của user, eager load đầy đủ để tối ưu hóa truy vấn
         $posts = BaiViet::query()
             ->join('bai_viet_da_luu', 'bai_viet.id', '=', 'bai_viet_da_luu.bai_viet_id')
             ->where('bai_viet_da_luu.nguoi_dung_id', $user->id)
             ->where('bai_viet.da_xoa', false)
+            ->whereNotIn('bai_viet.nguoi_dung_id', $blockedUserIds) // Ẩn các bài viết của người bị chặn hoặc chặn mình
             ->select('bai_viet.*')
             ->with(['user', 'media', 'originalPost.user', 'originalPost.media'])
             ->withCount(['reactions', 'comments', 'shares'])

@@ -27,6 +27,16 @@ class MentionService
 
         $notifiedUserIds = [];
 
+        // Lấy danh sách ID người dùng có quan hệ chặn với người gửi
+        $blockedUserIds = \Illuminate\Support\Facades\DB::table('chan')
+            ->where('nguoi_chan_id', $sender->id)
+            ->orWhere('nguoi_bi_chan_id', $sender->id)
+            ->get()
+            ->map(function($row) use ($sender) {
+                return $row->nguoi_chan_id == $sender->id ? $row->nguoi_bi_chan_id : $row->nguoi_chan_id;
+            })
+            ->toArray();
+
         // 1. Handle @all (notify all connected users: followers and following, must be accepted)
         if (preg_match('/(?<=^|(?<=[^a-zA-Z0-9_\.]))@all/iu', $content)) {
             Log::info('MentionService: @all detected', ['content' => $content]);
@@ -41,7 +51,7 @@ class MentionService
                     return [$row->nguoi_theo_doi_id, $row->nguoi_duoc_theo_doi_id];
                 })
                 ->unique()
-                ->reject(fn($id) => $id === $sender->id)
+                ->reject(fn($id) => $id === $sender->id || in_array($id, $blockedUserIds))
                 ->toArray();
 
             if (!empty($connectedUserIds)) {
@@ -76,6 +86,7 @@ class MentionService
                 $taggedUsers = User::whereIn('ten_dang_nhap', $usernames)
                     ->where('con_hoat_dong', true)
                     ->where('id', '!=', $sender->id)
+                    ->whereNotIn('id', $blockedUserIds) // Không gửi cho những người có quan hệ chặn
                     ->whereNotIn('id', $notifiedUserIds) // Avoid duplicate notifications
                     ->get();
 

@@ -55,4 +55,17 @@ class ThongBao extends Model
     {
         return $this->belongsTo(Conversation::class, 'cuoc_tro_chuyen_id');
     }
+
+    public function reaction()
+    {
+        return $this->hasOne(CamXuc::class, 'bai_viet_id', 'bai_viet_id')
+            ->where('nguoi_dung_id', $this->nguoi_thuc_hien_id)
+            ->whereNull('binh_luan_id');
+    }
+
+    public function commentReaction()
+    {
+        return $this->hasOne(CamXuc::class, 'binh_luan_id', 'binh_luan_id')
+            ->where('nguoi_dung_id', $this->nguoi_thuc_hien_id);
+    }
 }

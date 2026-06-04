@@ -506,9 +506,10 @@ class PostController extends Controller
             return response()->json(['success' => false, 'message' => 'Bài viết gốc không còn tồn tại.'], 404);
         }
 
-        // CHẶN CHIA SẺ TRÙNG LẶP: Đảm bảo một người dùng chỉ chia sẻ một bài viết gốc tối đa 1 lần
+        // CHẶN CHIA SẺ TRÙNG LẶP: Đảm bảo một người dùng chỉ chia sẻ một bài viết gốc hoạt động tối đa 1 lần
         $alreadyShared = BaiViet::where('bai_goc_id', $originalPost->id)
             ->where('nguoi_dung_id', auth()->id())
+            ->where('da_xoa', false)
             ->exists();
 
         if ($alreadyShared) {
@@ -521,7 +522,7 @@ class PostController extends Controller
             'loai' => 'chia_se',
             'bai_goc_id' => $originalPost->id,
             'noi_dung' => $request->input('noi_dung', null),
-            'quyen_rieng_tu' => 'ban_be',
+            'quyen_rieng_tu' => 'cong_khai',
         ]);
 
         // TẠO THÔNG BÁO CHO CHỦ BÀI VIẾT GỐC

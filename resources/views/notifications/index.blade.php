@@ -33,6 +33,9 @@
                     case 'chia_se':
                     case 'dang_bai':
                         $redirectUrl = $notification->bai_viet_id ? route('posts.show', $notification->bai_viet_id) : '#';
+                        if ($notification->binh_luan_id) {
+                            $redirectUrl .= '#comment-' . $notification->binh_luan_id;
+                        }
                         break;
                     case 'tag':
                     case 'tag_all':
@@ -76,7 +79,21 @@
                         {{-- Icon badge for notification type --}}
                         <div class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center border-2 border-[#0a0e1a] 
                             @switch($notification->loai)
-                                @case('thich') bg-rose-500 @break
+                                @case('thich')
+                                    @php
+                                        $rx = $notification->binh_luan_id ? $notification->commentReaction : $notification->reaction;
+                                        $rxType = $rx ? $rx->loai_cam_xuc : 'thich';
+                                    @endphp
+                                    @switch($rxType)
+                                        @case('thich') bg-sky-500 @break
+                                        @case('tim') bg-rose-500 @break
+                                        @case('haha') bg-yellow-500 @break
+                                        @case('buon') bg-slate-500 @break
+                                        @case('phan_no') bg-orange-500 @break
+                                        @case('wow') bg-emerald-500 @break
+                                        @default bg-rose-500
+                                    @endswitch
+                                    @break
                                 @case('binh_luan') bg-sky-500 @break
                                 @case('theo_doi') @case('ket_ban') bg-purple-500 @break
                                 @case('chia_se') bg-emerald-500 @break
@@ -88,7 +105,21 @@
                             @endswitch">
                             <span class="material-symbols-outlined text-white text-[14px]">
                                 @switch($notification->loai)
-                                    @case('thich') favorite @break
+                                    @case('thich')
+                                        @php
+                                            $rx = $notification->binh_luan_id ? $notification->commentReaction : $notification->reaction;
+                                            $rxType = $rx ? $rx->loai_cam_xuc : 'thich';
+                                        @endphp
+                                        @switch($rxType)
+                                            @case('thich') thumb_up @break
+                                            @case('tim') favorite @break
+                                            @case('haha') mood @break
+                                            @case('buon') sentiment_dissatisfied @break
+                                            @case('phan_no') mood_bad @break
+                                            @case('wow') emoji_objects @break
+                                            @default favorite
+                                        @endswitch
+                                        @break
                                     @case('binh_luan') chat_bubble @break
                                     @case('theo_doi') person_add @break
                                     @case('ket_ban') handshake @break
@@ -115,7 +146,33 @@
                             
                             @switch($notification->loai)
                                 @case('thich')
-                                    {{ __('messages.notifications_liked_post') }}
+                                    @if($notification->binh_luan_id)
+                                        @php
+                                            $rx = $notification->commentReaction;
+                                            $rxType = $rx ? $rx->loai_cam_xuc : 'thich';
+                                        @endphp
+                                        @switch($rxType)
+                                            @case('tim') {{ app()->getLocale() == 'vi' ? 'đã bày tỏ yêu thích bình luận của bạn.' : 'loved your comment.' }} @break
+                                            @case('haha') {{ app()->getLocale() == 'vi' ? 'đã bày tỏ cảm xúc haha với bình luận của bạn.' : 'reacted haha to your comment.' }} @break
+                                            @case('buon') {{ app()->getLocale() == 'vi' ? 'đã bày tỏ cảm xúc buồn với bình luận của bạn.' : 'reacted sad to your comment.' }} @break
+                                            @case('phan_no') {{ app()->getLocale() == 'vi' ? 'đã phẫn nộ với bình luận của bạn.' : 'reacted angry to your comment.' }} @break
+                                            @case('wow') {{ app()->getLocale() == 'vi' ? 'đã bày tỏ cảm xúc wow với bình luận của bạn.' : 'reacted wow to your comment.' }} @break
+                                            @default {{ app()->getLocale() == 'vi' ? 'đã thích bình luận của bạn.' : 'liked your comment.' }}
+                                        @endswitch
+                                    @else
+                                        @php
+                                            $rx = $notification->reaction;
+                                            $rxType = $rx ? $rx->loai_cam_xuc : 'thich';
+                                        @endphp
+                                        @switch($rxType)
+                                            @case('tim') {{ app()->getLocale() == 'vi' ? 'đã bày tỏ yêu thích bài viết của bạn.' : 'loved your post.' }} @break
+                                            @case('haha') {{ app()->getLocale() == 'vi' ? 'đã bày tỏ cảm xúc haha với bài viết của bạn.' : 'reacted haha to your post.' }} @break
+                                            @case('buon') {{ app()->getLocale() == 'vi' ? 'đã bày tỏ cảm xúc buồn với bài viết của bạn.' : 'reacted sad to your post.' }} @break
+                                            @case('phan_no') {{ app()->getLocale() == 'vi' ? 'đã phẫn nộ với bài viết của bạn.' : 'reacted angry to your post.' }} @break
+                                            @case('wow') {{ app()->getLocale() == 'vi' ? 'đã bày tỏ cảm xúc wow với bài viết của bạn.' : 'reacted wow to your post.' }} @break
+                                            @default {{ __('messages.notifications_liked_post') }}
+                                        @endswitch
+                                    @endif
                                     @break
                                 @case('binh_luan')
                                     @if($notification->binhLuan && $notification->binhLuan->binh_luan_cha_id)
@@ -210,7 +267,7 @@
                         @endif
 
                         {{-- Action Preview (if post or comment) --}}
-                        @if($notification->loai === 'binh_luan' && $notification->binhLuan)
+                        @if(($notification->loai === 'binh_luan' || ($notification->loai === 'thich' && $notification->binh_luan_id)) && $notification->binhLuan)
                             <div class="mt-2.5 p-3 rounded-xl bg-white/5 border border-white/5 text-xs text-slate-400 italic line-clamp-2">
                                 "{{ $notification->binhLuan->noi_dung }}"
                             </div>
