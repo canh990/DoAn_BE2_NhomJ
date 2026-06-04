@@ -49,6 +49,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/reports', [ReportController::class, 'adminIndex'])->name('admin.reports.index');
         Route::post('/reports/{report}/action/{action}', [ReportController::class, 'adminAction'])->name('admin.reports.action');
         Route::delete('/reports/{report}/delete-content', [ReportController::class, 'adminDeleteContent'])->name('admin.reports.delete_content');
+        Route::post('/users/{user}/toggle-status', [ReportController::class, 'adminToggleUserStatus'])->name('admin.users.toggle_status');
     });
 });
 

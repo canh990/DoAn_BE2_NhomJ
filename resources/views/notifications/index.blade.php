@@ -56,6 +56,9 @@
                     case 'dang_tin':
                         $redirectUrl = route('home'); // Stories usually on home
                         break;
+                    case 'bao_cao':
+                        $redirectUrl = route('admin.reports.index');
+                        break;
                 }
             @endphp
             <div class="notification-item group relative glass-panel rounded-2xl p-4 transition-all hover:bg-white/5 hover:border-sky-400/30 cursor-pointer {{ $notification->da_doc ? 'opacity-80' : 'border-l-4 border-sky-400' }}" 
@@ -80,6 +83,7 @@
                                 @case('tag') @case('tag_all') bg-amber-500 @break
                                 @case('ghim_binh_luan') bg-yellow-500 @break
                                 @case('tin_nhan') @case('tin_nhan_nhom') bg-indigo-500 @break
+                                @case('bao_cao') bg-red-500 @break
                                 @default bg-slate-500
                             @endswitch">
                             <span class="material-symbols-outlined text-white text-[14px]">
@@ -95,6 +99,7 @@
                                     @case('tag_all') groups @break
                                     @case('ghim_binh_luan') push_pin @break
                                     @case('dang_bai') article @break
+                                    @case('bao_cao') report @break
                                     @default notifications
                                 @endswitch
                             </span>
@@ -170,6 +175,9 @@
                                     @break
                                 @case('he_thong')
                                     <span class="text-sky-400 font-bold">{{ __('messages.notifications_system') }}</span> {{ $notification->noi_dung ?? __('messages.notifications_system_notification') }}
+                                    @break
+                                @case('bao_cao')
+                                    <span class="text-red-400 font-bold">Báo cáo vi phạm:</span> {{ $notification->noi_dung ?? 'Có báo cáo mới cần xử lý.' }}
                                     @break
                                 @default
                                     {{ __('messages.notifications_interacted') }}

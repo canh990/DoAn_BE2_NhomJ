@@ -72,6 +72,16 @@
     @else
         <div class="space-y-4">
             @foreach($reports as $report)
+                @php
+                    $violatingUser = null;
+                    if ($report->bai_viet_id && $report->baiViet) {
+                        $violatingUser = $report->baiViet->user;
+                    } elseif ($report->binh_luan_id && $report->binhLuan) {
+                        $violatingUser = $report->binhLuan->user;
+                    } elseif ($report->nguoi_dung_bi_bao_cao_id && $report->nguoiBiBaoCao) {
+                        $violatingUser = $report->nguoiBiBaoCao;
+                    }
+                @endphp
                 <div class="glass-panel p-6 rounded-2xl border border-white/5 hover:border-white/10 transition-all bg-slate-950/40 relative flex flex-col gap-4" id="report-row-{{ $report->id }}">
                     <!-- Top row: Header & badges -->
                     <div class="flex flex-wrap items-center justify-between gap-3 border-b border-white/5 pb-3">
@@ -140,9 +150,16 @@
                             
                             @if($report->bai_viet_id)
                                 @if($report->baiViet)
-                                    <div class="flex items-center gap-2">
-                                        <img src="{{ $report->baiViet->user ? $report->baiViet->user->avatar_url : 'https://ui-avatars.com/api/?name=User&background=random' }}" class="w-5 h-5 rounded-full object-cover">
-                                        <span class="text-xs font-semibold text-slate-400">Tác giả: {{ $report->baiViet->user?->name }}</span>
+                                    <div class="flex items-center justify-between gap-2 flex-wrap">
+                                        <div class="flex items-center gap-2">
+                                            <img src="{{ $report->baiViet->user ? $report->baiViet->user->avatar_url : 'https://ui-avatars.com/api/?name=User&background=random' }}" class="w-5 h-5 rounded-full object-cover">
+                                            <span class="text-xs font-semibold text-slate-400">Tác giả: {{ $report->baiViet->user?->name }}</span>
+                                        </div>
+                                        @if($report->baiViet->user)
+                                            <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full border {{ $report->baiViet->user->con_hoat_dong ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border-rose-500/20' }}">
+                                                {{ $report->baiViet->user->con_hoat_dong ? 'Tài khoản hoạt động' : 'Tài khoản đã khóa' }}
+                                            </span>
+                                        @endif
                                     </div>
                                     <p class="text-sm text-slate-300 line-clamp-3 whitespace-pre-line leading-relaxed">
                                         {{ $report->baiViet->noi_dung }}
@@ -162,9 +179,16 @@
 
                             @elseif($report->binh_luan_id)
                                 @if($report->binhLuan)
-                                    <div class="flex items-center gap-2">
-                                        <img src="{{ $report->binhLuan->user ? $report->binhLuan->user->avatar_url : 'https://ui-avatars.com/api/?name=User&background=random' }}" class="w-5 h-5 rounded-full object-cover">
-                                        <span class="text-xs font-semibold text-slate-400">Người viết: {{ $report->binhLuan->user?->name }}</span>
+                                    <div class="flex items-center justify-between gap-2 flex-wrap">
+                                        <div class="flex items-center gap-2">
+                                            <img src="{{ $report->binhLuan->user ? $report->binhLuan->user->avatar_url : 'https://ui-avatars.com/api/?name=User&background=random' }}" class="w-5 h-5 rounded-full object-cover">
+                                            <span class="text-xs font-semibold text-slate-400">Người viết: {{ $report->binhLuan->user?->name }}</span>
+                                        </div>
+                                        @if($report->binhLuan->user)
+                                            <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full border {{ $report->binhLuan->user->con_hoat_dong ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border-rose-500/20' }}">
+                                                {{ $report->binhLuan->user->con_hoat_dong ? 'Tài khoản hoạt động' : 'Tài khoản đã khóa' }}
+                                            </span>
+                                        @endif
                                     </div>
                                     <p class="text-sm text-slate-300 leading-relaxed italic">
                                         "{!! $report->binhLuan->noi_dung !!}"
@@ -177,19 +201,21 @@
 
                             @elseif($report->nguoi_dung_bi_bao_cao_id)
                                 @if($report->nguoiBiBaoCao)
-                                    <div class="flex items-center gap-3">
-                                        <img src="{{ $report->nguoiBiBaoCao->avatar_url }}" class="w-10 h-10 rounded-full object-cover border border-white/10">
-                                        <div>
-                                            <p class="text-sm font-bold text-white">{{ $report->nguoiBiBaoCao->name }}</p>
-                                            <p class="text-xs text-slate-500">{{ '@' . $report->nguoiBiBaoCao->ten_dang_nhap }}</p>
+                                    <div class="flex items-center justify-between gap-2 flex-wrap">
+                                        <div class="flex items-center gap-3">
+                                            <img src="{{ $report->nguoiBiBaoCao->avatar_url }}" class="w-10 h-10 rounded-full object-cover border border-white/10">
+                                            <div>
+                                                <p class="text-sm font-bold text-white">{{ $report->nguoiBiBaoCao->name }}</p>
+                                                <p class="text-xs text-slate-500">{{ '@' . $report->nguoiBiBaoCao->ten_dang_nhap }}</p>
+                                            </div>
                                         </div>
+                                        <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full border {{ $report->nguoiBiBaoCao->con_hoat_dong ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border-rose-500/20' }}">
+                                            {{ $report->nguoiBiBaoCao->con_hoat_dong ? 'Tài khoản hoạt động' : 'Tài khoản đã khóa' }}
+                                        </span>
                                     </div>
                                     <p class="text-xs text-slate-400 mt-1">
                                         Tiểu sử: {{ $report->nguoiBiBaoCao->tieu_su ?? '(Chưa có)' }}
                                     </p>
-                                    @if(!$report->nguoiBiBaoCao->con_hoat_dong)
-                                        <span class="text-xs text-rose-400 font-semibold mt-1 block">Tài khoản này hiện đang bị khóa/vô hiệu hóa</span>
-                                    @endif
                                 @else
                                     <span class="text-xs text-rose-400 italic">Người dùng không tồn tại</span>
                                 @endif
@@ -197,24 +223,41 @@
                         </div>
                     </div>
 
-                    <!-- Bottom row: Process Buttons -->
-                    @if($report->trang_thai === 'cho_xu_ly')
-                        <div class="flex justify-end gap-3 border-t border-white/5 pt-4 mt-1">
-                            <button type="button" class="px-4 py-2 border border-white/10 hover:bg-white/5 text-slate-300 text-sm font-semibold rounded-xl transition-all cursor-pointer" onclick="processReport({{ $report->id }}, 'bo_qua')">
-                                Bỏ qua & Giữ lại
-                            </button>
-                            
-                            @if(($report->bai_viet_id && $report->baiViet) || ($report->binh_luan_id && $report->binhLuan) || ($report->nguoi_dung_bi_bao_cao_id && $report->nguoiBiBaoCao && $report->nguoiBiBaoCao->con_hoat_dong))
-                                <button type="button" class="px-5 py-2 bg-rose-500 hover:bg-rose-600 text-white text-sm font-semibold rounded-xl shadow-lg shadow-rose-500/10 transition-all flex items-center gap-2 cursor-pointer" onclick="deleteViolatingContent({{ $report->id }})">
-                                    <span class="material-symbols-outlined text-[18px]">delete_forever</span> Xóa nội dung vi phạm
-                                </button>
-                            @else
-                                <button type="button" class="px-5 py-2 bg-sky-500 hover:bg-sky-600 text-white text-sm font-semibold rounded-xl transition-all cursor-pointer" onclick="processReport({{ $report->id }}, 'da_xu_ly')">
-                                    Đánh dấu Đã xử lý
-                                </button>
+                    <!-- Bottom row: User controls & Process Buttons -->
+                    <div class="flex flex-wrap items-center justify-between gap-3 border-t border-white/5 pt-4 mt-1">
+                        <div>
+                            @if($violatingUser)
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs text-slate-500 font-semibold">Tác vụ tài khoản:</span>
+                                    <button type="button" 
+                                            id="user-status-btn-{{ $violatingUser->id }}"
+                                            class="px-3.5 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 {{ $violatingUser->con_hoat_dong ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20' }}" 
+                                            onclick="toggleUserStatus({{ $violatingUser->id }}, '{{ $violatingUser->name }}')">
+                                        <span class="material-symbols-outlined text-[16px]">{{ $violatingUser->con_hoat_dong ? 'lock' : 'lock_open' }}</span>
+                                        <span class="btn-text">{{ $violatingUser->con_hoat_dong ? 'Khóa tài khoản' : 'Mở khóa tài khoản' }}</span>
+                                    </button>
+                                </div>
                             @endif
                         </div>
-                    @endif
+
+                        @if($report->trang_thai === 'cho_xu_ly')
+                            <div class="flex gap-3">
+                                <button type="button" class="px-4 py-2 border border-white/10 hover:bg-white/5 text-slate-300 text-sm font-semibold rounded-xl transition-all cursor-pointer" onclick="processReport({{ $report->id }}, 'bo_qua')">
+                                    Bỏ qua & Giữ lại
+                                </button>
+                                
+                                @if(($report->bai_viet_id && $report->baiViet) || ($report->binh_luan_id && $report->binhLuan) || ($report->nguoi_dung_bi_bao_cao_id && $report->nguoiBiBaoCao && $report->nguoiBiBaoCao->con_hoat_dong))
+                                    <button type="button" class="px-5 py-2 bg-rose-500 hover:bg-rose-600 text-white text-sm font-semibold rounded-xl shadow-lg shadow-rose-500/10 transition-all flex items-center gap-2 cursor-pointer" onclick="deleteViolatingContent({{ $report->id }})">
+                                        <span class="material-symbols-outlined text-[18px]">delete_forever</span> Xóa nội dung vi phạm
+                                    </button>
+                                @else
+                                    <button type="button" class="px-5 py-2 bg-sky-500 hover:bg-sky-600 text-white text-sm font-semibold rounded-xl transition-all cursor-pointer" onclick="processReport({{ $report->id }}, 'da_xu_ly')">
+                                        Đánh dấu Đã xử lý
+                                    </button>
+                                @endif
+                            </div>
+                        @endif
+                    </div>
                 </div>
             @endforeach
         </div>
@@ -228,6 +271,55 @@
 
 <!-- Handle Actions script -->
 <script>
+function toggleUserStatus(userId, userName) {
+    const btn = document.getElementById('user-status-btn-' + userId);
+    const isLocking = btn.classList.contains('bg-amber-500/10');
+    const title = isLocking ? 'Khóa tài khoản này?' : 'Mở khóa tài khoản này?';
+    const message = isLocking 
+        ? `Tài khoản của "${userName}" sẽ bị vô hiệu hóa hoạt động trên hệ thống.` 
+        : `Tài khoản của "${userName}" sẽ được mở khóa hoạt động trở lại.`;
+    const actionText = isLocking ? 'Khóa tài khoản' : 'Mở khóa';
+
+    window.openConfirmModal(
+        title, 
+        message, 
+        function() {
+            fetch('/admin/users/' + userId + '/toggle-status', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    if(typeof window.showToast === 'function') {
+                        window.showToast(data.message, 'success');
+                    } else {
+                        alert(data.message);
+                    }
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    if(typeof window.showToast === 'function') {
+                        window.showToast(data.message || 'Có lỗi xảy ra.', 'error');
+                    } else {
+                        alert(data.message);
+                    }
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                if(typeof window.showToast === 'function') window.showToast('Lỗi kết nối.', 'error');
+            });
+        },
+        actionText
+    );
+}
+
 function processReport(reportId, action) {
     const row = document.getElementById('report-row-' + reportId);
     
