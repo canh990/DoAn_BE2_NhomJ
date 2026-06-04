@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
         // 1. Tạo người dùng
         $this->command->info('👤 Đang tạo dữ liệu người dùng...');
         $this->call(NguoiDungSeeder::class);
+        $this->call(SearchUserSeeder::class);
 
 
         // 2. Tạo mối quan hệ theo dõi và gợi ý bạn bè
