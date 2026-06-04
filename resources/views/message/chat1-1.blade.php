@@ -86,7 +86,8 @@
         <section class="flex min-h-0 flex-col border-r border-[#1b3047] bg-[#0b1220]">
             <div class="flex items-center justify-between px-8 py-7">
                 <h1 class="text-3xl font-extrabold">Tin nhắn</h1>
-                <button class="grid h-11 w-11 place-items-center rounded-full bg-sky-400/10 text-xl text-sky-300" type="button">✎</button>
+                <a href="{{ route('chat.groups.index') }}" class="grid h-11 w-20 place-items-center rounded-full bg-sky-400/10 text-xl text-sky-300" aria-label="Chuyển sang chat nhóm">Nhóm</a>
+
             </div>
 
             <div class="px-8">
@@ -180,7 +181,7 @@
                         <button class="hover:text-sky-300" type="button">☎</button>
                         <button class="hover:text-sky-300" type="button">▭</button>
                         <span class="h-8 w-px bg-[#1b3047]"></span>
-                        <button class="hover:text-sky-300" type="button">⚙</button>
+                        <a href="{{ route('chat.groups.index') }}" class="hover:text-sky-300" aria-label="Chuyển sang chat nhóm">✎</a>
                     </div>
                 </header>
 
