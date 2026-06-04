@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
         // 1. Tạo người dùng
         $this->command->info('👤 Đang tạo dữ liệu người dùng...');
         $this->call(NguoiDungSeeder::class);
+        $this->call(SearchUserSeeder::class);
 
 
         // 2. Tạo mối quan hệ theo dõi và gợi ý bạn bè
@@ -80,6 +81,9 @@ class DatabaseSeeder extends Seeder
         // 14. Tạo dữ liệu Help Center (Trợ giúp & FAQ)
         $this->command->info('🌐 Đang tạo dữ liệu Help Center...');
         $this->call(TroGiupSeeder::class);
+
+        // 15. Tạo dữ liệu Khám phá (Explore & Hashtags)
+        $this->call(ExploreSeeder::class);
 
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
