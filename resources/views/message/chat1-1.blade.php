@@ -31,7 +31,7 @@
     @php
         // Các helper dùng cho giao diện chat riêng tư.
         $activeUser = $selectedUser;
-        $displayName = fn ($user) => $user->ten_dang_nhap ?: ($user->email ?: 'Nguoi dung');
+        $displayName = fn ($user) => $user->ten_hien_thi ?: ($user->ten_dang_nhap ?: ($user->email ?: 'Nguoi dung'));
         $avatarText = fn ($user) => mb_strtoupper(mb_substr($displayName($user), 0, 1));
         $attachmentName = fn ($media) => basename($media->duong_dan);
     @endphp
@@ -100,16 +100,16 @@
                             <div class="grid h-14 w-14 place-items-center rounded-full bg-gradient-to-br from-sky-300 via-cyan-500 to-emerald-400 text-xl font-black text-[#07111f] avatar-ring">
                                 {{ $avatarText($user) }}
                             </div>
-                            <span class="absolute bottom-1 right-0 h-3.5 w-3.5 rounded-full border-2 border-[#0b1220] {{ $isActive ? 'bg-emerald-400' : 'bg-slate-500' }}"></span>
+                            <span class="absolute bottom-1 right-0 h-3.5 w-3.5 rounded-full border-2 border-[#0b1220] {{ $user->isOnline() ? 'bg-emerald-400' : 'bg-slate-500' }}"></span>
                         </div>
 
                         <div class="min-w-0 flex-1">
                             <div class="flex items-center justify-between gap-3">
                                 <div class="truncate text-lg font-bold">{{ $name }}</div>
-                                <div class="shrink-0 text-sm font-semibold {{ $isActive ? 'text-sky-300' : 'text-slate-400' }}">
-                                {{ $isActive ? __('messages.chat_just_now') : 'Online' }}
+                                <div class="shrink-0 text-xs font-semibold {{ $user->isOnline() ? 'text-emerald-400' : 'text-slate-400' }}">
+                                    {{ $user->isOnline() ? 'Online' : $user->status_text }}
+                                </div>
                             </div>
-                        </div>
                             <div class="mt-1 flex items-center gap-2 truncate font-medium {{ $isActive ? 'text-sky-300' : 'text-slate-400' }}">
                                 @if ($isMuted)
                                     <span class="material-symbols-outlined text-[16px] text-amber-300" title="Đã tắt thông báo">notifications_off</span>
@@ -129,16 +129,18 @@
         <main class="chat-bg flex min-h-0 flex-col">
             @if ($activeUser)
                 <header class="flex h-[70px] items-center justify-between border-b border-[#1b3047] bg-[#0d1423]/85 px-8">
-                    <div class="flex items-center gap-4">
-                        <div class="relative">
+                    <div class="flex min-w-0 items-center gap-4">
+                        <div class="relative shrink-0">
                             <div class="grid h-12 w-12 place-items-center rounded-full bg-gradient-to-br from-cyan-300 to-emerald-400 text-xl font-black text-[#07111f] avatar-ring">
                                 {{ $avatarText($activeUser) }}
                             </div>
-                            <span class="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[#0d1423] bg-emerald-400"></span>
+                            <span id="chatHeaderStatusDot" class="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[#0d1423] {{ $activeUser->isOnline() ? 'bg-emerald-400' : 'bg-slate-500' }}"></span>
                         </div>
-                        <div>
-                            <div class="text-xl font-extrabold">{{ $displayName($activeUser) }}</div>
-                            <div class="text-sm font-bold text-emerald-400">Online</div>
+                        <div class="min-w-0">
+                            <div class="max-w-[200px] truncate text-xl font-extrabold md:max-w-[300px]" title="{{ $displayName($activeUser) }}">{{ $displayName($activeUser) }}</div>
+                            <div id="chatHeaderStatus" class="max-w-[200px] truncate text-sm font-bold md:max-w-[300px] {{ $activeUser->isOnline() ? 'text-emerald-400' : 'text-slate-400' }}">
+                                {{ $activeUser->isOnline() ? 'Online' : $activeUser->status_text }}
+                            </div>
                         </div>
                     </div>
 
@@ -212,7 +214,7 @@
                                 <div class="mt-2 flex items-center gap-2 text-xs font-semibold text-slate-400 {{ $isMine ? 'justify-end' : 'justify-start' }}">
                                     <span>{{ optional($chatMessage->ngay_tao)->format('H:i') }}</span>
                                     @if ($isMine)
-                                        <span class="grid h-3.5 w-3.5 place-items-center rounded-full bg-sky-300 text-[10px] text-[#07111f]">✓</span>
+                                        <span class="material-symbols-outlined text-[15px] leading-none text-sky-400/80 select-none">done</span>
                                     @endif
                                 </div>
                             </div>
@@ -375,7 +377,7 @@
                 </div>
             `;
             const checked = message.is_mine
-                ? '<span class="grid h-3.5 w-3.5 place-items-center rounded-full bg-sky-300 text-[10px] text-[#07111f]">✓</span>'
+                ? '<span class="material-symbols-outlined text-[15px] leading-none text-sky-400/80 select-none">done</span>'
                 : '';
             const content = message.content
                 ? `<div class="whitespace-pre-wrap break-words">${escapeHtml(message.content)}</div>`
@@ -549,6 +551,21 @@
             if (response.ok) {
                 const data = await response.json();
                 renderMessages(data.messages || []);
+
+                // Cập nhật trạng thái hoạt động thực tế trên header chính
+                const headerStatus = document.getElementById('chatHeaderStatus');
+                if (data.user && headerStatus) {
+                    const isOnline = data.user.is_online;
+                    const statusText = data.user.status_text || (isOnline ? 'Online' : 'Offline');
+                    headerStatus.textContent = statusText;
+                    headerStatus.className = `text-sm font-bold ${isOnline ? 'text-emerald-400' : 'text-slate-400'}`;
+                    
+                    // Cập nhật chấm xanh/xám trên header chính
+                    const headerStatusDot = document.getElementById('chatHeaderStatusDot');
+                    if (headerStatusDot) {
+                        headerStatusDot.className = `absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[#0d1423] ${isOnline ? 'bg-emerald-400' : 'bg-slate-500'}`;
+                    }
+                }
             }
         }
 

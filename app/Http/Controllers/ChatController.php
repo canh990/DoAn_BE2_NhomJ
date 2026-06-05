@@ -31,8 +31,51 @@ class ChatController extends Controller
             ->when(!empty($blockedUserIds), function ($query) use ($blockedUserIds) {
                 $query->whereNotIn('id', $blockedUserIds);
             })
+            ->select('nguoi_dung.*')
+            ->selectSub(function ($query) use ($currentUser) {
+                $query->selectRaw('MAX(c.ngay_cap_nhat)')
+                    ->from('cuoc_tro_chuyen as c')
+                    ->join('thanh_vien_nhom as tv1', 'tv1.cuoc_tro_chuyen_id', '=', 'c.id')
+                    ->join('thanh_vien_nhom as tv2', 'tv2.cuoc_tro_chuyen_id', '=', 'c.id')
+                    ->whereRaw('tv1.nguoi_dung_id = nguoi_dung.id')
+                    ->where('tv2.nguoi_dung_id', $currentUser->id)
+                    ->where('c.loai', 'ca_nhan');
+            }, 'latest_message_time')
+            ->orderBy('latest_message_time', 'desc')
             ->orderBy('ten_dang_nhap')
             ->get();
+
+        if ($request->expectsJson() || $request->query('format') === 'json') {
+            return response()->json([
+                'users' => $users->map(function ($u) {
+                    $isOnline = \Illuminate\Support\Facades\Cache::has('user-is-online-' . $u->id);
+                    $lastSeen = \Illuminate\Support\Facades\Cache::get('user-last-seen-' . $u->id);
+                    
+                    $statusText = $isOnline ? 'Online' : 'Offline';
+                    if (!$isOnline && $lastSeen) {
+                        $diff = now()->timestamp - $lastSeen;
+                        if ($diff < 60) {
+                            $statusText = 'Vừa hoạt động';
+                        } elseif ($diff < 3600) {
+                            $statusText = 'Hoạt động ' . round($diff / 60) . ' phút trước';
+                        } elseif ($diff < 86400) {
+                            $statusText = 'Hoạt động ' . round($diff / 3600) . ' giờ trước';
+                        } else {
+                            $statusText = 'Hoạt động ' . round($diff / 86400) . ' ngày trước';
+                        }
+                    }
+
+                    return [
+                        'id' => $u->id,
+                        'name' => $u->name,
+                        'ten_dang_nhap' => $u->ten_dang_nhap,
+                        'avatar_url' => $u->avatar_url,
+                        'is_online' => $isOnline,
+                        'status_text' => $statusText,
+                    ];
+                })->values()
+            ]);
+        }
 
         $selectedUser = null;
         $conversation = null;
@@ -124,9 +167,31 @@ class ChatController extends Controller
             ? $conversation->messages()->with('media')->orderBy('ngay_tao')->get()
             : collect();
 
+        $isOnline = \Illuminate\Support\Facades\Cache::has('user-is-online-' . $user->id);
+        $lastSeen = \Illuminate\Support\Facades\Cache::get('user-last-seen-' . $user->id);
+        
+        $statusText = $isOnline ? 'Online' : 'Offline';
+        if (!$isOnline && $lastSeen) {
+            $diff = now()->timestamp - $lastSeen;
+            if ($diff < 60) {
+                $statusText = 'Vừa hoạt động';
+            } elseif ($diff < 3600) {
+                $statusText = 'Hoạt động ' . round($diff / 60) . ' phút trước';
+            } elseif ($diff < 86400) {
+                $statusText = 'Hoạt động ' . round($diff / 3600) . ' giờ trước';
+            } else {
+                $statusText = 'Hoạt động ' . round($diff / 86400) . ' ngày trước';
+            }
+        }
+
         return response()->json([
             'conversation_id' => $conversation?->id,
             'messages' => $messages->map(fn (Message $message) => $this->formatMessage($message, $currentUser->id))->values(),
+            'user' => [
+                'id' => $user->id,
+                'is_online' => $isOnline,
+                'status_text' => $statusText,
+            ]
         ]);
     }
 
@@ -489,7 +554,7 @@ class ChatController extends Controller
 
     private function displayName(User $user): string
     {
-        return $user->ten_dang_nhap ?: ($user->email ?: 'nguoi dung nay');
+        return $user->ten_hien_thi ?: ($user->ten_dang_nhap ?: ($user->email ?: 'nguoi dung nay'));
     }
 
     private function typingUsers(Conversation $conversation, int $currentUserId): array

@@ -189,3 +189,8 @@
     });
 </script>
 @endsection
+            });
+        });
+    });
+</script>
+@endsection

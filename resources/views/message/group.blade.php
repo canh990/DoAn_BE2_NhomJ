@@ -29,7 +29,7 @@
     </style>
     @php
         // Các hàm trợ giúp hiển thị tên người dùng/nhóm và tệp đính kèm
-        $displayName = fn ($user) => $user->ten_dang_nhap ?: ($user->email ?: 'Người dùng');
+        $displayName = fn ($user) => $user->ten_hien_thi ?: ($user->ten_dang_nhap ?: ($user->email ?: 'Người dùng'));
         $avatarText = fn ($text) => mb_strtoupper(mb_substr($text ?: 'N', 0, 1));
         $groupAvatar = fn ($group) => $group->anh_nhom ? asset($group->anh_nhom) : null;
         $attachmentName = fn ($media) => basename($media->duong_dan);

@@ -53,6 +53,8 @@ class User extends Authenticatable
 
     protected $appends = [
         'avatar_url',
+        'is_online',
+        'status_text',
     ];
 
     // ✅ Trỏ đúng cột mật khẩu
@@ -148,6 +150,49 @@ class User extends Authenticatable
     public function hasAnyBlockRelationship($userId)
     {
         return $this->hasBlocked($userId) || $this->isBlockedBy($userId);
+    }
+
+    /**
+     * Kiểm tra người dùng có đang hoạt động hay không.
+     */
+    public function isOnline()
+    {
+        return \Illuminate\Support\Facades\Cache::has('user-is-online-' . $this->id);
+    }
+
+    /**
+     * Accessor cho is_online.
+     */
+    public function getIsOnlineAttribute()
+    {
+        return $this->isOnline();
+    }
+
+    /**
+     * Accessor cho status_text.
+     */
+    public function getStatusTextAttribute()
+    {
+        $isOnline = $this->isOnline();
+        if ($isOnline) {
+            return 'Online';
+        }
+        
+        $lastSeen = \Illuminate\Support\Facades\Cache::get('user-last-seen-' . $this->id);
+        if ($lastSeen) {
+            $diff = now()->timestamp - $lastSeen;
+            if ($diff < 60) {
+                return 'Vừa hoạt động';
+            } elseif ($diff < 3600) {
+                return 'Hoạt động ' . round($diff / 60) . ' phút trước';
+            } elseif ($diff < 86400) {
+                return 'Hoạt động ' . round($diff / 3600) . ' giờ trước';
+            } else {
+                return 'Hoạt động ' . round($diff / 86400) . ' ngày trước';
+            }
+        }
+        
+        return 'Offline';
     }
 
     /**

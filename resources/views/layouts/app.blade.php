@@ -2126,6 +2126,549 @@
             </div>
         </div>
     </div>
+
+    @auth
+        <!-- CSS for Floating Mini Chat -->
+        <style>
+            .mini-chat-msg-bubble {
+                max-width: 75%;
+                word-wrap: break-word;
+                font-size: 13px;
+                line-height: 1.4;
+            }
+            .mini-chat-msg-mine {
+                align-self: flex-end;
+                background-color: rgba(56, 189, 248, 0.2);
+                color: #f8fafc;
+                border: 1px solid rgba(56, 189, 248, 0.25);
+                border-radius: 18px 18px 4px 18px;
+                padding: 8px 12px;
+            }
+            .mini-chat-msg-other {
+                align-self: flex-start;
+                background-color: rgba(255, 255, 255, 0.05);
+                color: #f8fafc;
+                border: 1px solid rgba(255, 255, 255, 0.05);
+                border-radius: 18px 18px 18px 4px;
+                padding: 8px 12px;
+            }
+            .mini-chat-recalled {
+                align-self: flex-start;
+                background-color: transparent;
+                color: #64748b;
+                border: 1px dashed rgba(255, 255, 255, 0.1);
+                border-radius: 18px;
+                padding: 8px 12px;
+                font-style: italic;
+            }
+            .floating-chat-shadow {
+                box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            }
+        </style>
+
+        <!-- Floating Chat Widget -->
+        <div id="floating-chat-container" class="fixed bottom-6 right-6 z-[9999] flex flex-col items-end gap-3 select-none">
+            
+            <!-- Cửa sổ Chat Mini -->
+            <div id="mini-chat-window" class="hidden w-80 sm:w-96 h-[480px] rounded-2xl border border-white/10 bg-[#0d1322]/95 backdrop-blur-xl floating-chat-shadow flex flex-col overflow-hidden transition-all duration-300 transform scale-95 opacity-0 origin-bottom-right mb-2">
+                <!-- Header -->
+                <div class="flex items-center justify-between px-4 py-3.5 border-b border-white/10 bg-white/[0.02] shrink-0">
+                    <div class="flex items-center gap-2" id="mini-chat-header-title">
+                        <span class="material-symbols-outlined text-sky-400">forum</span>
+                        <span class="font-bold text-sm text-slate-100">Tin nhắn</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <button type="button" id="mini-chat-back-btn" class="hidden text-slate-400 hover:text-white p-1.5 rounded-full hover:bg-white/5 transition-colors" title="Quay lại">
+                            <span class="material-symbols-outlined text-lg">arrow_back</span>
+                        </button>
+                        <button type="button" id="mini-chat-close-btn" class="text-slate-400 hover:text-white p-1.5 rounded-full hover:bg-white/5 transition-colors" title="Đóng">
+                            <span class="material-symbols-outlined text-lg">close</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Body: List View -->
+                <div id="mini-chat-list-view" class="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-2.5 flex flex-col min-h-0">
+                    <!-- Search -->
+                    <div class="relative shrink-0">
+                        <span class="material-symbols-outlined text-slate-500 absolute left-3 top-2.5 text-lg">search</span>
+                        <input type="text" id="mini-chat-search" placeholder="Tìm kiếm bạn bè..." class="w-full pl-9 pr-4 py-2 bg-white/5 border border-white/10 rounded-xl text-xs text-slate-100 outline-none focus:border-sky-400/30 transition-all">
+                    </div>
+                    <!-- User list -->
+                    <div id="mini-chat-users-list" class="flex-1 space-y-1.5 overflow-y-auto custom-scrollbar min-h-0">
+                        <!-- Loading state -->
+                        <div class="text-center py-12 text-slate-500 text-xs" id="mini-chat-list-loading">
+                            <div class="inline-block animate-spin w-5 h-5 border-2 border-sky-400 border-t-transparent rounded-full mb-2"></div>
+                            <p>Đang tải danh sách...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Body: Chat Thread View -->
+                <div id="mini-chat-thread-view" class="hidden flex-1 flex-col overflow-hidden min-h-0">
+                    <!-- Messages List -->
+                    <div id="mini-chat-messages" class="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-4 flex flex-col min-h-0">
+                        <!-- Messages will load dynamically -->
+                    </div>
+                    <!-- Typing Indicator -->
+                    <div id="mini-chat-typing" class="hidden px-4 pb-2 text-[11px] text-slate-400 flex items-center gap-1.5 shrink-0">
+                        <span class="font-semibold" id="mini-chat-typing-name"></span> đang nhập...
+                        <span class="inline-flex items-center gap-0.5 bg-white/5 px-1.5 py-0.5 rounded-full">
+                            <span class="h-1 w-1 bg-sky-300 rounded-full animate-bounce"></span>
+                            <span class="h-1 w-1 bg-sky-300 rounded-full animate-bounce" style="animation-delay: 0.15s"></span>
+                            <span class="h-1 w-1 bg-sky-300 rounded-full animate-bounce" style="animation-delay: 0.3s"></span>
+                        </span>
+                    </div>
+                    <!-- Send input -->
+                    <form id="mini-chat-form" class="p-3 border-t border-white/10 bg-white/[0.01] flex items-center gap-2 shrink-0">
+                        <input type="text" id="mini-chat-input" placeholder="Nhập tin nhắn..." autocomplete="off" class="flex-1 h-9 px-4 bg-[#111a2e] border border-white/10 rounded-full text-xs text-slate-100 outline-none focus:border-sky-400/30">
+                        <button type="submit" class="w-9 h-9 rounded-full bg-sky-400/20 hover:bg-sky-400/30 text-sky-300 flex items-center justify-center transition-colors shrink-0">
+                            <span class="material-symbols-outlined text-lg">send</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Buttons Row -->
+            <div class="flex items-center gap-3">
+                <!-- Compose Button (Nhắn tin mới) -->
+                <button type="button" id="mini-chat-compose" class="w-12 h-12 rounded-full bg-slate-800/90 border border-white/10 hover:bg-slate-700 hover:border-white/20 text-slate-200 flex items-center justify-center shadow-lg hover:scale-105 transition-all duration-200 active:scale-95 group shrink-0" title="Nhắn tin mới">
+                    <span class="material-symbols-outlined text-xl group-hover:rotate-12 transition-transform duration-300">edit_note</span>
+                </button>
+
+                <!-- Main Chat Head Button -->
+                <button type="button" id="mini-chat-trigger" class="w-12 h-12 rounded-full bg-[#162238]/90 border border-sky-400/30 flex items-center justify-center shadow-lg hover:scale-105 transition-all duration-200 active:scale-95 group relative shrink-0" title="Tin nhắn lơ lửng">
+                    <div id="mini-chat-trigger-content" class="w-full h-full rounded-full overflow-hidden flex items-center justify-center">
+                        <span class="material-symbols-outlined text-sky-400 text-xl">forum</span>
+                    </div>
+                    <span class="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[#0a0e1a] bg-emerald-400"></span>
+                </button>
+            </div>
+
+        </div>
+
+        <!-- Script xử lý Chat Lơ Lửng -->
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const container = document.getElementById('floating-chat-container');
+                if (!container) return;
+
+                const windowEl = document.getElementById('mini-chat-window');
+                const triggerBtn = document.getElementById('mini-chat-trigger');
+                const composeBtn = document.getElementById('mini-chat-compose');
+                const closeBtn = document.getElementById('mini-chat-close-btn');
+                const backBtn = document.getElementById('mini-chat-back-btn');
+                
+                const listView = document.getElementById('mini-chat-list-view');
+                const usersList = document.getElementById('mini-chat-users-list');
+                const listLoading = document.getElementById('mini-chat-list-loading');
+                const searchInput = document.getElementById('mini-chat-search');
+
+                const threadView = document.getElementById('mini-chat-thread-view');
+                const messagesContainer = document.getElementById('mini-chat-messages');
+                const chatForm = document.getElementById('mini-chat-form');
+                const chatInput = document.getElementById('mini-chat-input');
+                const headerTitle = document.getElementById('mini-chat-header-title');
+
+                const typingIndicator = document.getElementById('mini-chat-typing');
+                const typingName = document.getElementById('mini-chat-typing-name');
+
+                let isOpen = false;
+                let activeUserId = null;
+                let pollingTimer = null;
+                let typingTimer = null;
+                let cacheUsers = [];
+                let lastMessageCount = 0;
+                let localUserId = {{ Auth::id() }};
+                let isLocallyTyping = false;
+                let lastTypingSentAt = 0;
+
+                // Toggle hiển thị cửa sổ chat mini
+                function toggleChatWindow() {
+                    isOpen = !isOpen;
+                    if (isOpen) {
+                        windowEl.classList.remove('hidden');
+                        // Hiệu ứng mượt mà
+                        setTimeout(() => {
+                            windowEl.classList.remove('scale-95', 'opacity-0');
+                            windowEl.classList.add('scale-100', 'opacity-100');
+                        }, 50);
+
+                        // Mặc định tải danh sách nếu không có đoạn chat nào đang mở
+                        if (!activeUserId) {
+                            loadUsersList();
+                        }
+                    } else {
+                        windowEl.classList.remove('scale-100', 'opacity-100');
+                        windowEl.classList.add('scale-95', 'opacity-0');
+                        setTimeout(() => {
+                            windowEl.classList.add('hidden');
+                        }, 300);
+
+                        // Dừng polling
+                        stopPolling();
+                    }
+                }
+
+                // Tải danh sách bạn bè / người dùng có thể chat
+                async function loadUsersList() {
+                    listLoading.classList.remove('hidden');
+                    
+                    try {
+                        const response = await fetch('/chat1-1?format=json', {
+                            headers: { 'Accept': 'application/json' }
+                        });
+                        if (!response.ok) throw new Error('Failed to load users');
+                        const data = await response.json();
+                        cacheUsers = data.users || [];
+                        renderUsersList(cacheUsers);
+                    } catch (err) {
+                        console.error('Lỗi tải danh sách chat mini:', err);
+                        usersList.innerHTML = `<div class="text-center py-8 text-red-400 text-xs">Không thể tải danh sách.</div>`;
+                    } finally {
+                        listLoading.classList.add('hidden');
+                    }
+                }
+
+                // Hiển thị danh sách bạn bè
+                function renderUsersList(users) {
+                    if (users.length === 0) {
+                        usersList.innerHTML = `<div class="text-center py-8 text-slate-500 text-xs">Không tìm thấy người dùng nào.</div>`;
+                        return;
+                    }
+
+                    usersList.innerHTML = users.map(user => {
+                        const avatar = user.avatar_url;
+                        const initial = user.name ? user.name.charAt(0).toUpperCase() : '?';
+                        const avatarHtml = avatar 
+                            ? `<img class="w-9 h-9 rounded-full object-cover border border-white/10" src="${avatar}" alt="${user.name}">`
+                            : `<div class="w-9 h-9 rounded-full bg-gradient-to-br from-sky-400 to-purple-500 flex items-center justify-center font-bold text-slate-900 text-sm">${initial}</div>`;
+                        
+                        const dotColor = user.is_online ? 'bg-emerald-400' : 'bg-slate-500';
+                        const statusColor = user.is_online ? 'text-emerald-400' : 'text-slate-500';
+                        const statusLabel = user.is_online ? 'Online' : user.status_text || 'Offline';
+
+                        return `
+                            <div class="flex items-center gap-3 p-2 rounded-xl hover:bg-white/5 cursor-pointer transition-colors" data-user-id="${user.id}">
+                                <div class="relative shrink-0">
+                                    ${avatarHtml}
+                                    <span class="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border border-[#0d1322] ${dotColor}"></span>
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="font-bold text-slate-100 text-xs truncate">${user.name}</div>
+                                    <div class="text-[10px] text-slate-500 truncate flex items-center justify-between">
+                                        <span>@${user.ten_dang_nhap}</span>
+                                        <span class="${statusColor} font-semibold text-[9px]">${statusLabel}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+
+                    // Gắn sự kiện click
+                    usersList.querySelectorAll('[data-user-id]').forEach(el => {
+                        el.addEventListener('click', () => {
+                            const userId = parseInt(el.dataset.userId);
+                            const user = cacheUsers.find(u => u.id === userId);
+                            openChatThread(user);
+                        });
+                    });
+                }
+
+                // Tìm kiếm trong danh sách bạn bè
+                searchInput.addEventListener('input', (e) => {
+                    const term = e.target.value.toLowerCase().trim();
+                    const filtered = cacheUsers.filter(u => 
+                        u.name.toLowerCase().includes(term) || 
+                        u.ten_dang_nhap.toLowerCase().includes(term)
+                    );
+                    renderUsersList(filtered);
+                });
+
+                // Mở luồng chat với một người cụ thể
+                function openChatThread(user) {
+                    if (!user) return;
+                    activeUserId = user.id;
+                    lastMessageCount = 0;
+
+                    // Cập nhật Header
+                    const avatar = user.avatar_url;
+                    const initial = user.name ? user.name.charAt(0).toUpperCase() : '?';
+                    const avatarHtml = avatar 
+                        ? `<img class="w-6 h-6 rounded-full object-cover border border-white/10" src="${avatar}" alt="${user.name}">`
+                        : `<div class="w-6 h-6 rounded-full bg-gradient-to-br from-sky-400 to-purple-500 flex items-center justify-center font-bold text-slate-900 text-[10px]">${initial}</div>`;
+
+                    const statusColor = user.is_online ? 'text-emerald-400' : 'text-slate-500';
+                    const statusLabel = user.is_online ? 'Online' : user.status_text || 'Offline';
+
+                    headerTitle.innerHTML = `
+                        <div class="flex items-center gap-2">
+                            ${avatarHtml}
+                            <div class="min-w-0">
+                                <div class="font-bold text-xs text-slate-100 truncate">${user.name}</div>
+                                <div class="text-[9px] ${statusColor} leading-none font-semibold" id="mini-chat-header-status">${statusLabel}</div>
+                            </div>
+                        </div>
+                    `;
+
+                    // Thay đổi ảnh Chat Head chính thành avatar của người đang nhắn tin (giống Facebook)
+                    const triggerContent = document.getElementById('mini-chat-trigger-content');
+                    if (triggerContent) {
+                        triggerContent.innerHTML = avatarHtml.replace('w-6 h-6', 'w-full h-full');
+                    }
+
+                    // Chuyển view
+                    listView.classList.add('hidden');
+                    threadView.classList.remove('hidden');
+                    backBtn.classList.remove('hidden');
+
+                    // Tải tin nhắn lần đầu
+                    messagesContainer.innerHTML = `<div class="text-center py-12 text-slate-500 text-xs"><div class="inline-block animate-spin w-4 h-4 border-2 border-sky-400 border-t-transparent rounded-full mb-1"></div><p>Đang tải tin nhắn...</p></div>`;
+                    loadMessages();
+
+                    // Bắt đầu Polling tin nhắn và trạng thái gõ phím
+                    startPolling();
+                }
+
+                // Quay về danh sách chat
+                function goBackToList() {
+                    activeUserId = null;
+                    stopPolling();
+
+                    // Đưa nút Chat Head chính về icon forum
+                    const triggerContent = document.getElementById('mini-chat-trigger-content');
+                    if (triggerContent) {
+                        triggerContent.innerHTML = `<span class="material-symbols-outlined text-sky-400 text-xl">forum</span>`;
+                    }
+
+                    // Reset Header title
+                    headerTitle.innerHTML = `
+                        <span class="material-symbols-outlined text-sky-400">forum</span>
+                        <span class="font-bold text-sm text-slate-100">Tin nhắn</span>
+                    `;
+
+                    // Chuyển view
+                    threadView.classList.add('hidden');
+                    listView.classList.remove('hidden');
+                    backBtn.classList.add('hidden');
+
+                    // Tải lại danh sách bạn bè
+                    loadUsersList();
+                }
+
+                // Render tin nhắn dạng bóng chat mini
+                function renderMessages(messages) {
+                    if (messages.length === 0) {
+                        messagesContainer.innerHTML = `<div class="text-center py-12 text-slate-500 text-xs">Chưa có tin nhắn. Hãy gửi tin đầu tiên.</div>`;
+                        return;
+                    }
+
+                    // Kiểm tra xem số lượng tin nhắn hoặc nội dung tin nhắn cuối có thay đổi không trước khi re-render
+                    if (messages.length === lastMessageCount) {
+                        return; 
+                    }
+                    lastMessageCount = messages.length;
+
+                    const nearBottom = messagesContainer.scrollHeight - messagesContainer.scrollTop - messagesContainer.clientHeight < 100;
+
+                    messagesContainer.innerHTML = messages.map(msg => {
+                        const isMine = msg.is_mine;
+                        const recalled = msg.is_recalled;
+                        const deleted = msg.is_deleted;
+                        
+                        if (recalled || deleted) {
+                            return `<div class="mini-chat-recalled">${recalled ? 'Tin nhắn đã thu hồi' : 'Tin nhắn đã xóa'}</div>`;
+                        }
+
+                        let bubbleClass = isMine ? 'mini-chat-msg-mine' : 'mini-chat-msg-other';
+                        let contentHtml = msg.content ? `<div>${escapeHtml(msg.content)}</div>` : '';
+                        
+                        // Xử lý file đính kèm
+                        let attachmentsHtml = '';
+                        if (msg.attachments && msg.attachments.length > 0) {
+                            attachmentsHtml = `<div class="space-y-1 mt-1">` + msg.attachments.map(att => {
+                                if (att.type === 'hinh_anh') {
+                                    return `<a href="${att.url}" target="_blank" class="block overflow-hidden rounded-lg"><img src="${att.url}" alt="${escapeHtml(att.name)}" class="max-h-32 object-cover rounded-lg"></a>`;
+                                } else if (att.type === 'video') {
+                                    return `<video controls class="max-h-32 rounded-lg bg-black w-full"><source src="${att.url}"></video>`;
+                                } else if (att.type === 'am_thanh') {
+                                    return `<audio controls class="w-full scale-90 origin-left"><source src="${att.url}"></audio>`;
+                                } else {
+                                    return `<a href="${att.url}" target="_blank" class="flex items-center gap-1.5 p-1.5 rounded-lg bg-white/5 text-[10px] hover:bg-white/10 transition-colors truncate"><span class="material-symbols-outlined text-xs">description</span><span class="truncate">${escapeHtml(att.name)}</span></a>`;
+                                }
+                            }).join('') + `</div>`;
+                        }
+
+                        return `
+                            <div class="flex flex-col ${isMine ? 'items-end' : 'items-start'} gap-1">
+                                <div class="mini-chat-msg-bubble ${bubbleClass}">
+                                    ${contentHtml}
+                                    ${attachmentsHtml}
+                                </div>
+                                <div class="text-[9px] text-slate-500 px-1">${msg.time}</div>
+                            </div>
+                        `;
+                    }).join('');
+
+                    // Cuộn xuống đáy nếu gần đáy hoặc là lần tải đầu
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                }
+
+                // Tải tin nhắn từ server
+                async function loadMessages() {
+                    if (!activeUserId) return;
+                    try {
+                        const response = await fetch(`/chat1-1/users/${activeUserId}/messages`, {
+                            headers: { 'Accept': 'application/json' }
+                        });
+                        if (!response.ok) throw new Error('Failed to load messages');
+                        const data = await response.json();
+                        renderMessages(data.messages || []);
+
+                        // Cập nhật trạng thái hoạt động thực tế trên header của mini-chat
+                        if (data.user && document.getElementById('mini-chat-header-status')) {
+                            const statusEl = document.getElementById('mini-chat-header-status');
+                            const isOnline = data.user.is_online;
+                            const statusText = data.user.status_text || (isOnline ? 'Online' : 'Offline');
+                            statusEl.textContent = statusText;
+                            statusEl.className = `text-[9px] ${isOnline ? 'text-emerald-400' : 'text-slate-500'} leading-none font-semibold`;
+                        }
+                    } catch (err) {
+                        console.error('Lỗi tải tin nhắn chat mini:', err);
+                    }
+                }
+
+                // Tải trạng thái đang gõ phím của đối phương
+                async function loadTypingStatus() {
+                    if (!activeUserId) return;
+                    try {
+                        const response = await fetch(`/chat1-1/users/${activeUserId}/typing`, {
+                            headers: { 'Accept': 'application/json' }
+                        });
+                        if (!response.ok) throw new Error('Failed to load typing status');
+                        const data = await response.json();
+                        const activeTyping = data.users || [];
+                        if (activeTyping.length > 0) {
+                            typingName.textContent = activeTyping[0].name;
+                            typingIndicator.classList.remove('hidden');
+                        } else {
+                            typingIndicator.classList.add('hidden');
+                        }
+                    } catch (err) {
+                        console.error('Lỗi tải trạng thái gõ chat mini:', err);
+                    }
+                }
+
+                // Gửi trạng thái đang gõ của bản thân lên server
+                async function sendTypingState(typing) {
+                    if (!activeUserId) return;
+                    try {
+                        const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                        await fetch(typing ? `/chat1-1/users/${activeUserId}/typing` : `/chat1-1/users/${activeUserId}/typing`, {
+                            method: typing ? 'POST' : 'DELETE',
+                            headers: {
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': token
+                            }
+                        });
+                    } catch (err) {
+                        console.error('Lỗi gửi trạng thái gõ:', err);
+                    }
+                }
+
+                function triggerLocalTyping() {
+                    if (!isLocallyTyping) {
+                        isLocallyTyping = true;
+                        sendTypingState(true);
+                    }
+                    
+                    clearTimeout(typingTimer);
+                    typingTimer = setTimeout(() => {
+                        isLocallyTyping = false;
+                        sendTypingState(false);
+                    }, 2000);
+                }
+
+                // Gửi tin nhắn qua AJAX
+                chatForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const content = chatInput.value.trim();
+                    if (!content) return;
+
+                    chatInput.value = '';
+                    isLocallyTyping = false;
+                    sendTypingState(false);
+
+                    try {
+                        const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                        const formData = new FormData();
+                        formData.append('noi_dung', content);
+
+                        const response = await fetch(`/chat1-1/users/${activeUserId}/messages`, {
+                            method: 'POST',
+                            headers: {
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': token
+                            },
+                            body: formData
+                        });
+                        if (!response.ok) throw new Error('Failed to send message');
+                        
+                        // Tải ngay tin nhắn mới
+                        await loadMessages();
+                    } catch (err) {
+                        console.error('Lỗi gửi tin chat mini:', err);
+                        chatInput.value = content; // Khôi phục lại nội dung nếu lỗi
+                    }
+                });
+
+                // Gắn sự kiện gõ chữ
+                chatInput.addEventListener('input', triggerLocalTyping);
+
+                // Bắt đầu Polling tin nhắn
+                function startPolling() {
+                    stopPolling();
+                    pollingTimer = setInterval(() => {
+                        if (isOpen && activeUserId) {
+                            loadMessages();
+                            loadTypingStatus();
+                        }
+                    }, 3000);
+                }
+
+                // Dừng Polling tin nhắn
+                function stopPolling() {
+                    if (pollingTimer) {
+                        clearInterval(pollingTimer);
+                        pollingTimer = null;
+                    }
+                }
+
+                // Tránh ký tự không an toàn
+                function escapeHtml(text) {
+                    if (!text) return '';
+                    return text
+                        .replace(/&/g, "&amp;")
+                        .replace(/</g, "&lt;")
+                        .replace(/>/g, "&gt;")
+                        .replace(/"/g, "&quot;")
+                        .replace(/'/g, "&#039;");
+                }
+
+                // Gắn sự kiện các nút
+                triggerBtn.addEventListener('click', toggleChatWindow);
+                closeBtn.addEventListener('click', toggleChatWindow);
+                backBtn.addEventListener('click', goBackToList);
+
+                // Nút nhắn tin mới (Compose)
+                composeBtn.addEventListener('click', () => {
+                    if (!isOpen) toggleChatWindow();
+                    goBackToList();
+                    setTimeout(() => searchInput.focus(), 350);
+                });
+            });
+        </script>
+    @endauth
 </body>
 
 </html>
